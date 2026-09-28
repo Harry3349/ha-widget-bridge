@@ -4,14 +4,18 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.reimann.hawidget.R
 import de.reimann.hawidget.data.Settings
+import de.reimann.hawidget.widget.ScreenState
 import de.reimann.hawidget.widget.Widgets
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -47,8 +51,35 @@ class LiveUpdateService : Service() {
     private var socket: WebSocket? = null
     private var refreshJob: Job? = null
     private var running = false
+    private var screenReceiverRegistered = false
+
+    /**
+     * Live-Modus nur, solange das Widget sichtbar sein kann: bei ausgeschaltetem
+     * Bildschirm wird die WebSocket-Verbindung getrennt (spart Funkmodul und
+     * Akku), beim Einschalten sofort wieder verbunden und aktualisiert.
+     */
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> pauseForScreenOff()
+                Intent.ACTION_SCREEN_ON -> resumeForScreenOn()
+            }
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        registerReceiver(
+            screenReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            },
+        )
+        screenReceiverRegistered = true
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
@@ -61,6 +92,10 @@ class LiveUpdateService : Service() {
         if (!running) {
             running = true
             refreshJob = scope.launch { refreshLoop() }
+        }
+        // Nur verbinden, wenn noch keine Verbindung besteht und das Widget
+        // sichtbar sein kann (sonst wartet der Dienst auf SCREEN_ON)
+        if (socket == null && ScreenState.isVisible(this)) {
             connect()
         }
 
@@ -70,9 +105,31 @@ class LiveUpdateService : Service() {
     override fun onDestroy() {
         running = false
         runCatching { socket?.close(1000, null) }
+        socket = null
         refreshJob?.cancel()
+        if (screenReceiverRegistered) {
+            runCatching { unregisterReceiver(screenReceiver) }
+            screenReceiverRegistered = false
+        }
         scope.cancel()
         super.onDestroy()
+    }
+
+    // ------------------------------------------------------- Sichtbarkeit
+
+    private fun pauseForScreenOff() {
+        Log.d(TAG, "Bildschirm aus – Live-Verbindung wird getrennt")
+        runCatching { socket?.close(1000, null) }
+        socket = null
+    }
+
+    private fun resumeForScreenOn() {
+        if (!ScreenState.isVisible(this)) return
+        Log.d(TAG, "Bildschirm an – Live-Verbindung wird aufgebaut")
+        if (socket == null) connect()
+        // Einmal sofort aktualisieren, damit das Widget nicht mit alten Werten
+        // erscheint, während die Events eintrudeln.
+        changes.trySend(Unit)
     }
 
     // ------------------------------------------------------------ WebSocket
@@ -113,7 +170,10 @@ class LiveUpdateService : Service() {
         if (!running) return
         scope.launch {
             delay(RECONNECT_DELAY_MS)
-            if (running) connect()
+            // Bei ausgeschaltetem Bildschirm wartet der Dienst auf SCREEN_ON
+            if (running && socket == null && ScreenState.isVisible(this@LiveUpdateService)) {
+                connect()
+            }
         }
     }
 
@@ -127,6 +187,10 @@ class LiveUpdateService : Service() {
             while (changes.tryReceive().isSuccess) {
                 // Weitere Ereignisse im selben Zeitfenster verwerfen
             }
+
+            // Ohne sichtbares Widget nichts abrufen – das passiert z. B. direkt
+            // nach dem Aufbau der Verbindung oder beim Einschalten des Displays.
+            if (!ScreenState.isVisible(this)) continue
 
             val settings = Settings(this)
             if (!settings.isConfigured) continue
@@ -177,6 +241,7 @@ class LiveUpdateService : Service() {
     companion object {
         const val ACTION_STOP = "de.reimann.hawidget.action.LIVE_STOP"
 
+        private const val TAG = "HAWidgetBridge"
         private const val CHANNEL_ID = "hawidget_live"
         private const val NOTIFICATION_ID = 4711
         private const val DEBOUNCE_MS = 1500L

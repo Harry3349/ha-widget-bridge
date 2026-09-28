@@ -63,6 +63,13 @@ fun SetupScreen(vm: MainViewModel) {
             modifier = Modifier.fillMaxWidth(),
         )
 
+        Text(
+            "Abgerufen wird nur, wenn der Bildschirm an ist – im Standby entfallen die " +
+                "Abrufe. Antippen des Widgets holt jederzeit den aktuellen Stand.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Switch(
                 checked = vm.liveMode,
@@ -76,7 +83,9 @@ fun SetupScreen(vm: MainViewModel) {
                 Text("Live-Modus")
                 Text(
                     "Echtzeit-Aktualisierung per WebSocket-Dienst. Verbraucht mehr Akku " +
-                        "und zeigt eine dauerhafte Benachrichtigung.",
+                        "und zeigt eine dauerhafte Benachrichtigung. Bei ausgeschaltetem " +
+                        "Bildschirm pausiert der Dienst und verbindet sich beim Einschalten " +
+                        "neu (aktualisiert dann sofort).",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

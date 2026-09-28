@@ -1,10 +1,12 @@
 package de.reimann.hawidget.work
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import de.reimann.hawidget.R
 import de.reimann.hawidget.data.Settings
+import de.reimann.hawidget.widget.ScreenState
 import de.reimann.hawidget.widget.Widgets
 
 /** Aktualisiert die Inhalte aller (oder ausgewählter) Homescreen-Widgets. */
@@ -16,6 +18,14 @@ class RefreshWorker(
     override suspend fun doWork(): Result {
         val context = applicationContext
         val settings = Settings(context)
+
+        // Nur abrufen, wenn das Widget überhaupt sichtbar sein kann: ohne diese
+        // Prüfung weckt die App alle X Minuten Funkmodul und Server, obwohl der
+        // Bildschirm aus ist und niemand auf den Homescreen schaut.
+        if (!ScreenState.isVisible(context)) {
+            Log.d(TAG, "Bildschirm aus – Aktualisierung übersprungen")
+            return Result.success()
+        }
 
         val ids = inputData.getIntArray(KEY_IDS)
             ?.toList()
@@ -42,5 +52,7 @@ class RefreshWorker(
 
     companion object {
         const val KEY_IDS = "ids"
+
+        private const val TAG = "HAWidgetBridge"
     }
 }

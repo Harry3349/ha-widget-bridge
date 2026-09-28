@@ -313,10 +313,18 @@ actions:
 | Button drücken | sofort | ein Request + ein Snapshot |
 | Live-Modus | ~1–2 s | dauerhafte WebSocket-Verbindung + Benachrichtigung |
 
+**Aktualisiert wird nur, wenn der Bildschirm an ist.** Ein Homescreen-Widget ist nur dann
+zu sehen, und Android bietet keinen „Widget ist sichtbar“-Callback – deshalb prüfen die
+Worker den Bildschirmzustand (`PowerManager.isInteractive()`) und überspringen den Abruf
+sonst. Im Standby entfallen damit Funk- und Serverlast; der nächste Abruf holt den
+aktuellen Stand nach. Sofort aktuell ist das Widget außerdem beim Antippen, nach einem
+Button-Druck und beim Öffnen der App.
+
 **Live-Modus** hält per WebSocket (`subscribe_events` auf `state_changed`) eine Verbindung zu
 Home Assistant und lädt Snapshots gebündelt (max. alle 1,5 s) neu. Er ist in den
 App-Einstellungen abschaltbar; ohne ihn aktualisiert das Widget alle 15 Minuten, beim
-Antippen und nach jedem Button-Druck.
+Antippen und nach jedem Button-Druck. Bei ausgeschaltetem Bildschirm trennt der Dienst die
+Verbindung und verbindet sich beim Einschalten neu – dann wird sofort aktualisiert.
 
 ---
 

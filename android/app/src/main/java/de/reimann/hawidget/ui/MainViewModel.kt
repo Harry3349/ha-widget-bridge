@@ -54,6 +54,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (settings.liveMode) {
                 LiveUpdateService.start(application)
             }
+            // Wer die App öffnet, schaut auch aufs Widget – einmal aktualisieren
+            Widgets.refreshAllAsync(application)
         }
         updateInstanceCount()
     }
