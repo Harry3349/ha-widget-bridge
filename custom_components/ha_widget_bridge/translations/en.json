@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Widget Bridge",
+        "description": "Sets up the bridge between Home Assistant and the Android app **HA Widget Bridge**.\n\nThe widgets themselves are created in the Android app and are stored and rendered here. Every widget then shows up as a device with a content sensor and one button per widget action."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": {
+        "title": "Already configured",
+        "description": "HA Widget Bridge is already set up. Only one entry is needed."
+      },
+      "already_configured": {
+        "title": "Already configured",
+        "description": "HA Widget Bridge is already set up."
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Re-render widget content",
+      "description": "Re-renders the content of one (or all) widgets.",
+      "fields": {
+        "widget_id": {
+          "name": "Widget ID",
+          "description": "ID of the widget. If omitted, all widgets are re-rendered."
+        }
+      }
+    },
+    "press": {
+      "name": "Press widget button",
+      "description": "Triggers a widget button – identical to tapping it in the Android widget.",
+      "fields": {
+        "widget_id": {
+          "name": "Widget ID",
+          "description": "ID of the widget the button belongs to."
+        },
+        "button": {
+          "name": "Button",
+          "description": "Key of the button inside the widget."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# --- Python / Home Assistant ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Gradle / Android ---
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/release/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/

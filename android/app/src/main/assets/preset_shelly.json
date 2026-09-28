@@ -1,0 +1,62 @@
+{
+  "id": "shelly",
+  "name": "Shelly & Klima",
+  "text_size": 14,
+  "theme": {
+    "background": "#E6101018",
+    "text_color": "#FFFFFFFF",
+    "accent": "#FF00E676",
+    "button_background": "#26FFFFFF",
+    "button_text": "#FFFFFFFF"
+  },
+  "values": [
+    {
+      "entity": "sensor.dachboden_shelly_erik_3d_drucker_3ddrucker_leistung",
+      "label": "3D-Drucker"
+    },
+    {
+      "entity": "sensor.wohnzimmer_shelly_erik_pc_leistung",
+      "label": "Erik PC"
+    },
+    {
+      "entity": "sensor.schlafzimmer_shelly_erik_licht_leistung",
+      "label": "Erik Licht"
+    },
+    {
+      "entity": "sensor.wohnzimmer_usbc_power_pctisch_gesamtleistung",
+      "label": "USB PC-Tisch"
+    },
+    {
+      "entity": "sensor.schlafzimmer_usbc_power_nachttisch_gesamtleistung",
+      "label": "USB Nacht"
+    },
+    {
+      "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
+      "label": "Außen",
+      "color": "#4DD0E1"
+    }
+  ],
+  "buttons": [
+    {
+      "key": "drucker",
+      "label": "3D-Drucker",
+      "icon": "mdi:printer-3d",
+      "service": "switch.toggle",
+      "entity_id": "switch.dachboden_shelly_erik_3d_drucker_3ddrucker"
+    },
+    {
+      "key": "pc",
+      "label": "Erik PC",
+      "icon": "mdi:desktop-tower",
+      "service": "switch.toggle",
+      "entity_id": "switch.wohnzimmer_shelly_erik_pc"
+    },
+    {
+      "key": "licht",
+      "label": "Licht",
+      "icon": "mdi:lightbulb",
+      "service": "switch.toggle",
+      "entity_id": "switch.schlafzimmer_shelly_erik_licht"
+    }
+  ]
+}

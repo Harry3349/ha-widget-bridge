@@ -1,0 +1,32 @@
+refresh:
+  name: Widget-Inhalt neu rendern
+  description: >-
+    Rendert den Inhalt eines Widgets (oder aller Widgets) neu. Nützlich für
+    Templates mit Zeitfunktionen oder nach Änderungen über die App.
+  fields:
+    widget_id:
+      name: Widget-ID
+      description: ID des Widgets (z. B. "shelly"). Ohne Angabe werden alle Widgets neu gerendert.
+      required: false
+      example: shelly
+      selector:
+        text:
+
+press:
+  name: Widget-Button drücken
+  description: Löst den Button eines Widgets aus – identisch zum Tippen im Android-Widget.
+  fields:
+    widget_id:
+      name: Widget-ID
+      description: ID des Widgets, zu dem der Button gehört.
+      required: true
+      example: shelly
+      selector:
+        text:
+    button:
+      name: Button
+      description: Schlüssel (key) des Buttons innerhalb des Widgets.
+      required: true
+      example: drucker
+      selector:
+        text:

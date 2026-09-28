@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HA Widget Bridge</string>
+    <string name="widget_description">Widget aus Home Assistant – Werte anzeigen und Geräte schalten</string>
+    <string name="widget_default_title">HA Widget</string>
+    <string name="widget_placeholder">Noch nicht eingerichtet – App öffnen</string>
+    <string name="widget_error">Fehler</string>
+    <string name="live_channel_name">Live-Aktualisierung</string>
+    <string name="live_channel_description">Hält die Widget-Werte in Echtzeit aktuell</string>
+    <string name="live_notification_title">Widget-Werte werden live aktualisiert</string>
+    <string name="hint_refresh">Tippen zum Aktualisieren</string>
+    <string name="action_press_failed">Aktion fehlgeschlagen</string>
+</resources>

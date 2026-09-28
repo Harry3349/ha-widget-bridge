@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Widget Bridge",
+        "description": "Richtet die Brücke zwischen Home Assistant und der Android-App **HA Widget Bridge** ein.\n\nDie Widgets selbst werden in der Android-App angelegt und hier gespeichert und gerendert. Jedes Widget erscheint anschließend als Gerät mit einem Inhalts-Sensor und einem Button je Widget-Schaltfläche."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": {
+        "title": "Bereits eingerichtet",
+        "description": "HA Widget Bridge ist bereits eingerichtet. Es wird nur ein Eintrag benötigt."
+      },
+      "already_configured": {
+        "title": "Bereits eingerichtet",
+        "description": "HA Widget Bridge ist bereits eingerichtet."
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Widget-Inhalt neu rendern",
+      "description": "Rendert den Inhalt eines Widgets (oder aller Widgets) neu.",
+      "fields": {
+        "widget_id": {
+          "name": "Widget-ID",
+          "description": "ID des Widgets. Ohne Angabe werden alle Widgets neu gerendert."
+        }
+      }
+    },
+    "press": {
+      "name": "Widget-Button drücken",
+      "description": "Löst den Button eines Widgets aus – identisch zum Tippen im Android-Widget.",
+      "fields": {
+        "widget_id": {
+          "name": "Widget-ID",
+          "description": "ID des Widgets, zu dem der Button gehört."
+        },
+        "button": {
+          "name": "Button",
+          "description": "Schlüssel (key) des Buttons innerhalb des Widgets."
+        }
+      }
+    }
+  }
+}

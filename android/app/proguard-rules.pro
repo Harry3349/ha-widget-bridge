@@ -1,0 +1,9 @@
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+
+# Kotlin-Metadaten behalten
+-keep class kotlin.Metadata { *; }
