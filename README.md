@@ -289,6 +289,39 @@ Antippen und nach jedem Button-Druck.
 
 ---
 
+## Fehlersuche
+
+### Der HACS-Button meldet „Repository … nicht gefunden“
+
+Die My-Home-Assistant-Seite prüft das Repository **im Browser** über die GitHub-API
+(`api.github.com`). Unangemeldet erlaubt GitHub nur 60 Abfragen pro Stunde **pro IP-Adresse** –
+und HACS selbst verbraucht davon ebenfalls welche. Die Meldung kann also auftreten, obwohl das
+Repository öffentlich und in Ordnung ist.
+
+1. **Gegentest:** `https://api.github.com/repos/Harry3349/ha-widget-bridge` im Browser öffnen.
+   * JSON sichtbar → alles in Ordnung, Seite neu laden (hilft auch ein Inkognito-Fenster).
+   * „API rate limit exceeded“ → Limit abwarten (Reset stündlich).
+2. **Ohne My Home Assistant:** HACS → ⋮ (oben rechts) → *Benutzerdefinierte Repositories* →
+   `https://github.com/Harry3349/ha-widget-bridge` → Typ **Integration** → *HINZUFÜGEN*.
+3. **Ganz ohne HACS:** den Ordner `custom_components/ha_widget_bridge/` nach
+   `/config/custom_components/` kopieren, Home Assistant neu starten und die Integration unter
+   *Einstellungen → Geräte & Dienste → Integration hinzufügen* einrichten.
+
+### Integration taucht nach dem Neustart nicht auf
+
+* Prüfen, ob `/config/custom_components/ha_widget_bridge/manifest.json` existiert.
+* Log ansehen (`/config/home-assistant.log`) – Fehler beim Laden werden dort mit
+  `ha_widget_bridge` aufgeführt.
+* Nach dem Kopieren **muss** Home Assistant neu gestartet werden (kein YAML-Reload).
+
+### Widget bleibt leer / zeigt „Fehler“
+
+* In der App **Einrichtung → Testen** ausführen; die Meldung nennt den HTTP-Fehler.
+* Häufigste Ursache: Token abgelaufen/widerrufen oder falsche Basis-URL
+  (mit `https://` und Port, z. B. `https://homeassistant.local:8123`).
+* Das Widget zeigt bei Netzproblemen den zuletzt bekannten Stand weiter an (Cache);
+  die kleine Zeile oben rechts nennt dann den Fehler.
+
 ## Bekannte Einschränkungen
 
 * **Symbole:** Die App bringt einen eigenen, kleinen Symbolsatz mit. `mdi:`-Namen werden über
