@@ -193,7 +193,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = runCatching { withContext(Dispatchers.IO) { client.preview(safe) } }
             busy = false
             result.onSuccess { previewText = it.text }
-                .onFailure { message = "Vorschau fehlgeschlagen: ${it.message}" } }
+                .onFailure { message = "Vorschau fehlgeschlagen: ${it.message}" }
         }
     }
 
