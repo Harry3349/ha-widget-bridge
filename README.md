@@ -296,10 +296,23 @@ Antippen und nach jedem Button-Druck.
 python3 -m compileall custom_components/ha_widget_bridge
 python3 -m pyflakes  custom_components/ha_widget_bridge/*.py
 
+# Logik-Tests ohne Home Assistant (Validierung, Rendering, Button-Zustände)
+python3 tests/test_logik.py
+
+# Statische Prüfungen für App, Ressourcen und Doku
+python3 tools/check.py            # JSON/XML/YAML syntaktisch gültig?
+python3 tools/check_resources.py  # lösen alle R.*- und @typ/name-Verweise auf?
+python3 tools/check_kotlin.py     # Klammer-Balance der Kotlin-Dateien
+
 # API von Hand testen
 curl -H "Authorization: Bearer $TOKEN" https://HA/api/ha_widget_bridge/widgets
 curl -H "Authorization: Bearer $TOKEN" https://HA/api/ha_widget_bridge/widgets/shelly/snapshot
 ```
+
+Die Tests in `tests/test_logik.py` ersetzen die Home-Assistant-Module durch
+Attrappen und laufen deshalb überall dort, wo Python ≥ 3.11 vorhanden ist.
+`tools/check_kotlin.py` fängt Klammerfehler ab, die der Kotlin-Compiler erst
+mit irreführenden Zeilennummern meldet.
 
 Der Code der Integration kommt ohne Abhängigkeiten aus (`requirements: []`) und nutzt nur
 stabile HA-Helfer (`Store`, `dispatcher`, `HomeAssistantView`).

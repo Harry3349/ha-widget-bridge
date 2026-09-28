@@ -1,0 +1,283 @@
+#!/usr/bin/env python3
+"""Tests für die reine Logik der Integration – ohne Home-Assistant-Installation.
+
+Die HA-Module werden durch Minimal-Attrappen ersetzt, damit `store.py` und
+`render.py` importierbar sind. So lassen sich Validierung und Formatierung
+lokal prüfen (das ist genau der Teil, der später im Betrieb Fehler wirft).
+
+Aufruf:  python3 tests/test_logik.py
+"""
+
+from __future__ import annotations
+
+import importlib
+import pathlib
+import sys
+import types
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+PACKAGE_DIR = ROOT / "custom_components" / "ha_widget_bridge"
+
+
+# --------------------------------------------------------------------------
+# Attrappen für Home Assistant
+# --------------------------------------------------------------------------
+
+
+class FakeServices:
+    def __init__(self, known: set[tuple[str, str]]) -> None:
+        self._known = known
+
+    def has_service(self, domain: str, service: str) -> bool:
+        return (domain, service) in self._known
+
+
+class FakeStates:
+    def __init__(self) -> None:
+        self._states: dict[str, object] = {}
+
+    def set(self, entity_id: str, state: str, **attributes: object) -> None:
+        self._states[entity_id] = SimpleState(entity_id, state, attributes)
+
+    def get(self, entity_id: str) -> object | None:
+        return self._states.get(entity_id)
+
+
+class SimpleState:
+    def __init__(self, entity_id: str, state: str, attributes: dict[str, object]) -> None:
+        self.entity_id = entity_id
+        self.state = state
+        self.attributes = attributes
+
+
+class FakeHass:
+    def __init__(self, known: tuple[tuple[str, str], ...] = ()) -> None:
+        self.services = FakeServices(set(known))
+        self.states = FakeStates()
+
+
+class DummyTemplate:
+    """Platzhalter für homeassistant.helpers.template.Template."""
+
+    def __init__(self, source: str, hass: object = None) -> None:
+        self.source = source
+
+    def async_render(self, parse_result: bool = True, **kwargs: object) -> str:
+        return self.source
+
+
+def _register(name: str, **attributes: object) -> types.ModuleType:
+    module = types.ModuleType(name)
+    for key, value in attributes.items():
+        setattr(module, key, value)
+    sys.modules[name] = module
+    return module
+
+
+def _prepare_imports() -> None:
+    _register("homeassistant")
+    _register("homeassistant.core", HomeAssistant=object, State=SimpleState)
+    _register("homeassistant.helpers")
+    _register("homeassistant.helpers.storage", Store=object)
+    _register("homeassistant.helpers.template", Template=DummyTemplate)
+    _register("homeassistant.helpers.dispatcher", async_dispatcher_send=lambda *a, **k: None)
+    _register("homeassistant.util")
+
+    import datetime
+
+    _register("homeassistant.util.dt", utcnow=datetime.datetime.now)
+
+    # Die Integration als Paket registrieren, damit relative Importe
+    # (`from .const import ...`) funktionieren – ohne `__init__.py` auszuführen.
+    package = types.ModuleType("hawb")
+    package.__path__ = [str(PACKAGE_DIR)]
+    sys.modules["hawb"] = package
+
+
+_prepare_imports()
+
+store = importlib.import_module("hawb.store")
+render = importlib.import_module("hawb.render")
+WidgetValidationError = store.WidgetValidationError
+
+
+# --------------------------------------------------------------------------
+# Mini-Testrahmen
+# --------------------------------------------------------------------------
+
+failures: list[str] = []
+checks = 0
+
+
+def check(condition: bool, description: str) -> None:
+    global checks
+    checks += 1
+    if not condition:
+        failures.append(description)
+
+
+def expect_error(payload: object, fragment: str, description: str) -> None:
+    global checks
+    checks += 1
+    try:
+        store.normalize_widget(hass, payload)
+    except WidgetValidationError as err:
+        if fragment not in str(err):
+            failures.append(f"{description}: Fehlertext war '{err}' (erwartet: '{fragment}')")
+    except Exception as err:  # noqa: BLE001
+        failures.append(f"{description}: falscher Fehlertyp {type(err).__name__}: {err}")
+    else:
+        failures.append(f"{description}: es wurde kein Fehler gemeldet")
+
+
+hass = FakeHass(known=(("switch", "toggle"), ("light", "toggle")))
+hass.states.set(
+    "sensor.dachboden_shelly_erik_3d_drucker_3ddrucker_leistung",
+    "12.34",
+    friendly_name="3D-Drucker Leistung",
+    unit_of_measurement="W",
+)
+hass.states.set("sensor.wohnzimmer_shelly_erik_pc_leistung", "unknown")
+hass.states.set("sensor.sonoff_temp_luftfeuchte_04_temperatur", "14.16", unit_of_measurement="°C")
+hass.states.set("switch.wohnzimmer_shelly_erik_pc", "on")
+
+# --------------------------------------------------------------------------
+# 1) Slug-Bildung
+# --------------------------------------------------------------------------
+
+check(store.slugify("Shelly & Klima") == "shelly_klima", "slugify: Sonderzeichen")
+check(store.slugify("Außen-Temperatur") == "aussen_temperatur", "slugify: Umlaute")
+check(store.slugify("  ") == "", "slugify: leer")
+
+# --------------------------------------------------------------------------
+# 2) Gültige Definition (Shelly-Vorlage)
+# --------------------------------------------------------------------------
+
+gutes_widget = {
+    "name": "Shelly & Klima",
+    "values": [
+        {"entity": "sensor.dachboden_shelly_erik_3d_drucker_3ddrucker_leistung", "label": "3D-Drucker"},
+        "sensor.wohnzimmer_shelly_erik_pc_leistung",
+        {"entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur", "color": "#4DD0E1"},
+    ],
+    "buttons": [
+        {
+            "label": "Erik PC",
+            "icon": "mdi:desktop-tower",
+            "service": "switch.toggle",
+            "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+        }
+    ],
+}
+
+widget = store.normalize_widget(hass, gutes_widget)
+check(widget["id"] == "shelly_klima", "ID wird aus dem Namen erzeugt")
+check(len(widget["values"]) == 3, "alle drei Werte übernommen")
+check(widget["values"][1]["label"] is None, "String-Wert ohne Label wird akzeptiert")
+check(widget["values"][2]["color"] == "#4DD0E1", "Wert-Farbe übernommen")
+
+button = widget["buttons"][0]
+check(button["key"] == "erik_pc", "Button-Key aus Label erzeugt")
+check(button["state_entity"] == "switch.wohnzimmer_shelly_erik_pc", "state_entity automatisch gesetzt")
+check(widget["theme"]["accent"] == "#FF00E676", "Standard-Theme übernommen")
+check(widget["text_size"] == 14.0, "Standard-Schriftgröße")
+check(widget["threshold"] == 0.5, "Standard-Schwellwert")
+check(widget["template"] is None, "kein Template gesetzt")
+
+# --------------------------------------------------------------------------
+# 3) Validierungsfehler
+# --------------------------------------------------------------------------
+
+expect_error({"name": ""}, "name", "leerer Name wird abgelehnt")
+expect_error({"name": "Test", "values": [{"entity": "kaputt"}]}, "Entity-ID", "ungültige Entity-ID")
+expect_error({"name": "Test", "values": [{"entity": "sensor.a", "color": "grün"}]}, "Hex", "ungültige Farbe")
+expect_error(
+    {"name": "Test", "buttons": [{"label": "A", "service": "toggle"}]},
+    "service",
+    "Service ohne Domain",
+)
+expect_error(
+    {"name": "Test", "buttons": [{"label": "A", "service": "switch.toggle", "icon": "hass:light"}]},
+    "mdi",
+    "fremdes Icon-Paket",
+)
+expect_error(
+    {
+        "name": "Test",
+        "buttons": [
+            {"label": "A", "service": "switch.toggle", "entity_id": "switch.a"},
+            {"label": "A", "service": "switch.toggle", "entity_id": "switch.b"},
+        ],
+    },
+    "doppelt",
+    "doppelter Button-Key",
+)
+expect_error(
+    {"name": "Test", "buttons": [{"label": str(i), "service": "switch.toggle"} for i in range(1, 9)]},
+    "Maximal",
+    "zu viele Buttons",
+)
+expect_error({"name": "Test", "values": [{"entity": "sensor.a"}], "text_size": "groß"}, "Zahl", "Textgröße keine Zahl")
+
+# --------------------------------------------------------------------------
+# 4) Rendern: Klartext, Werte, Farben
+# --------------------------------------------------------------------------
+
+check(
+    render.html_to_text("<b>3D-Drucker</b> · <font color='#00e676'>12.3 W</font><br>Außen · 14.2 °C")
+    == "3D-Drucker · 12.3 W\nAußen · 14.2 °C",
+    "html_to_text entfernt Tags und wandelt <br> in Zeilenumbrüche",
+)
+
+text, aktiv = render.format_value(hass.states.get("sensor.dachboden_shelly_erik_3d_drucker_3ddrucker_leistung"), 0.5)
+check(text == "12.3 W", f"Zahl mit einer Nachkommastelle und Einheit (war '{text}')")
+check(aktiv, "12,3 W gilt als aktiv")
+
+text, aktiv = render.format_value(hass.states.get("sensor.wohnzimmer_shelly_erik_pc_leistung"), 0.5)
+check(text == "offline", "unavailable/unknown wird zu 'offline'")
+check(not aktiv, "'offline' ist nicht aktiv")
+
+text, aktiv = render.format_value(hass.states.get("switch.wohnzimmer_shelly_erik_pc"), 0.5)
+check(text == "An", "Binärzustand wird eingedeutscht")
+check(aktiv, "'on' gilt als aktiv")
+
+text, _ = render.format_value(None, 0.5)
+check(text == "offline", "fehlende Entity wird zu 'offline'")
+
+check(render.color_for("offline", False) == "#ff5252", "offline ist rot")
+check(render.color_for("12.3 W", True) == "#00e676", "aktiv ist grün")
+check(render.color_for("0.0 W", False) == "#999999", "inaktiv ist grau")
+
+# --------------------------------------------------------------------------
+# 5) Automatische Anzeige
+# --------------------------------------------------------------------------
+
+html = render.build_auto_html(hass, widget)
+check("3D-Drucker" in html, "Beschriftung erscheint")
+check("friendly_name" not in html, "kein Roh-Attributname im HTML")
+check(html.count("<br>") == 2, "drei Werte ergeben zwei Zeilenumbrüche")
+check("<font color='#ff5252'>" in html, "unbekannter Wert wird rot dargestellt")
+check("<font color='#4DD0E1'>" in html, "eigene Wertfarbe wird verwendet")
+check("&lt;" not in html, "keine doppelte Escalation")
+
+# --------------------------------------------------------------------------
+# 6) Button-Zustände
+# --------------------------------------------------------------------------
+
+buttons = render.button_view(hass, widget)
+check(len(buttons) == 1, "ein Button wird geliefert")
+check(buttons[0]["active"] is True, "Button kennt den Zustand 'on'")
+check(buttons[0]["state_label"] == "An", "Button zeigt deutschen Zustand")
+check(buttons[0]["available"] is True, "Button ist verfügbar")
+
+# --------------------------------------------------------------------------
+# Ergebnis
+# --------------------------------------------------------------------------
+
+if failures:
+    print(f"{len(failures)} von {checks} Prüfungen fehlgeschlagen:")
+    for failure in failures:
+        print(f"  - {failure}")
+    sys.exit(1)
+
+print(f"OK: {checks} Prüfungen bestanden.")
