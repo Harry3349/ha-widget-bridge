@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="custom_components/ha_widget_bridge/brand/icon.png" width="96" alt="HA Widget Bridge">
+</p>
+
 # HA Widget Bridge
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Harry3349&repository=ha-widget-bridge&category=integration)
@@ -355,6 +359,9 @@ python3 tests/test_logik.py
 python3 tools/check.py            # JSON/XML/YAML syntaktisch gültig?
 python3 tools/check_resources.py  # lösen alle R.*- und @typ/name-Verweise auf?
 python3 tools/check_kotlin.py     # Klammer-Balance der Kotlin-Dateien
+
+# Markensymbol der Integration neu erzeugen (brand/icon.png …, benötigt Pillow)
+python3 tools/make_brand_icon.py
 
 # API von Hand testen
 curl -H "Authorization: Bearer $TOKEN" https://HA/api/ha_widget_bridge/widgets
