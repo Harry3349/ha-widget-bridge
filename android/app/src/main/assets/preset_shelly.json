@@ -3,7 +3,7 @@
   "name": "Shelly & Klima",
   "text_size": 14,
   "theme": {
-    "background": "#E6101018",
+    "background": "#00000000",
     "text_color": "#FFFFFFFF",
     "accent": "#FF00E676",
     "button_background": "#26FFFFFF",

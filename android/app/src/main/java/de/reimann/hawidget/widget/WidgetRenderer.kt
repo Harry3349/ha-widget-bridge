@@ -96,7 +96,7 @@ object WidgetRenderer {
         val theme = snapshot?.theme ?: WidgetTheme()
 
         // Grundflächen und Texte
-        views.setInt(R.id.widget_root, "setBackgroundColor", color(theme.background, Color.parseColor("#E6101018")))
+        views.setInt(R.id.widget_root, "setBackgroundColor", color(theme.background, Color.TRANSPARENT))
         views.setTextColor(R.id.widget_title, color(theme.accent, Color.parseColor("#FF00E676")))
         views.setTextColor(R.id.widget_content, color(theme.textColor, Color.WHITE))
         views.setTextViewText(

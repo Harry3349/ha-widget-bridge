@@ -180,6 +180,14 @@ button = widget["buttons"][0]
 check(button["key"] == "erik_pc", "Button-Key aus Label erzeugt")
 check(button["state_entity"] == "switch.wohnzimmer_shelly_erik_pc", "state_entity automatisch gesetzt")
 check(widget["theme"]["accent"] == "#FF00E676", "Standard-Theme übernommen")
+check(widget["theme"]["background"] == "#00000000", "Standard-Hintergrund ist durchsichtig")
+check(
+    store.normalize_widget(hass, {"name": "Kasten", "theme": {"background": "#E6101018"}})[
+        "theme"
+    ]["background"]
+    == "#E6101018",
+    "eigener Hintergrund wird übernommen",
+)
 check(widget["text_size"] == 14.0, "Standard-Schriftgröße")
 check(widget["threshold"] == 0.5, "Standard-Schwellwert")
 check(widget["template"] is None, "kein Template gesetzt")

@@ -225,6 +225,14 @@ feste, ausblendbare Felder, weil `RemoteViews` keine Views zur Laufzeit erzeugen
 Ein gesetztes **Jinja-Template** ersetzt weiterhin die Werteliste und füllt den
 HTML-Bereich.
 
+## Hintergrund
+
+Der Widget-Hintergrund ist **standardmäßig durchsichtig** (`theme.background` =
+`#00000000`), sodass der Homescreen durchscheint; nur die Werte und die Button-Flächen
+haben eine eigene Farbe. Ein eigener Kasten ist weiterhin möglich, z. B.
+`"theme": { "background": "#E6101018" }` (die ersten beiden Stellen sind der
+Alpha-Wert: `00` durchsichtig … `FF` deckend).
+
 ---
 
 ## Widget-Definition (Schema)
@@ -239,7 +247,7 @@ HTML-Bereich.
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
 | `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |
 | `value_label_above` | true/false | `true` = Name oben, Wert darunter (Standard: `Name · Wert` in einer Zeile) |
-| `theme` | Objekt | `background`, `text_color`, `accent`, `button_background`, `button_text` |
+| `theme` | Objekt | `background` (Standard `#00000000` = durchsichtig), `text_color`, `accent`, `button_background`, `button_text` |
 
 `buttons[]`:
 

@@ -68,7 +68,8 @@ COLOR_IDLE = "#999999"
 COLOR_ERROR = "#ff5252"
 
 DEFAULT_THEME: dict[str, str] = {
-    "background": "#E6101018",
+    # Durchsichtig (Alpha 00), damit der Homescreen durchscheint
+    "background": "#00000000",
     "text_color": "#FFFFFFFF",
     "accent": "#FF00E676",
     "button_background": "#26FFFFFF",

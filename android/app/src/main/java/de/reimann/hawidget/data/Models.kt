@@ -22,7 +22,7 @@ data class WidgetButton(
 
 /** Farben eines Widgets. */
 data class WidgetTheme(
-    val background: String = "#E6101018",
+    val background: String = "#00000000",
     val textColor: String = "#FFFFFFFF",
     val accent: String = "#FF00E676",
     val buttonBackground: String = "#26FFFFFF",
