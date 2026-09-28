@@ -1,9 +1,19 @@
 # HA Widget Bridge
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Harry3349&repository=ha-widget-bridge&category=integration)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![Android-Build](https://github.com/Harry3349/ha-widget-bridge/actions/workflows/android.yml/badge.svg)](https://github.com/Harry3349/ha-widget-bridge/actions/workflows/android.yml)
 
 Ein **vollständig in Home Assistant integriertes Homescreen-Widget für Android** –
 bestehend aus einer HACS-Integration und einer eigenen Android-App.
+
+> ### ⚡ Schnellinstallation
+> Auf den **HACS-Button oben** klicken: Home Assistant öffnet sich und fügt dieses Repository
+> als benutzerdefinierte Integration (*Integration*) hinzu – danach „Herunterladen“ und HA neu starten.
+>
+> Beim ersten Klick fragt My Home Assistant einmalig nach der Adresse deiner Instanz.
+> Alternativ manuell: HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories →
+> `https://github.com/Harry3349/ha-widget-bridge` → Kategorie *Integration*.
 
 * **Buttons** direkt im Widget (z. B. Shellys schalten)
 * **Anzeigen** direkt im Widget (z. B. Leistungen, USB-C-Power, Außentemperatur)
@@ -96,6 +106,9 @@ Voraussetzung: Home Assistant ≥ 2025.1 und HACS.
 2. In Home Assistant: **HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories**
    → `https://github.com/Harry3349/ha-widget-bridge` eintragen → Kategorie **Integration**
    → Hinzufügen.
+
+   Schneller geht es mit dem HACS-Button oben im README: der öffnet Home Assistant und
+   trägt das Repository automatisch ein.
 3. Das Repository in HACS suchen → **Herunterladen** → Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → „HA Widget Bridge“**
    → nur bestätigen (ein Eintrag verwaltet alle Widgets).
