@@ -1,0 +1,44 @@
+name: Prüfungen
+
+# Prüft die Teile des Projekts, die ohne Android-SDK bzw. ohne Home Assistant
+# laufen können: Logik der Integration sowie die Prüfskripte in tools/.
+# Der APK-Build läuft unabhängig davon in android.yml.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "custom_components/**"
+      - "tests/**"
+      - "tools/**"
+      - ".github/workflows/checks.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - "custom_components/**"
+      - "tests/**"
+      - "tools/**"
+  workflow_dispatch:
+
+jobs:
+  logik:
+    name: Logik und Prüfskripte
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Logik-Tests der Integration
+        run: python3 tests/test_logik.py
+
+      - name: JSON/XML/YAML prüfen
+        run: python3 tools/check.py
+
+      - name: Kotlin-Klammern prüfen
+        run: python3 tools/check_kotlin.py
+
+      - name: Ressourcen-Verweise prüfen
+        run: python3 tools/check_resources.py
+
+      - name: Werte-Raster prüfen
+        run: python3 tools/check_widget_layout.py
