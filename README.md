@@ -125,6 +125,10 @@ Die App braucht JDK 17 und das Android SDK (Android Studio installiert beides).
 Bei jedem Push läuft `.github/workflows/android.yml` und erzeugt ein Artefakt
 `HAWidgetBridge-debug` mit der installierbaren Debug-APK.
 
+Die fertige APK hängt zusätzlich an jedem
+[Release](https://github.com/Harry3349/ha-widget-bridge/releases/latest) – das ist der
+einfachste Weg, sie direkt auf dem Handy herunterzuladen und zu installieren.
+
 **b) Lokal**
 
 ```bash
