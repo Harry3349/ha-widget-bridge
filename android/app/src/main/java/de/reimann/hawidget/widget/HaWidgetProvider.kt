@@ -19,6 +19,10 @@ class HaWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        // Der Launcher ruft das nach Neustart/App-Update auf: hier die
+        // periodische Aktualisierung sicherstellen, falls sie verloren ging.
+        Widgets.schedulePeriodicRefresh(context)
+
         // Zuerst sofort eine Ansicht liefern – ohne sie zeigt der Launcher
         // „Widget kann nicht geladen werden“. Danach kommen die echten Werte.
         Widgets.initialView(context, appWidgetIds.toList())

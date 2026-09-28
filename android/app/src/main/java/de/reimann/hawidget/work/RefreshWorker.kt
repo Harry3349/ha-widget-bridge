@@ -47,6 +47,10 @@ class RefreshWorker(
         }
 
         Widgets.refreshNow(context, settings.client(), ids)
+
+        // Selbstheilung: geht die periodische Planung verloren (kommt nach
+        // App-Updates vor), setzt jeder Lauf sie wieder.
+        Widgets.schedulePeriodicRefresh(context)
         return Result.success()
     }
 
