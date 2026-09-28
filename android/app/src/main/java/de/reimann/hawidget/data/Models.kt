@@ -38,6 +38,10 @@ data class WidgetDef(
     val buttons: List<WidgetButton> = emptyList(),
     val theme: WidgetTheme = WidgetTheme(),
     val textSize: Float = 14f,
+    /** 1 = Werte untereinander, 2 oder 3 = nebeneinander */
+    val valueColumns: Int = 1,
+    /** true = Name in der ersten Zeile, Wert darunter */
+    val valueLabelAbove: Boolean = false,
     val revision: Int = 0,
 ) {
     val isNew: Boolean get() = revision == 0
@@ -64,6 +68,36 @@ data class WidgetSnapshot(
     val text: String,
     val error: String?,
     val buttons: List<ButtonState>,
+    /** true = Inhalt kommt aus dem Jinja-Template (dann keine Werte-Felder) */
+    val templateUsed: Boolean = false,
+    val valueColumns: Int = 1,
+    val valueLabelAbove: Boolean = false,
+    val values: List<ValueState> = emptyList(),
+) {
+    /**
+     * Zeilen für die Editor-Vorschau: die Werte in der eingestellten
+     * Spaltenzahl, damit die Anordnung schon vor dem Speichern sichtbar ist.
+     */
+    fun previewLines(): List<String> {
+        if (values.isEmpty()) return emptyList()
+        val columns = valueColumns.coerceIn(1, 3)
+        return values.chunked(columns).map { row ->
+            row.joinToString("    ") { value ->
+                if (valueLabelAbove) "${value.label}\n${value.text}"
+                else "${value.label} · ${value.text}"
+            }
+        }
+    }
+}
+
+/** Ein aufbereiteter Wert, wie ihn Home Assistant für das Widget liefert. */
+data class ValueState(
+    val entity: String,
+    val label: String,
+    val text: String,
+    val color: String,
+    val active: Boolean,
+    val available: Boolean,
 )
 
 /** Ein Entity für die Auswahlliste in der App. */

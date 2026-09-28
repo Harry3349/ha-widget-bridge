@@ -67,7 +67,8 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         // --------------------------------------------------------------- Werte
         Text("Werte", style = MaterialTheme.typography.titleMedium)
         Text(
-            "Eine Zeile pro Wert. Die Reihenfolge hier ist die Reihenfolge im Widget.",
+            "Ein Wert pro Feld. Die Reihenfolge hier ist die Reihenfolge im Widget " +
+                "(erst von links nach rechts, dann die nächste Zeile).",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -86,6 +87,42 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         }
 
         OutlinedButton(onClick = { valueIndex = NEW_ENTRY }) { Text("Wert hinzufügen") }
+
+        // ----------------------------------------------------------- Anordnung
+        Text("Anordnung der Werte", style = MaterialTheme.typography.titleMedium)
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Nebeneinander", style = MaterialTheme.typography.bodyMedium)
+            listOf(1, 2, 3).forEach { columns ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = def.valueColumns == columns,
+                        onClick = {
+                            vm.updateEditor { current -> current.copy(valueColumns = columns) }
+                        },
+                    )
+                    Text(if (columns == 1) "1 Spalte" else "$columns Spalten")
+                }
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Switch(
+                checked = def.valueLabelAbove,
+                onCheckedChange = { checked ->
+                    vm.updateEditor { current -> current.copy(valueLabelAbove = checked) }
+                },
+            )
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text("Wert unter dem Namen", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Name in der ersten Zeile, Wert darunter – sonst beides in einer Zeile.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         HorizontalDivider()
 

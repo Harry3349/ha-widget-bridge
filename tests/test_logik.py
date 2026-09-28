@@ -271,6 +271,61 @@ check(buttons[0]["state_label"] == "An", "Button zeigt deutschen Zustand")
 check(buttons[0]["available"] is True, "Button ist verfügbar")
 
 # --------------------------------------------------------------------------
+# 7) Anordnung der Werte (Spalten / Wert unter dem Namen)
+# --------------------------------------------------------------------------
+
+import asyncio  # noqa: E402 – gehört zum Abschnitt
+
+check(widget["value_columns"] == 1, "Standard: eine Spalte")
+check(widget["value_label_above"] is False, "Standard: Wert hinter dem Namen")
+
+zweispaltig = store.normalize_widget(
+    hass, {"name": "Raster", "values": ["sensor.a", "sensor.b"], "value_columns": 2}
+)
+check(zweispaltig["value_columns"] == 2, "zwei Spalten werden übernommen")
+check(
+    store.normalize_widget(hass, {"name": "Viele", "value_columns": 9})["value_columns"] == 3,
+    "zu viele Spalten werden auf 3 begrenzt",
+)
+check(
+    store.normalize_widget(hass, {"name": "Wenig", "value_columns": 0})["value_columns"] == 1,
+    "0 Spalten werden auf 1 korrigiert",
+)
+check(
+    store.normalize_widget(hass, {"name": "Wahr", "value_label_above": "ja"})[
+        "value_label_above"
+    ]
+    is True,
+    "'ja' gilt als wahr",
+)
+expect_error({"name": "Test", "value_columns": "viele"}, "Zahl", "value_columns muss eine Zahl sein")
+expect_error(
+    {"name": "Test", "value_label_above": "vielleicht"},
+    "true oder false",
+    "value_label_above muss wahr/falsch sein",
+)
+
+# Wertefelder, die die App selbst anordnet
+felder = render.value_view(hass, widget)
+check(len(felder) == 3, "value_view liefert alle Werte")
+check(felder[0]["label"] == "3D-Drucker", "value_view übernimmt das Label")
+check(felder[0]["text"] == "12.3 W", "value_view formatiert den Wert")
+check(felder[0]["color"] == "#00e676", "value_view liefert die Farbe")
+check(felder[0]["available"] is True, "aktiver Wert ist verfügbar")
+check(felder[1]["available"] is False and felder[1]["text"] == "offline", "offline erkannt")
+check(felder[2]["color"] == "#4DD0E1", "eigene Wertfarbe auch in value_view")
+
+gestapelt = dict(widget, value_label_above=True)
+html_stapel = render.build_auto_html(hass, gestapelt)
+check("<b>3D-Drucker</b><br>" in html_stapel, "Wert steht unter dem Namen")
+check(html_stapel.count("<br>") == 5, "gestapelt: drei Werte ergeben fünf Zeilenumbrüche")
+
+ohne_template = asyncio.run(render.async_render_widget(hass, widget))
+check(ohne_template["template_used"] is False, "ohne Template ordnet die App die Werte an")
+mit_template = asyncio.run(render.async_render_widget(hass, {**widget, "template": "<b>Hallo</b>"}))
+check(mit_template["template_used"] is True, "mit Template gilt der HTML-Inhalt")
+
+# --------------------------------------------------------------------------
 # Ergebnis
 # --------------------------------------------------------------------------
 

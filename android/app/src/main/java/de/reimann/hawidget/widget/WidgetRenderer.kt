@@ -11,6 +11,7 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import de.reimann.hawidget.R
+import de.reimann.hawidget.data.ValueState
 import de.reimann.hawidget.data.WidgetSnapshot
 import de.reimann.hawidget.data.WidgetTheme
 import de.reimann.hawidget.icons.MdiIcons
@@ -27,6 +28,10 @@ import java.util.Locale
 object WidgetRenderer {
 
     private const val MAX_ROWS = 6
+
+    /** Werte-Raster: 6 Zeilen à 3 Felder (12 Werte / 2 Spalten = 6 Zeilen). */
+    private const val MAX_VALUE_ROWS = 6
+    private const val MAX_VALUE_COLUMNS = 3
 
     private val ROW_IDS = intArrayOf(
         R.id.btn_row_1, R.id.btn_row_2, R.id.btn_row_3,
@@ -46,6 +51,39 @@ object WidgetRenderer {
     private val STATE_IDS = intArrayOf(
         R.id.btn_state_1, R.id.btn_state_2, R.id.btn_state_3,
         R.id.btn_state_4, R.id.btn_state_5, R.id.btn_state_6,
+    )
+
+    /** Reihenfolge: erst alle Felder der Zeile 1, dann Zeile 2 … */
+    private val VALUE_ROW_IDS = intArrayOf(
+        R.id.value_row_1, R.id.value_row_2, R.id.value_row_3,
+        R.id.value_row_4, R.id.value_row_5, R.id.value_row_6,
+    )
+
+    private val VALUE_CELL_IDS = intArrayOf(
+        R.id.value_cell_1_1, R.id.value_cell_1_2, R.id.value_cell_1_3,
+        R.id.value_cell_2_1, R.id.value_cell_2_2, R.id.value_cell_2_3,
+        R.id.value_cell_3_1, R.id.value_cell_3_2, R.id.value_cell_3_3,
+        R.id.value_cell_4_1, R.id.value_cell_4_2, R.id.value_cell_4_3,
+        R.id.value_cell_5_1, R.id.value_cell_5_2, R.id.value_cell_5_3,
+        R.id.value_cell_6_1, R.id.value_cell_6_2, R.id.value_cell_6_3,
+    )
+
+    private val VALUE_NAME_IDS = intArrayOf(
+        R.id.value_name_1_1, R.id.value_name_1_2, R.id.value_name_1_3,
+        R.id.value_name_2_1, R.id.value_name_2_2, R.id.value_name_2_3,
+        R.id.value_name_3_1, R.id.value_name_3_2, R.id.value_name_3_3,
+        R.id.value_name_4_1, R.id.value_name_4_2, R.id.value_name_4_3,
+        R.id.value_name_5_1, R.id.value_name_5_2, R.id.value_name_5_3,
+        R.id.value_name_6_1, R.id.value_name_6_2, R.id.value_name_6_3,
+    )
+
+    private val VALUE_TEXT_IDS = intArrayOf(
+        R.id.value_text_1_1, R.id.value_text_1_2, R.id.value_text_1_3,
+        R.id.value_text_2_1, R.id.value_text_2_2, R.id.value_text_2_3,
+        R.id.value_text_3_1, R.id.value_text_3_2, R.id.value_text_3_3,
+        R.id.value_text_4_1, R.id.value_text_4_2, R.id.value_text_4_3,
+        R.id.value_text_5_1, R.id.value_text_5_2, R.id.value_text_5_3,
+        R.id.value_text_6_1, R.id.value_text_6_2, R.id.value_text_6_3,
     )
 
     fun render(
@@ -71,8 +109,29 @@ object WidgetRenderer {
             snapshot?.textSize ?: 14f,
         )
 
-        // Inhalt
+        // Inhalt (Template oder – bei einer Spalte – die Werteliste)
         val html = snapshot?.html.orEmpty()
+        val values = snapshot?.values.orEmpty()
+        val columns = (snapshot?.valueColumns ?: 1).coerceIn(1, MAX_VALUE_COLUMNS)
+
+        // Werte nur dann als Raster anordnen, wenn sie nicht aus einem
+        // Jinja-Template stammen und tatsächlich nebeneinander sollen.
+        val grid = values.isNotEmpty() && snapshot?.templateUsed != true && columns > 1
+
+        views.setViewVisibility(R.id.widget_content, if (grid) View.GONE else View.VISIBLE)
+        views.setViewVisibility(R.id.value_area, if (grid) View.VISIBLE else View.GONE)
+
+        if (grid) {
+            renderValueGrid(
+                views = views,
+                values = values,
+                columns = columns,
+                labelAbove = snapshot?.valueLabelAbove == true,
+                textSize = snapshot?.textSize ?: 14f,
+                textColor = color(theme.textColor, Color.WHITE),
+            )
+        }
+
         when {
             html.isNotBlank() -> views.setTextViewText(
                 R.id.widget_content,
@@ -126,6 +185,71 @@ object WidgetRenderer {
     }
 
     // -------------------------------------------------------------- intern
+
+    /**
+     * Werte in die vorab deklarierten Felder schreiben (zeilenweise gefüllt).
+     * Nicht benötigte Zeilen und Felder werden ausgeblendet; dadurch nutzen die
+     * sichtbaren Felder die volle Breite und stehen nebeneinander.
+     */
+    private fun renderValueGrid(
+        views: RemoteViews,
+        values: List<ValueState>,
+        columns: Int,
+        labelAbove: Boolean,
+        textSize: Float,
+        textColor: Int,
+    ) {
+        val nameSize = (textSize - 3f).coerceAtLeast(9f)
+
+        for (row in 0 until MAX_VALUE_ROWS) {
+            var rowHasValue = false
+
+            for (col in 0 until MAX_VALUE_COLUMNS) {
+                val slot = row * MAX_VALUE_COLUMNS + col
+                val value = if (col < columns) values.getOrNull(row * columns + col) else null
+
+                if (value == null) {
+                    views.setViewVisibility(VALUE_CELL_IDS[slot], View.GONE)
+                    continue
+                }
+
+                rowHasValue = true
+                views.setViewVisibility(VALUE_CELL_IDS[slot], View.VISIBLE)
+
+                val nameId = VALUE_NAME_IDS[slot]
+                val textId = VALUE_TEXT_IDS[slot]
+                val valueColor = color(value.color, textColor)
+
+                views.setTextViewTextSize(textId, TypedValue.COMPLEX_UNIT_SP, textSize)
+                views.setTextViewTextSize(nameId, TypedValue.COMPLEX_UNIT_SP, nameSize)
+
+                if (labelAbove) {
+                    views.setViewVisibility(nameId, View.VISIBLE)
+                    views.setTextViewText(nameId, value.label)
+                    views.setTextViewText(textId, value.text)
+                    views.setTextColor(textId, valueColor)
+                } else {
+                    views.setViewVisibility(nameId, View.GONE)
+                    views.setTextViewText(textId, Html.fromHtml(inlineHtml(value), Html.FROM_HTML_MODE_LEGACY))
+                    views.setTextColor(textId, textColor)
+                }
+            }
+
+            views.setViewVisibility(VALUE_ROW_IDS[row], if (rowHasValue) View.VISIBLE else View.GONE)
+        }
+    }
+
+    /** ``Name · Wert`` als HTML, damit Name fett und Wert farbig ist. */
+    private fun inlineHtml(value: ValueState): String =
+        "<b>${escape(value.label)}</b> · " +
+            "<font color='${escape(value.color)}'>${escape(value.text)}</font>"
+
+    /** Texte aus Home Assistant vor der HTML-Ausgabe entschärfen. */
+    private fun escape(text: String): String = text
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
 
     private fun pressIntent(context: Context, appWidgetId: Int, buttonKey: String): PendingIntent {
         val intent = Intent(context, HaWidgetProvider::class.java).apply {

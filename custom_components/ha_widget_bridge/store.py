@@ -19,6 +19,8 @@ from .const import (
     DEFAULT_THEME,
     DEFAULT_TEXT_SIZE,
     DEFAULT_THRESHOLD,
+    DEFAULT_VALUE_COLUMNS,
+    DEFAULT_VALUE_LABEL_ABOVE,
     DOMAIN,
     LOGGER,
     MAX_BUTTONS,
@@ -32,6 +34,8 @@ from .const import (
     STORAGE_VERSION,
     TEXT_SIZE_MAX,
     TEXT_SIZE_MIN,
+    VALUE_COLUMNS_MAX,
+    VALUE_COLUMNS_MIN,
 )
 
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,49}$")
@@ -43,6 +47,22 @@ _COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 
 class WidgetValidationError(ValueError):
     """Die übergebene Widget-Definition ist ungültig."""
+
+
+def _as_bool(value: Any, field: str) -> bool:
+    """Wahrheitswert annehmen (bool, 0/1 oder Text wie 'true'/'ja')."""
+    if isinstance(value, bool):
+        return value
+    if value in (None, ""):
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in ("true", "1", "yes", "on", "ja"):
+        return True
+    if text in ("false", "0", "no", "off", "nein"):
+        return False
+    raise WidgetValidationError(f"{field} muss true oder false sein")
 
 
 def slugify(value: Any) -> str:
@@ -237,6 +257,16 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
     except (TypeError, ValueError) as err:
         raise WidgetValidationError("threshold muss eine Zahl sein") from err
 
+    try:
+        value_columns = int(payload.get("value_columns", DEFAULT_VALUE_COLUMNS))
+    except (TypeError, ValueError) as err:
+        raise WidgetValidationError("value_columns muss eine Zahl sein") from err
+    value_columns = min(max(value_columns, VALUE_COLUMNS_MIN), VALUE_COLUMNS_MAX)
+
+    value_label_above = _as_bool(
+        payload.get("value_label_above", DEFAULT_VALUE_LABEL_ABOVE), "value_label_above"
+    )
+
     return {
         "id": widget_id,
         "name": name,
@@ -246,6 +276,8 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         "theme": _normalize_theme(payload.get("theme")),
         "text_size": round(text_size, 1),
         "threshold": threshold,
+        "value_columns": value_columns,
+        "value_label_above": value_label_above,
     }
 
 

@@ -114,10 +114,15 @@ def color_for(text: str, active: bool) -> str:
     return COLOR_ACTIVE if active else COLOR_IDLE
 
 
-def build_auto_html(hass: HomeAssistant, widget: dict[str, Any]) -> str:
-    """Anzeige aus ``values`` erzeugen (eine Zeile pro Entity)."""
+def value_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]]:
+    """Werte als fertige Felder aufbereiten (Name, Text, Farbe).
+
+    Die App ordnet diese Felder selbst an – wahlweise untereinander oder
+    nebeneinander (``value_columns``) und mit dem Wert unter dem Namen
+    (``value_label_above``).
+    """
     default_threshold = float(widget.get("threshold", DEFAULT_THRESHOLD))
-    lines: list[str] = []
+    result: list[dict[str, Any]] = []
 
     for value in widget.get("values") or []:
         entity_id = value["entity"]
@@ -133,10 +138,33 @@ def build_auto_html(hass: HomeAssistant, widget: dict[str, Any]) -> str:
         own_color = value.get("color")
         color = own_color if own_color and text != "offline" else color_for(text, active)
 
-        lines.append(
-            f"<b>{html_lib.escape(name)}</b> · "
-            f"<font color='{color}'>{html_lib.escape(text)}</font>"
+        result.append(
+            {
+                "entity": entity_id,
+                "label": name,
+                "text": text,
+                "color": color,
+                "active": active,
+                "available": text != "offline",
+            }
         )
+
+    return result
+
+
+def build_auto_html(hass: HomeAssistant, widget: dict[str, Any]) -> str:
+    """Anzeige aus ``values`` erzeugen.
+
+    Standard: eine Zeile pro Entity (``Name · Wert``). Mit
+    ``value_label_above`` steht der Wert in der Zeile darunter.
+    """
+    above = bool(widget.get("value_label_above"))
+    lines: list[str] = []
+
+    for value in value_view(hass, widget):
+        name = html_lib.escape(value["label"])
+        text = f"<font color='{value['color']}'>{html_lib.escape(value['text'])}</font>"
+        lines.append(f"<b>{name}</b><br>{text}" if above else f"<b>{name}</b> · {text}")
 
     return "<br>".join(lines)
 
@@ -144,10 +172,13 @@ def build_auto_html(hass: HomeAssistant, widget: dict[str, Any]) -> str:
 async def async_render_widget(hass: HomeAssistant, widget: dict[str, Any]) -> dict[str, Any]:
     """Inhalt eines Widgets rendern.
 
-    Rückgabe: ``{"html": str, "text": str, "error": str | None}``.
+    Rückgabe: ``{"html", "text", "error", "template_used"}``. ``template_used``
+    ist True, wenn der Inhalt aus dem Jinja-Template stammt – dann zeigt die App
+    den HTML-Text an statt die Werte-Felder anzuordnen.
     """
     error: str | None = None
     html_out = ""
+    template_used = False
 
     template_source = widget.get("template")
     if template_source:
@@ -155,17 +186,24 @@ async def async_render_widget(hass: HomeAssistant, widget: dict[str, Any]) -> di
             template = Template(template_source, hass)
             rendered = template.async_render(parse_result=False)
             html_out = rendered if isinstance(rendered, str) else str(rendered)
+            template_used = bool(html_out.strip())
         except Exception as err:  # noqa: BLE001 – Fehler soll im Widget sichtbar sein
             error = f"Template-Fehler: {err}"
             LOGGER.warning("Widget '%s': %s", widget.get("id"), error)
 
     if not html_out.strip():
         html_out = build_auto_html(hass, widget)
+        template_used = False
 
     if error:
         html_out = f"<font color='{COLOR_ERROR}'>{html_lib.escape(error)}</font><br>{html_out}"
 
-    return {"html": html_out, "text": html_to_text(html_out), "error": error}
+    return {
+        "html": html_out,
+        "text": html_to_text(html_out),
+        "error": error,
+        "template_used": template_used,
+    }
 
 
 def button_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]]:

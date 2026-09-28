@@ -210,6 +210,23 @@ Statt der automatischen Werteliste kann ein **Jinja-Template** genutzt werden
 
 ---
 
+## Werte anordnen
+
+Im Abschnitt **Werte** des Editors stellst du die Anordnung ein:
+
+| Einstellung | Wirkung |
+|---|---|
+| **Nebeneinander: 1 Spalte** | Ein Wert pro Zeile (Standard) |
+| **Nebeneinander: 2 / 3 Spalten** | Die Werte stehen nebeneinander, gefüllt von links nach rechts |
+| **Wert unter dem Namen** | Im Feld steht der Name in der ersten Zeile, der Wert darunter |
+
+Bei mehreren Spalten ordnet die **App** die Werte an – das Widget-Layout enthält dafür
+feste, ausblendbare Felder, weil `RemoteViews` keine Views zur Laufzeit erzeugen kann.
+Ein gesetztes **Jinja-Template** ersetzt weiterhin die Werteliste und füllt den
+HTML-Bereich.
+
+---
+
 ## Widget-Definition (Schema)
 
 | Feld | Typ | Bedeutung |
@@ -220,6 +237,8 @@ Statt der automatischen Werteliste kann ein **Jinja-Template** genutzt werden
 | `values[]` | Liste | `entity`, optional `label`, `threshold` (W), `color` (Hex) |
 | `buttons[]` | Liste (max. 6) | siehe unten |
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
+| `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |
+| `value_label_above` | true/false | `true` = Name oben, Wert darunter (Standard: `Name · Wert` in einer Zeile) |
 | `theme` | Objekt | `background`, `text_color`, `accent`, `button_background`, `button_text` |
 
 `buttons[]`:
@@ -331,9 +350,10 @@ Repository öffentlich und in Ordnung ist.
 * **Symbole:** Die App bringt einen eigenen, kleinen Symbolsatz mit. `mdi:`-Namen werden über
   Schlüsselwörter zugeordnet (`printer`, `desktop`, `light`, `plug`, `therm`, `power`,
   `toggle`, sonst Standardsymbol).
-* **Formatierung:** Der Widget-Inhalt wird über `Html.fromHtml` in eine `TextView` gerendert –
-  möglich sind `<b>`, `<i>`, `<u>`, `<font color>`, `<br>`; **keine** Tabellen oder CSS-Layouts.
-  Mehrfache Leerzeichen werden zusammengefasst.
+* **Formatierung:** Die Werte-Felder ordnet die App selbst an (1–3 Spalten, Name
+  darüber oder davor). Der **Template**-Inhalt wird über `Html.fromHtml` in eine `TextView`
+  gerendert – möglich sind `<b>`, `<i>`, `<u>`, `<font color>`, `<br>`; **keine** Tabellen
+  oder CSS-Layouts. Mehrfache Leerzeichen werden zusammengefasst.
 * **Maximal 6 Buttons** und 12 Werte pro Widget, 25 Widgets.
 * **Token:** Der Long-Lived-Token liegt in den App-einstellungen (Gerätespeicher). Die App ist
   von Cloud-Backups ausgenommen (`allowBackup=false`). Erzeuge am besten einen eigenen Token

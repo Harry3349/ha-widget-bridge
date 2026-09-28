@@ -48,6 +48,13 @@ MAX_VALUES = 12
 MAX_TEMPLATE_LENGTH = 6000
 MAX_SERVICE_DATA_KEYS = 20
 
+# Werte-Anordnung: 1 = Liste untereinander, 2/3 = nebeneinander
+VALUE_COLUMNS_MIN = 1
+VALUE_COLUMNS_MAX = 3
+DEFAULT_VALUE_COLUMNS = 1
+# Wert unter dem Namen (zweite Zeile im Feld) statt dahinter
+DEFAULT_VALUE_LABEL_ABOVE = False
+
 TEXT_SIZE_MIN = 8.0
 TEXT_SIZE_MAX = 30.0
 DEFAULT_TEXT_SIZE = 14.0

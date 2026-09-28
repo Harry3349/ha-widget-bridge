@@ -26,6 +26,8 @@ object WidgetJson {
         buttons = parseButtons(json.optJSONArray("buttons")),
         theme = parseTheme(json.optJSONObject("theme")),
         textSize = json.optDouble("text_size", 14.0).toFloat(),
+        valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
+        valueLabelAbove = json.optBoolean("value_label_above", false),
         revision = json.optInt("revision", 0),
     )
 
@@ -41,6 +43,10 @@ object WidgetJson {
             text = json.optString("text"),
             error = json.stringOrNull("error"),
             buttons = parseButtonStates(json.optJSONArray("buttons")),
+            templateUsed = json.optBoolean("template_used", false),
+            valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
+            valueLabelAbove = json.optBoolean("value_label_above", false),
+            values = parseValueStates(json.optJSONArray("values")),
         )
     }
 
@@ -112,8 +118,26 @@ object WidgetJson {
         return result
     }
 
-    private fun parseButtonStates(array: JSONArray?): List<ButtonState> {
+    private fun parseValueStates(array: JSONArray?): List<ValueState> {
         if (array == null) return emptyList()
+        val result = ArrayList<ValueState>(array.length())
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index) ?: continue
+            result.add(
+                ValueState(
+                    entity = json.optString("entity"),
+                    label = json.optString("label", json.optString("entity")),
+                    text = json.optString("text"),
+                    color = json.optString("color"),
+                    active = json.optBoolean("active", false),
+                    available = json.optBoolean("available", true),
+                )
+            )
+        }
+        return result
+    }
+
+    private fun parseButtonStates(array: JSONArray?): List<ButtonState> {        if (array == null) return emptyList()
         val result = ArrayList<ButtonState>(array.length())
         for (index in 0 until array.length()) {
             val json = array.optJSONObject(index) ?: continue
@@ -151,6 +175,8 @@ object WidgetJson {
         json.put("name", def.name)
         if (!def.template.isNullOrBlank()) json.put("template", def.template)
         json.put("text_size", def.textSize.toDouble())
+        json.put("value_columns", def.valueColumns.coerceIn(1, 3))
+        json.put("value_label_above", def.valueLabelAbove)
 
         val values = JSONArray()
         def.values.forEach { value ->

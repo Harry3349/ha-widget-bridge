@@ -192,8 +192,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val safe = if (def.name.isBlank()) def.copy(name = "Vorschau") else def
             val result = runCatching { withContext(Dispatchers.IO) { client.preview(safe) } }
             busy = false
-            result.onSuccess { previewText = it.text }
-                .onFailure { message = "Vorschau fehlgeschlagen: ${it.message}" }
+            result.onSuccess { snapshot ->
+                // Werte in der eingestellten Spaltenzahl zeigen, damit die
+                // Anordnung schon vor dem Speichern sichtbar ist.
+                val lines = snapshot.previewLines()
+                previewText = if (lines.isEmpty()) snapshot.text else lines.joinToString("\n")
+            }.onFailure { message = "Vorschau fehlgeschlagen: ${it.message}" }
         }
     }
 

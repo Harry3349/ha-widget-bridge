@@ -141,4 +141,279 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!--
+      Werte: sechs Zeilen mit je drei Feldern. Je nach Widget-Definition
+      (value_columns 1..3) werden nur die passenden Felder eingeblendet –
+      dadurch stehen die Werte nebeneinander. Innerhalb eines Felds steht
+      der Name oben und der Wert darunter (value_label_above).
+    -->
+    <LinearLayout
+        android:id="@+id/value_area"
+        style="@style/WidgetValueArea">
+
+        <LinearLayout
+            android:id="@+id/value_row_1"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_1_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_1_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_1_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_1_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_1_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_1_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_1_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_1_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_1_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/value_row_2"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_2_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_2_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_2_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_2_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_2_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_2_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_2_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_2_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_2_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/value_row_3"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_3_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_3_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_3_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_3_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_3_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_3_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_3_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_3_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_3_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/value_row_4"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_4_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_4_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_4_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_4_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_4_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_4_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_4_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_4_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_4_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/value_row_5"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_5_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_5_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_5_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_5_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_5_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_5_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_5_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_5_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_5_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/value_row_6"
+            style="@style/WidgetValueRow">
+
+            <LinearLayout
+                android:id="@+id/value_cell_6_1"
+                style="@style/WidgetValueCell">
+
+                <TextView
+                    android:id="@+id/value_name_6_1"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_6_1"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_6_2"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_6_2"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_6_2"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/value_cell_6_3"
+                style="@style/WidgetValueCellGap">
+
+                <TextView
+                    android:id="@+id/value_name_6_3"
+                    style="@style/WidgetValueName" />
+
+                <TextView
+                    android:id="@+id/value_text_6_3"
+                    style="@style/WidgetValueText" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
 </LinearLayout>
