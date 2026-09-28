@@ -1,5 +1,7 @@
 # HA Widget Bridge
 
+[![Android-Build](https://github.com/Harry3349/ha-widget-bridge/actions/workflows/android.yml/badge.svg)](https://github.com/Harry3349/ha-widget-bridge/actions/workflows/android.yml)
+
 Ein **vollständig in Home Assistant integriertes Homescreen-Widget für Android** –
 bestehend aus einer HACS-Integration und einer eigenen Android-App.
 
