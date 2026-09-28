@@ -31,6 +31,16 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # Ohne festen Schlüssel erzeugt jeder CI-Lauf einen neuen Debug-Schlüssel –
+      # Android würde Updates dann mit INSTALL_FAILED_UPDATE_INCOMPATIBLE ablehnen.
+      - name: Debug-Keystore wiederherstellen
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE }}
+        run: |
+          mkdir -p "$HOME/.android"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          ls -l "$HOME/.android/debug.keystore"
+
       - name: Gradle-Wrapper erzeugen
         working-directory: android
         run: gradle --no-daemon wrapper --gradle-version 8.9
