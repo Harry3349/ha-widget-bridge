@@ -39,6 +39,23 @@ object Widgets {
             runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
         }
 
+    /**
+     * Sofort eine Ansicht liefern, damit der Launcher nicht "Widget kann nicht
+     * geladen werden" anzeigt. Danach folgt die Aktualisierung im Hintergrund.
+     */
+    fun initialView(context: Context, ids: List<Int>) {
+        for (appWidgetId in ids) {
+            val widgetId = WidgetPrefs.widgetId(context, appWidgetId)
+            val snapshot = widgetId?.let { cachedSnapshot(context, it) }
+            val status = when {
+                widgetId == null -> context.getString(R.string.widget_placeholder)
+                snapshot == null -> context.getString(R.string.widget_loading)
+                else -> null
+            }
+            update(context, appWidgetId, snapshot, status)
+        }
+    }
+
     // ------------------------------------------------------ Aktualisieren
 
     fun refreshAsync(context: Context, ids: List<Int>, reason: String = "manual") {
@@ -57,11 +74,18 @@ object Widgets {
 
     /** Alle übergebenen Widgets sofort aktualisieren (im Hintergrund-Thread aufrufen). */
     suspend fun refreshNow(context: Context, client: HaClient, ids: List<Int>) {
+        assignMissingWidgets(context, client, ids)
+
         val cache = HashMap<String, WidgetSnapshot?>()
         val failed = HashSet<String>()
 
         for (appWidgetId in ids) {
-            val widgetId = WidgetPrefs.widgetId(context, appWidgetId) ?: continue
+            val widgetId = WidgetPrefs.widgetId(context, appWidgetId)
+            if (widgetId == null) {
+                // In Home Assistant ist noch gar kein Widget angelegt
+                update(context, appWidgetId, null, context.getString(R.string.widget_no_widget))
+                continue
+            }
 
             if (!cache.containsKey(widgetId)) {
                 val raw = runCatching { client.snapshotRaw(widgetId) }.getOrNull()
@@ -82,6 +106,24 @@ object Widgets {
             }
             update(context, appWidgetId, snapshot, status)
         }
+    }
+
+    /**
+     * Homescreen-Widgets ohne Zuordnung übernehmen das erste in Home Assistant
+     * angelegte Widget. Nötig, weil beim Anheften (``requestPinAppWidget``) die
+     * Konfigurations-Activity nicht immer läuft – ohne Zuordnung würde das Widget
+     * leer bleiben („Widget kann nicht geladen werden“).
+     */
+    private suspend fun assignMissingWidgets(
+        context: Context,
+        client: HaClient,
+        ids: List<Int>,
+    ) {
+        val missing = ids.filter { WidgetPrefs.widgetId(context, it) == null }
+        if (missing.isEmpty()) return
+
+        val first = runCatching { client.listWidgets().firstOrNull()?.id }.getOrNull() ?: return
+        missing.forEach { WidgetPrefs.setWidgetId(context, it, first) }
     }
 
     fun schedulePeriodicRefresh(context: Context) {

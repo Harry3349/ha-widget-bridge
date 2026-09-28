@@ -19,6 +19,9 @@ class HaWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        // Zuerst sofort eine Ansicht liefern – ohne sie zeigt der Launcher
+        // „Widget kann nicht geladen werden“. Danach kommen die echten Werte.
+        Widgets.initialView(context, appWidgetIds.toList())
         Widgets.refreshAsync(context, appWidgetIds.toList(), "update")
     }
 
