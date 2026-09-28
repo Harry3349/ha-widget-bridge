@@ -52,7 +52,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    // targetSdk 35 zeichnet randlos – ohne Innenabstände läge die
+                    // Statusleiste über der Meldungszeile.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .safeDrawingPadding(),
+                    ) {
 
                         vm.message?.let { text ->
                             Surface(

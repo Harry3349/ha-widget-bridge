@@ -136,8 +136,16 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { vm.renderPreview() }) { Text("Vorschau") }
-            Button(onClick = { vm.saveEditor() }) { Text("Speichern") }
+            OutlinedButton(onClick = { vm.renderPreview() }, enabled = !vm.busy) { Text("Vorschau") }
+            Button(onClick = { vm.saveEditor() }, enabled = !vm.busy) { Text("Speichern") }
+        }
+
+        if (vm.busy) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(10.dp))
+                Text("Wird gespeichert …", style = MaterialTheme.typography.bodySmall)
+            }
         }
 
         vm.previewText?.let { text ->

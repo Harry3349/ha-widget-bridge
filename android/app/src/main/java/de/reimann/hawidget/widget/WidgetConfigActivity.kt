@@ -64,7 +64,11 @@ class WidgetConfigActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surface,
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .safeDrawingPadding()
+                            .padding(20.dp),
+                    ) {
                         Text("Widget auswählen", style = MaterialTheme.typography.headlineSmall)
                         Spacer(Modifier.height(12.dp))
 
