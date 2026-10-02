@@ -113,9 +113,20 @@ class Settings(context: Context) {
         get() = prefs.getLong(KEY_PRESS_FAILED, 0L)
         set(value) = prefs.edit().putLong(KEY_PRESS_FAILED, value).apply()
 
+    /**
+     * Knoten-ID des Handys, von dem zuletzt ein Stand kam.
+     *
+     * Nachrichten an die leere Knoten-ID werden nicht zugestellt – die Uhr muss
+     * den Absender kennen, um „Button gedrückt“ zurückzuschicken.
+     */
+    var phoneNode: String?
+        get() = prefs.getString(KEY_PHONE_NODE, null)
+        set(value) = prefs.edit().putString(KEY_PHONE_NODE, value).apply()
+
     companion object {
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_LAST_REFRESH = "last_refresh"
         private const val KEY_PRESS_FAILED = "press_failed_at"
+        private const val KEY_PHONE_NODE = "phone_node"
     }
 }

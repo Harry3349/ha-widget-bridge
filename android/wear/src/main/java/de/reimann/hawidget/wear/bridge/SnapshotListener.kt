@@ -43,6 +43,8 @@ class SnapshotListener : WearableListenerService() {
                 val settings = Settings(this)
                 settings.snapshotJson = raw
                 settings.lastRefresh = System.currentTimeMillis()
+                // Absender merken – dorthin gehen später „Button gedrückt“ usw.
+                if (event.sourceNodeId.isNotBlank()) settings.phoneNode = event.sourceNodeId
                 Log.d(TAG, "Snapshot für diese Uhr erhalten (${raw.length} Zeichen)")
                 Bridge.updateTile(this)
             }

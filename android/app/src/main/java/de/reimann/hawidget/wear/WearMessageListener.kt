@@ -42,7 +42,7 @@ class WearMessageListener : WearableListenerService() {
         val context = applicationContext
         val settings = Settings(context)
         if (!settings.isConfigured) {
-            WearSync.sendToWatch(context, PATH_PRESS_FAILED)
+            WearSync.sendToWatch(context, PATH_PRESS_FAILED, nodeId = sourceNodeId)
             return
         }
 
@@ -50,7 +50,7 @@ class WearMessageListener : WearableListenerService() {
             val client = settings.client()
             val target = widgetId.takeIf { it.isNotBlank() } ?: resolveWidgetId(client)
             if (target == null) {
-                WearSync.sendToWatch(context, PATH_PRESS_FAILED)
+                WearSync.sendToWatch(context, PATH_PRESS_FAILED, nodeId = sourceNodeId)
                 return@runBlocking
             }
             try {
@@ -63,7 +63,7 @@ class WearMessageListener : WearableListenerService() {
                 pushBack(context, sourceNodeId, raw)
             } catch (error: Exception) {
                 Log.w(TAG, "Druck fehlgeschlagen: ${error.message}")
-                WearSync.sendToWatch(context, PATH_PRESS_FAILED)
+                WearSync.sendToWatch(context, PATH_PRESS_FAILED, nodeId = sourceNodeId)
             }
         }
     }

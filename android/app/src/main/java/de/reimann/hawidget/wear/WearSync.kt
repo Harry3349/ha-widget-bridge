@@ -48,11 +48,20 @@ object WearSync {
             .onFailure { Log.w(TAG, "Übertragen an $nodeId fehlgeschlagen: ${it.message}") }
     }
 
-    /** Kurze Nachricht an die Uhr (z. B. „Druck fehlgeschlagen“). */
-    fun sendToWatch(context: Context, path: String, payload: String = "") {
+    /**
+     * Kurze Nachricht an die Uhr (z. B. „Druck fehlgeschlagen“).
+     *
+     * Mit Knoten-ID geht sie gezielt an eine Uhr; ohne geht sie an alle (leere
+     * Knoten-ID liefert der Data Layer nicht zuverlässig aus).
+     */
+    fun sendToWatch(context: Context, path: String, payload: String = "", nodeId: String? = null) {
         runCatching {
-            Wearable.getMessageClient(context)
-                .sendMessage("", path, payload.toByteArray())
+            val client = Wearable.getMessageClient(context)
+            if (nodeId.isNullOrBlank()) {
+                client.sendMessage("", path, payload.toByteArray())
+            } else {
+                client.sendMessage(nodeId, path, payload.toByteArray())
+            }
         }.onFailure { Log.w(TAG, "Nachricht an die Uhr fehlgeschlagen: ${it.message}") }
     }
 }

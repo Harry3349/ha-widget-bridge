@@ -33,9 +33,33 @@ object Bridge {
     fun refresh(context: Context) = send(context, PATH_REFRESH, "")
 
     private fun send(context: Context, path: String, payload: String) {
-        runCatching {
-            Wearable.getMessageClient(context).sendMessage("", path, payload.toByteArray())
-        }.onFailure { Log.w(TAG, "Nachricht an das Handy fehlgeschlagen: ${it.message}") }
+        val message = payload.toByteArray()
+        val client = Wearable.getMessageClient(context)
+
+        // Der zuletzt bekannte Absender ist das Handy; sonst an alle Knoten.
+        val known = Settings(context).phoneNode?.takeIf { it.isNotBlank() }
+        if (known != null) {
+            runCatching { client.sendMessage(known, path, message) }
+                .onFailure { Log.w(TAG, "Nachricht an das Handy fehlgeschlagen: ${it.message}") }
+            return
+        }
+
+        val nodes = runCatching {
+            com.google.android.gms.tasks.Tasks.await(
+                Wearable.getNodeClient(context).connectedNodes,
+                8,
+                java.util.concurrent.TimeUnit.SECONDS,
+            )
+        }.getOrDefault(emptyList())
+
+        if (nodes.isEmpty()) {
+            Log.w(TAG, "Kein Handy verbunden – Nachricht $path nicht gesendet")
+            return
+        }
+        nodes.forEach { node ->
+            runCatching { client.sendMessage(node.id, path, message) }
+                .onFailure { Log.w(TAG, "Nachricht an ${node.id} fehlgeschlagen: ${it.message}") }
+        }
     }
 
     /** Tile neu zeichnen lassen. */
