@@ -68,7 +68,9 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         Text("Werte", style = MaterialTheme.typography.titleMedium)
         Text(
             "Ein Wert pro Feld. Die Reihenfolge hier ist die Reihenfolge im Widget " +
-                "(erst von links nach rechts, dann die nächste Zeile).",
+                "(erst von links nach rechts, dann die nächste Zeile). Sensoren für das " +
+                "Zeilen-Layout wählst du weiter unten aus dieser Liste – hier bekommen " +
+                "sie ihren Namen.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -126,20 +128,13 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
 
         HorizontalDivider()
 
-        // -------------------------------------------------- Zeilen (Handy+Uhr)
-        RowEditorSection(
-            rows = def.rows,
-            entities = vm.entities,
-            onRowsChange = { rows -> vm.updateEditor { current -> current.copy(rows = rows) } },
-        )
-
-        HorizontalDivider()
-
         // ------------------------------------------------------------- Buttons
         Text("Buttons", style = MaterialTheme.typography.titleMedium)
         Text(
             "Jeder Button wird in Home Assistant als eigene Button-Entity angelegt " +
-                "und lässt sich dort auch per Automation auslösen.",
+                "und lässt sich dort auch per Automation auslösen. Buttons für das " +
+                "Zeilen-Layout wählst du weiter unten aus dieser Liste – hier bekommen " +
+                "sie Beschriftung, Service und Symbol.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -158,6 +153,17 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         }
 
         OutlinedButton(onClick = { buttonIndex = NEW_ENTRY }) { Text("Button hinzufügen") }
+
+        HorizontalDivider()
+
+        // ------------------------------------------- Zeilen (Handy + Uhr)
+        // Sensoren und Buttons in den Zeilen kommen aus den Listen oben.
+        RowEditorSection(
+            rows = def.rows,
+            values = def.values,
+            buttons = def.buttons,
+            onRowsChange = { rows -> vm.updateEditor { current -> current.copy(rows = rows) } },
+        )
 
         HorizontalDivider()
 

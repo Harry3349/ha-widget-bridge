@@ -311,11 +311,16 @@ sie über den Data Layer vom Handy).
 
 | Einstellung pro Objekt | Bedeutung |
 |---|---|
-| **Text** | fester Text (z. B. eine Überschrift) |
-| **Sensor** | Entity + Beschriftung; der Wert kommt aus Home Assistant, Staffelung über `threshold` |
-| **Button** | Service + Entity wie in der Button-Liste, zusätzlich Symbol und Zustandstext („An/Aus“) |
+| **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
+| **Sensor** | Auswahl aus der Liste **Werte** oben; die Beschriftung von dort wird übernommen und kann pro Zeile überschrieben werden |
+| **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
 | **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
+
+Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehungsweise
+*Buttons*) – dort werden sie aus Home Assistant ausgewählt und benannt. Im Zeilen-Editor
+wählst du sie anschließend nur noch aus; wird ein Eintrag oben gelöscht, markiert der
+Editor die betroffenen Objekte mit „nicht mehr in der Liste oben“.
 
 Die Objekte einer Zeile teilen sich die Breite: ein Objekt füllt die ganze Zeile, zwei
 je die Hälfte, drei je ein Drittel. Sobald **mindestens eine Zeile** angelegt ist,

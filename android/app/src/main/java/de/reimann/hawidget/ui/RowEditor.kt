@@ -1,9 +1,10 @@
 package de.reimann.hawidget.ui
 
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -14,11 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
-import de.reimann.hawidget.data.HaEntity
 import de.reimann.hawidget.data.RowDef
 import de.reimann.hawidget.data.RowItem
-import de.reimann.hawidget.icons.MdiIcons
+import de.reimann.hawidget.data.WidgetButton
+import de.reimann.hawidget.data.WidgetValue
 
 /** Wie viele Zeilen die Widgets überhaupt darstellen können. */
 internal const val MAX_ROW_LINES = 8
@@ -35,7 +35,8 @@ internal const val MAX_ROW_OBJECTS = 3
 @Composable
 fun RowEditorSection(
     rows: List<RowDef>,
-    entities: List<HaEntity>,
+    values: List<WidgetValue>,
+    buttons: List<WidgetButton>,
     onRowsChange: (List<RowDef>) -> Unit,
 ) {
     var dialog by remember { mutableStateOf<RowDialog?>(null) }
@@ -43,8 +44,9 @@ fun RowEditorSection(
     Text("Zeilen (Handy + Uhr)", style = MaterialTheme.typography.titleMedium)
     Text(
         "Gilt für das Widget auf dem Handy und die Kachel auf der Uhr gleichzeitig. " +
-            "Pro Zeile bis zu drei Objekte – Text, Sensor oder Button – jeweils mit " +
-            "eigenem Text, eigener Ausrichtung (links/mitte/rechts) und Schriftgröße. " +
+            "Pro Zeile bis zu drei Objekte – Text, Sensor oder Button. Sensoren und " +
+            "Buttons kommen aus den Listen oben („Werte“ und „Buttons“), dort bekommen " +
+            "sie ihren Namen; hier stellst du nur Ausrichtung und Schriftgröße ein. " +
             "Sobald eine Zeile angelegt ist, ersetzt dieses Layout die Werte- und " +
             "Button-Liste oben. Auf der Uhr passen nur so viele Zeilen auf die Kachel, " +
             "wie ohne Scrollen hineingehen; ein Tipp auf die Kachel öffnet die volle " +
@@ -106,10 +108,16 @@ fun RowEditorSection(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(item.summary, style = MaterialTheme.typography.bodyMedium)
+                            val missing = isMissing(item, values, buttons)
                             Text(
-                                "Ausrichtung ${alignLabel(item.align)} · ${item.size.toInt()} sp",
+                                "Ausrichtung ${alignLabel(item.align)} · ${item.size.toInt()} sp" +
+                                    if (missing) " · nicht mehr in der Liste oben" else "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (missing) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
                             )
                         }
                         TextButton(onClick = { dialog = RowDialog.Edit(rowIndex, itemIndex) }) {
@@ -189,14 +197,14 @@ fun RowEditorSection(
                 when (type) {
                     "sensor" -> RowSensorDialog(
                         initial = initial,
-                        entities = entities,
+                        values = values,
                         onDismiss = { dialog = null },
                         onConfirm = confirm,
                     )
 
                     "button" -> RowButtonDialog(
                         initial = initial,
-                        entities = entities,
+                        buttons = buttons,
                         onDismiss = { dialog = null },
                         onConfirm = confirm,
                     )
@@ -213,6 +221,22 @@ fun RowEditorSection(
 }
 
 private const val NEW_ITEM = -1
+
+/**
+ * Verweist das Objekt noch auf einen Eintrag der Listen oben?
+ *
+ * Text-Objekte sind frei; Sensoren und Buttons müssen aus „Werte“ bzw. „Buttons“
+ * stammen, sonst hat der Nutzer den Eintrag oben gelöscht.
+ */
+private fun isMissing(
+    item: RowItem,
+    values: List<WidgetValue>,
+    buttons: List<WidgetButton>,
+): Boolean = when (item.type) {
+    "sensor" -> values.none { it.entity == item.entity }
+    "button" -> buttons.none { it.key == item.key }
+    else -> false
+}
 
 private sealed interface RowDialog {
     data class PickType(val row: Int) : RowDialog
@@ -389,7 +413,7 @@ private fun RowTextDialog(
 @Composable
 private fun RowSensorDialog(
     initial: RowItem?,
-    entities: List<HaEntity>,
+    values: List<WidgetValue>,
     onDismiss: () -> Unit,
     onConfirm: (RowItem) -> Unit,
 ) {
@@ -398,36 +422,57 @@ private fun RowSensorDialog(
     var color by remember { mutableStateOf(initial?.color.orEmpty()) }
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
-    var pickerOpen by remember { mutableStateOf(false) }
+
+    val chosen = values.firstOrNull { it.entity == entity }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Sensor hinzufügen" else "Sensor bearbeiten") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = entity,
-                    onValueChange = { entity = it },
-                    label = { Text("Entity-ID") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedButton(onClick = { pickerOpen = true }) { Text("Entity auswählen") }
-                OutlinedTextField(
-                    value = label,
-                    onValueChange = { label = it },
-                    label = { Text("Beschriftung (optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = color,
-                    onValueChange = { color = it },
-                    label = { Text("Farbe (optional, z. B. #4DD0E1)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                AlignSizeFields(align, { align = it }, size, { size = it })
+                if (values.isEmpty()) {
+                    Text(
+                        "Es ist noch kein Sensor angelegt. Füge ihn zuerst oben im " +
+                            "Abschnitt „Werte“ hinzu – dort bekommt er auch seinen Namen.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text("Sensor aus der Liste oben", style = MaterialTheme.typography.bodyMedium)
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 200.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        values.forEach { value ->
+                            PickerRow(
+                                selected = value.entity == entity,
+                                title = value.label ?: value.entity,
+                                subtitle = value.entity,
+                                onSelect = {
+                                    entity = value.entity
+                                    label = value.label.orEmpty()
+                                    color = value.color.orEmpty()
+                                },
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = label,
+                        onValueChange = { label = it },
+                        label = { Text("Name in diesem Widget (optional)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = color,
+                        onValueChange = { color = it },
+                        label = { Text("Farbe (optional, z. B. #4DD0E1)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    AlignSizeFields(align, { align = it }, size, { size = it })
+                }
             }
         },
         confirmButton = {
@@ -442,7 +487,7 @@ private fun RowSensorDialog(
                             color = color.trim().ifBlank { null },
                             align = align,
                             size = sizeOf(size, 14f),
-                            threshold = initial?.threshold,
+                            threshold = chosen?.threshold ?: initial?.threshold,
                         )
                     )
                 },
@@ -450,125 +495,97 @@ private fun RowSensorDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
+}
 
-    if (pickerOpen) {
-        EntityPickerDialog(
-            title = "Entity auswählen",
-            entities = entities,
-            onDismiss = { pickerOpen = false },
-            onPick = { picked ->
-                entity = picked.entityId
-                if (label.isBlank()) label = picked.name
-                pickerOpen = false
-            },
-        )
+/** Auswahlliste mit Radioknopf (Sensoren und Buttons aus den Listen oben). */
+@Composable
+private fun PickerRow(
+    selected: Boolean,
+    title: String,
+    subtitle: String,
+    onSelect: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect)
+            .padding(vertical = 4.dp),
+    ) {
+        RadioButton(selected = selected, onClick = onSelect)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
 @Composable
 private fun RowButtonDialog(
     initial: RowItem?,
-    entities: List<HaEntity>,
+    buttons: List<WidgetButton>,
     onDismiss: () -> Unit,
     onConfirm: (RowItem) -> Unit,
 ) {
-    var label by remember { mutableStateOf(initial?.label.orEmpty()) }
-    var service by remember { mutableStateOf(initial?.service ?: "switch.toggle") }
-    var entityId by remember { mutableStateOf(initial?.entityId.orEmpty()) }
-    var stateEntity by remember { mutableStateOf(initial?.stateEntity.orEmpty()) }
-    var icon by remember { mutableStateOf(initial?.icon ?: MdiIcons.DEFAULT) }
+    var key by remember { mutableStateOf(initial?.key.orEmpty()) }
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
-    var pickerTarget by remember { mutableStateOf("") }
+
+    val chosen = buttons.firstOrNull { it.key == key }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) "Button hinzufügen" else "Button bearbeiten") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = label,
-                    onValueChange = { label = it },
-                    label = { Text("Beschriftung") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = service,
-                    onValueChange = { service = it },
-                    label = { Text("Service (z. B. switch.toggle)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                ) {
-                    listOf("switch.toggle", "light.toggle", "script.turn_on", "automation.trigger")
-                        .forEach { preset ->
-                            OutlinedButton(
-                                onClick = { service = preset },
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            ) { Text(preset, style = MaterialTheme.typography.bodySmall) }
-                        }
-                }
-                OutlinedTextField(
-                    value = entityId,
-                    onValueChange = { entityId = it },
-                    label = { Text("Entity-ID") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedButton(onClick = { pickerTarget = "entity" }) { Text("Entity auswählen") }
-                OutlinedTextField(
-                    value = stateEntity,
-                    onValueChange = { stateEntity = it },
-                    label = { Text("Zustand anzeigen (Entity, optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedButton(onClick = { pickerTarget = "state" }) { Text("Zustands-Entity wählen") }
-
-                Text("Symbol", style = MaterialTheme.typography.bodyMedium)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                ) {
-                    MdiIcons.choices.forEach { (name, drawable) ->
-                        val selected = name == icon
-                        IconButton(onClick = { icon = name }) {
-                            Icon(
-                                painter = painterResource(drawable),
-                                contentDescription = name,
-                                tint = if (selected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
+                if (buttons.isEmpty()) {
+                    Text(
+                        "Es ist noch kein Button angelegt. Füge ihn zuerst oben im " +
+                            "Abschnitt „Buttons“ hinzu – dort bekommt er Beschriftung, " +
+                            "Service und Symbol.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text("Button aus der Liste oben", style = MaterialTheme.typography.bodyMedium)
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 200.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        buttons.forEach { button ->
+                            PickerRow(
+                                selected = button.key == key,
+                                title = button.label,
+                                subtitle = button.service +
+                                    (button.entityId?.let { " · $it" } ?: ""),
+                                onSelect = { key = button.key },
                             )
                         }
                     }
+                    AlignSizeFields(align, { align = it }, size, { size = it })
                 }
-
-                AlignSizeFields(align, { align = it }, size, { size = it })
             }
         },
         confirmButton = {
             TextButton(
-                enabled = label.isNotBlank() && service.contains("."),
+                enabled = chosen != null,
                 onClick = {
+                    val button = chosen ?: return@TextButton
                     onConfirm(
                         RowItem(
                             type = "button",
-                            key = initial?.key ?: slugify(label),
-                            label = label.trim(),
-                            icon = icon,
-                            service = service.trim(),
-                            entityId = entityId.trim().ifBlank { null },
-                            stateEntity = stateEntity.trim().ifBlank { null },
-                            stateLabelOn = initial?.stateLabelOn,
-                            stateLabelOff = initial?.stateLabelOff,
+                            key = button.key,
+                            label = button.label,
+                            icon = button.icon,
+                            service = button.service,
+                            entityId = button.entityId,
+                            stateEntity = button.stateEntity,
+                            stateLabelOn = button.stateLabelOn,
+                            stateLabelOff = button.stateLabelOff,
                             align = align,
                             size = sizeOf(size, 14f),
                         )
@@ -578,21 +595,6 @@ private fun RowButtonDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
-
-    if (pickerTarget.isNotEmpty()) {
-        EntityPickerDialog(
-            title = "Entity auswählen",
-            entities = entities,
-            onDismiss = { pickerTarget = "" },
-            onPick = { picked ->
-                if (pickerTarget == "entity") {
-                    entityId = picked.entityId
-                    if (label.isBlank()) label = picked.name
-                } else {
-                    stateEntity = picked.entityId
-                }
-                pickerTarget = ""
-            },
-        )
-    }
 }
+
+

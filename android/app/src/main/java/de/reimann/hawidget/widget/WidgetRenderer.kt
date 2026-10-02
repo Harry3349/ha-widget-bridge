@@ -332,7 +332,8 @@ object WidgetRenderer {
 
         views.setViewVisibility(cellId, View.VISIBLE)
         views.setInt(cellId, "setHorizontalGravity", alignGravity(item.align))
-        views.setInt(cellId, "setBackgroundResource", android.R.color.transparent)
+        // 0 = kein Hintergrund (nur Buttons bekommen gleich eine Fläche)
+        views.setInt(cellId, "setBackgroundResource", 0)
         views.setOnClickPendingIntent(cellId, null)
 
         // Alle vier Slots erst einmal leeren
