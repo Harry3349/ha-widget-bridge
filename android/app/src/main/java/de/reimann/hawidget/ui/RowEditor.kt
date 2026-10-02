@@ -460,7 +460,8 @@ private fun RowSensorDialog(
                     OutlinedTextField(
                         value = label,
                         onValueChange = { label = it },
-                        label = { Text("Name in diesem Widget (optional)") },
+                        label = { Text("Name in diesem Widget") },
+                        supportingText = { Text("Leer lassen = es wird nur der Wert angezeigt") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )

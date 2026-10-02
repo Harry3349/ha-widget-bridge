@@ -312,7 +312,7 @@ sie über den Data Layer vom Handy).
 | Einstellung pro Objekt | Bedeutung |
 |---|---|
 | **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
-| **Sensor** | Auswahl aus der Liste **Werte** oben; die Beschriftung von dort wird übernommen und kann pro Zeile überschrieben werden |
+| **Sensor** | Auswahl aus der Liste **Werte** oben; die Beschriftung von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
 | **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
 | **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |

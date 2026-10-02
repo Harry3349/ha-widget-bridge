@@ -175,7 +175,11 @@ class WearAppActivity : Activity() {
                     orientation = LinearLayout.VERTICAL
                     gravity = align
                 }
-                box.addView(inline(item.label.orEmpty(), small, LABEL_COLOR))
+                // Ohne eingetragenen Namen steht nur der Wert
+                val label = item.label.orEmpty()
+                if (label.isNotBlank()) {
+                    box.addView(inline(label, small, LABEL_COLOR))
+                }
                 box.addView(inline(item.text.orEmpty(), size, parseColor(item.color, Color.WHITE)))
                 cell.addView(box)
             }

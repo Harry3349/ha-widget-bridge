@@ -176,7 +176,9 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
             if kind == "sensor":
                 entity_id = item["entity"]
                 state = hass.states.get(entity_id)
-                label = item.get("label") or display_name(hass, entity_id)
+                # Kein Name eingetragen = kein Name anzeigen (bewusst KEIN
+                # Rückfall auf den Namen der Entity: der Nutzer entscheidet).
+                label = str(item.get("label") or "").strip()
                 limit = item.get("threshold")
                 limit = default_threshold if limit is None else float(limit)
                 text, active = format_value(state, limit)

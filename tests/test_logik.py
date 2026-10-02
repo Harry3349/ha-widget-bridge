@@ -388,8 +388,9 @@ check(zeilen[0]["items"][0]["text"] == "Wohnzimmer", "Text-Objekt wird geliefert
 check(zeilen[0]["items"][1]["text"] != "", "Sensor-Objekt wird gerendert")
 check(zeilen[0]["items"][1]["align"] == "center", "Ausrichtung bleibt erhalten")
 check(zeilen[0]["items"][2]["state_label"] == "An", "Button-Objekt zeigt den Zustand")
-check(zeilen[1]["items"][0]["label"] != "", "Sensor-Objekt bekommt eine Beschriftung")
+check(zeilen[1]["items"][0]["label"] == "", "ohne Namen wird kein Name geliefert")
 check(zeilen[1]["items"][0]["color"] == "#4DD0E1", "eigene Sensor-Farbe übernommen")
+check(zeilen[0]["items"][1]["label"] == "PC", "eingetragener Name wird geliefert")
 
 expect_error(
     {"name": "Test", "rows": [{"items": [{"type": "lampe"}]}]},

@@ -246,15 +246,19 @@ object TileRenderer {
             .setHorizontalAlignment(align)
 
         when (item.type) {
-            "sensor" -> box.addContent(
-                LayoutElementBuilders.Column.Builder()
+            "sensor" -> {
+                // Ohne eingetragenen Namen steht nur der Wert (kein leerer Platz)
+                val sensor = LayoutElementBuilders.Column.Builder()
                     .setHorizontalAlignment(align)
-                    .addContent(text(item.label.orEmpty(), LABEL_COLOR, small))
-                    .addContent(
-                        text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
-                    )
-                    .build()
-            )
+                val label = item.label.orEmpty()
+                if (label.isNotBlank()) {
+                    sensor.addContent(text(label, LABEL_COLOR, small))
+                }
+                sensor.addContent(
+                    text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
+                )
+                box.addContent(sensor.build())
+            }
 
             "button" -> {
                 val key = item.key.orEmpty()
