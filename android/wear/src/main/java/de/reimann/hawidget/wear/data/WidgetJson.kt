@@ -18,7 +18,43 @@ object WidgetJson {
             error = json.optString("error").takeIf { it.isNotBlank() && it != "null" },
             valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
             valueLabelAbove = json.optBoolean("value_label_above", false),
+            rows = parseRows(json.optJSONArray("rows")),
         )
+    }
+
+    private fun parseRows(array: JSONArray?): List<RowDef> {
+        if (array == null) return emptyList()
+        val result = ArrayList<RowDef>(array.length())
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index) ?: continue
+            result.add(RowDef(items = parseRowItems(json.optJSONArray("items"))))
+        }
+        return result
+    }
+
+    private fun parseRowItems(array: JSONArray?): List<RowItem> {
+        if (array == null) return emptyList()
+        val result = ArrayList<RowItem>(array.length())
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index) ?: continue
+            result.add(
+                RowItem(
+                    type = json.optString("type", "text"),
+                    text = json.optString("text").takeIf { it.isNotBlank() },
+                    entity = json.optString("entity").takeIf { it.isNotBlank() },
+                    label = json.optString("label").takeIf { it.isNotBlank() },
+                    color = json.optString("color").takeIf { it.isNotBlank() },
+                    align = json.optString("align", "center"),
+                    size = json.optDouble("size", 14.0).toFloat(),
+                    key = json.optString("key").takeIf { it.isNotBlank() },
+                    icon = json.optString("icon").takeIf { it.isNotBlank() },
+                    stateLabel = json.optString("state_label").takeIf { it.isNotBlank() },
+                    active = json.optBoolean("active", false),
+                    available = json.optBoolean("available", true),
+                )
+            )
+        }
+        return result
     }
 
     fun firstWidgetId(body: String): String? {

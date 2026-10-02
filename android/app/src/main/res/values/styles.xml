@@ -125,4 +125,79 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <!-- Zeilen-Layout: freie Zeilen mit bis zu drei Objekten (Text, Sensor,
+         Button). Leere Zellen werden ausgeblendet und die restlichen teilen
+         sich die Breite. Die Ausrichtung (links/mitte/rechts) setzt die App
+         zur Laufzeit über die horizontale Gravity der Zelle. -->
+
+    <style name="WidgetRowArea">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="WidgetRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:baselineAligned">false</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="WidgetRowCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">28dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">6dp</item>
+        <item name="android:paddingRight">6dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+    </style>
+
+    <style name="WidgetRowCellGap" parent="WidgetRowCell">
+        <item name="android:layout_marginLeft">4dp</item>
+    </style>
+
+    <style name="WidgetRowIcon">
+        <item name="android:layout_width">16dp</item>
+        <item name="android:layout_height">16dp</item>
+        <item name="android:layout_marginRight">6dp</item>
+        <item name="android:src">@drawable/ic_power</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="WidgetRowText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="WidgetRowLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginRight">6dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">#B3FFFFFF</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="WidgetRowState">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">6dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">#B3FFFFFF</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
 </resources>

@@ -9,6 +9,8 @@ import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ModifiersBuilders
 import de.reimann.hawidget.wear.R
 import de.reimann.hawidget.wear.data.ButtonState
+import de.reimann.hawidget.wear.data.RowDef
+import de.reimann.hawidget.wear.data.RowItem
 import de.reimann.hawidget.wear.data.ValueState
 import de.reimann.hawidget.wear.data.WidgetSnapshot
 import de.reimann.hawidget.wear.icons.TileIcons
@@ -79,6 +81,14 @@ object TileRenderer {
             )
         )
 
+        // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
+        // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
+        val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
+        if (rows.isNotEmpty()) {
+            rows.forEach { row -> column.addContent(rowLine(row)) }
+            return column.build()
+        }
+
         // Buttons untereinander und alle gleich breit
         val buttons = snapshot?.buttons.orEmpty()
         val buttonWidth = (screenWidthDp - 48f).coerceAtLeast(80f)
@@ -110,6 +120,99 @@ object TileRenderer {
         }
 
         return column.build()
+    }
+
+    /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */
+    private fun rowLine(row: RowDef): LayoutElementBuilders.Row {
+        val builder = LayoutElementBuilders.Row.Builder()
+            .setWidth(DimensionBuilders.expand())
+        row.items.take(3).forEach { item -> builder.addContent(rowCell(item)) }
+        return builder.build()
+    }
+
+    /**
+     * Ein Objekt in einer Zeile. Die Zelle nimmt den gleichen Anteil der Breite
+     * wie die anderen Objekte der Zeile (``expand``), die Ausrichtung aus dem
+     * Editor bestimmt die Position des Inhalts darin.
+     */
+    private fun rowCell(item: RowItem): LayoutElementBuilders.Box {
+        val align = when (item.align.lowercase()) {
+            "left" -> LayoutElementBuilders.HORIZONTAL_ALIGN_START
+            "right" -> LayoutElementBuilders.HORIZONTAL_ALIGN_END
+            else -> LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER
+        }
+        val size = item.size.coerceIn(8f, 30f)
+        val small = (size - 3f).coerceAtLeast(9f)
+
+        val box = LayoutElementBuilders.Box.Builder()
+            .setWidth(DimensionBuilders.expand())
+            .setHorizontalAlignment(align)
+
+        when (item.type) {
+            "sensor" -> box.addContent(
+                LayoutElementBuilders.Column.Builder()
+                    .setHorizontalAlignment(align)
+                    .addContent(text(item.label.orEmpty(), LABEL_COLOR, small))
+                    .addContent(
+                        text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
+                    )
+                    .build()
+            )
+
+            "button" -> {
+                val key = item.key.orEmpty()
+                val clickable = ModifiersBuilders.Clickable.Builder()
+                    .setId(PRESS_PREFIX + key)
+                    .setOnClick(ActionBuilders.LoadAction.Builder().build())
+                    .build()
+                val background = ModifiersBuilders.Background.Builder()
+                    .setColor(
+                        argb(
+                            if (item.active) BUTTON_ACTIVE_BACKGROUND
+                            else BUTTON_BACKGROUND
+                        )
+                    )
+                    .build()
+
+                box.setModifiers(
+                    ModifiersBuilders.Modifiers.Builder()
+                        .setClickable(clickable)
+                        .setBackground(background)
+                        .setPadding(
+                            ModifiersBuilders.Padding.Builder()
+                                .setTop(DimensionBuilders.dp(4f))
+                                .setBottom(DimensionBuilders.dp(4f))
+                                .setStart(DimensionBuilders.dp(4f))
+                                .setEnd(DimensionBuilders.dp(4f))
+                                .build()
+                        )
+                        .build()
+                )
+
+                val content = LayoutElementBuilders.Row.Builder()
+                    .addContent(
+                        LayoutElementBuilders.Image.Builder()
+                            .setResourceId(TileIcons.id(item.icon))
+                            .setWidth(DimensionBuilders.dp(14f))
+                            .setHeight(DimensionBuilders.dp(14f))
+                            .build()
+                    )
+                    .addContent(text(" " + item.label.orEmpty(), Color.WHITE, size))
+                val state = item.stateLabel.orEmpty()
+                if (state.isNotBlank()) {
+                    content.addContent(
+                        text(" " + state, if (item.active) ACCENT else LABEL_COLOR, small)
+                    )
+                }
+                box.addContent(content.build())
+            }
+
+            else -> box.addContent(
+                text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
+            )
+        }
+
+        return box.build()
     }
 
     /** Eine Rasterzeile: je Wert eine Zelle mit Name über dem Wert. */

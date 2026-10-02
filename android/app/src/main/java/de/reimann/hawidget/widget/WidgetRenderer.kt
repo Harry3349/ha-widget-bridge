@@ -8,9 +8,12 @@ import android.graphics.Color
 import android.net.Uri
 import android.text.Html
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.RemoteViews
 import de.reimann.hawidget.R
+import de.reimann.hawidget.data.RowDef
+import de.reimann.hawidget.data.RowItem
 import de.reimann.hawidget.data.ValueState
 import de.reimann.hawidget.data.WidgetSnapshot
 import de.reimann.hawidget.data.WidgetTheme
@@ -32,6 +35,10 @@ object WidgetRenderer {
     /** Werte-Raster: 6 Zeilen à 3 Felder (12 Werte / 2 Spalten = 6 Zeilen). */
     private const val MAX_VALUE_ROWS = 6
     private const val MAX_VALUE_COLUMNS = 3
+
+    /** Zeilen-Layout: 8 Zeilen à 3 Objekte (Text, Sensor, Button). */
+    private const val MAX_ROW_LINES = 8
+    private const val MAX_ROW_CELLS = 3
 
     private val ROW_IDS = intArrayOf(
         R.id.btn_row_1, R.id.btn_row_2, R.id.btn_row_3,
@@ -86,6 +93,66 @@ object WidgetRenderer {
         R.id.value_text_6_1, R.id.value_text_6_2, R.id.value_text_6_3,
     )
 
+    private val ROW_LINE_IDS = intArrayOf(
+        R.id.row_1, R.id.row_2, R.id.row_3, R.id.row_4,
+        R.id.row_5, R.id.row_6, R.id.row_7, R.id.row_8,
+    )
+
+    private val ROW_CELL_IDS = intArrayOf(
+        R.id.row_1_cell_1, R.id.row_1_cell_2, R.id.row_1_cell_3,
+        R.id.row_2_cell_1, R.id.row_2_cell_2, R.id.row_2_cell_3,
+        R.id.row_3_cell_1, R.id.row_3_cell_2, R.id.row_3_cell_3,
+        R.id.row_4_cell_1, R.id.row_4_cell_2, R.id.row_4_cell_3,
+        R.id.row_5_cell_1, R.id.row_5_cell_2, R.id.row_5_cell_3,
+        R.id.row_6_cell_1, R.id.row_6_cell_2, R.id.row_6_cell_3,
+        R.id.row_7_cell_1, R.id.row_7_cell_2, R.id.row_7_cell_3,
+        R.id.row_8_cell_1, R.id.row_8_cell_2, R.id.row_8_cell_3,
+    )
+
+    private val ROW_ICON_IDS = intArrayOf(
+        R.id.row_1_icon_1, R.id.row_1_icon_2, R.id.row_1_icon_3,
+        R.id.row_2_icon_1, R.id.row_2_icon_2, R.id.row_2_icon_3,
+        R.id.row_3_icon_1, R.id.row_3_icon_2, R.id.row_3_icon_3,
+        R.id.row_4_icon_1, R.id.row_4_icon_2, R.id.row_4_icon_3,
+        R.id.row_5_icon_1, R.id.row_5_icon_2, R.id.row_5_icon_3,
+        R.id.row_6_icon_1, R.id.row_6_icon_2, R.id.row_6_icon_3,
+        R.id.row_7_icon_1, R.id.row_7_icon_2, R.id.row_7_icon_3,
+        R.id.row_8_icon_1, R.id.row_8_icon_2, R.id.row_8_icon_3,
+    )
+
+    private val ROW_BEFORE_IDS = intArrayOf(
+        R.id.row_1_before_1, R.id.row_1_before_2, R.id.row_1_before_3,
+        R.id.row_2_before_1, R.id.row_2_before_2, R.id.row_2_before_3,
+        R.id.row_3_before_1, R.id.row_3_before_2, R.id.row_3_before_3,
+        R.id.row_4_before_1, R.id.row_4_before_2, R.id.row_4_before_3,
+        R.id.row_5_before_1, R.id.row_5_before_2, R.id.row_5_before_3,
+        R.id.row_6_before_1, R.id.row_6_before_2, R.id.row_6_before_3,
+        R.id.row_7_before_1, R.id.row_7_before_2, R.id.row_7_before_3,
+        R.id.row_8_before_1, R.id.row_8_before_2, R.id.row_8_before_3,
+    )
+
+    private val ROW_MAIN_IDS = intArrayOf(
+        R.id.row_1_main_1, R.id.row_1_main_2, R.id.row_1_main_3,
+        R.id.row_2_main_1, R.id.row_2_main_2, R.id.row_2_main_3,
+        R.id.row_3_main_1, R.id.row_3_main_2, R.id.row_3_main_3,
+        R.id.row_4_main_1, R.id.row_4_main_2, R.id.row_4_main_3,
+        R.id.row_5_main_1, R.id.row_5_main_2, R.id.row_5_main_3,
+        R.id.row_6_main_1, R.id.row_6_main_2, R.id.row_6_main_3,
+        R.id.row_7_main_1, R.id.row_7_main_2, R.id.row_7_main_3,
+        R.id.row_8_main_1, R.id.row_8_main_2, R.id.row_8_main_3,
+    )
+
+    private val ROW_AFTER_IDS = intArrayOf(
+        R.id.row_1_after_1, R.id.row_1_after_2, R.id.row_1_after_3,
+        R.id.row_2_after_1, R.id.row_2_after_2, R.id.row_2_after_3,
+        R.id.row_3_after_1, R.id.row_3_after_2, R.id.row_3_after_3,
+        R.id.row_4_after_1, R.id.row_4_after_2, R.id.row_4_after_3,
+        R.id.row_5_after_1, R.id.row_5_after_2, R.id.row_5_after_3,
+        R.id.row_6_after_1, R.id.row_6_after_2, R.id.row_6_after_3,
+        R.id.row_7_after_1, R.id.row_7_after_2, R.id.row_7_after_3,
+        R.id.row_8_after_1, R.id.row_8_after_2, R.id.row_8_after_3,
+    )
+
     fun render(
         context: Context,
         appWidgetId: Int,
@@ -109,17 +176,22 @@ object WidgetRenderer {
             snapshot?.textSize ?: 14f,
         )
 
-        // Inhalt (Template oder – bei einer Spalte – die Werteliste)
+        // Inhalt (Template, Zeilen-Layout oder – bei einer Spalte – Werteliste)
         val html = snapshot?.html.orEmpty()
         val values = snapshot?.values.orEmpty()
         val columns = (snapshot?.valueColumns ?: 1).coerceIn(1, MAX_VALUE_COLUMNS)
+        val rows = snapshot?.rows.orEmpty()
+        val hasRows = rows.any { it.items.isNotEmpty() }
 
         // Werte nur dann als Raster anordnen, wenn sie nicht aus einem
         // Jinja-Template stammen und tatsächlich nebeneinander sollen.
-        val grid = values.isNotEmpty() && snapshot?.templateUsed != true && columns > 1
+        val grid = !hasRows && values.isNotEmpty() &&
+            snapshot?.templateUsed != true && columns > 1
 
-        views.setViewVisibility(R.id.widget_content, if (grid) View.GONE else View.VISIBLE)
+        val showContent = !grid && (!hasRows || html.isNotBlank())
+        views.setViewVisibility(R.id.widget_content, if (showContent) View.VISIBLE else View.GONE)
         views.setViewVisibility(R.id.value_area, if (grid) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.row_area, if (hasRows) View.VISIBLE else View.GONE)
 
         if (grid) {
             renderValueGrid(
@@ -147,8 +219,8 @@ object WidgetRenderer {
 
         views.setTextViewText(R.id.widget_updated, status ?: timeStamp())
 
-        // Buttons
-        val buttons = snapshot?.buttons.orEmpty()
+        // Buttons: entweder klassische Button-Zeilen oder das Zeilen-Layout
+        val buttons = if (hasRows) emptyList() else snapshot?.buttons.orEmpty()
         for (index in 0 until MAX_ROWS) {
             val rowId = ROW_IDS[index]
             val button = buttons.getOrNull(index)
@@ -178,6 +250,15 @@ object WidgetRenderer {
             )
         }
 
+        if (hasRows) {
+            renderRows(
+                views = views,
+                rows = rows,
+                textColor = color(theme.textColor, Color.WHITE),
+                pressFor = { key -> pressIntent(context, appWidgetId, key) },
+            )
+        }
+
         // Ganze Fläche antippen = neu laden
         views.setOnClickPendingIntent(R.id.widget_root, refreshIntent(context, appWidgetId))
 
@@ -185,6 +266,136 @@ object WidgetRenderer {
     }
 
     // -------------------------------------------------------------- intern
+
+    /**
+     * Zeilen-Layout zeichnen: Zeile für Zeile, Objekt für Objekt.
+     *
+     * Leere Zellen werden ausgeblendet – die übrigen teilen sich die
+     * Zeilenbreite (layout_weight). Die Ausrichtung jedes Objekts setzt
+     * ``setHorizontalGravity`` auf der Zelle (LinearLayout ist remotable).
+     */
+    private fun renderRows(
+        views: RemoteViews,
+        rows: List<RowDef>,
+        textColor: Int,
+        pressFor: (String) -> PendingIntent,
+    ) {
+        for (line in 0 until MAX_ROW_LINES) {
+            val row = rows.getOrNull(line)
+            val lineId = ROW_LINE_IDS[line]
+
+            if (row == null || row.items.isEmpty()) {
+                views.setViewVisibility(lineId, View.GONE)
+                for (cell in 0 until MAX_ROW_CELLS) {
+                    val cellId = ROW_CELL_IDS[line * MAX_ROW_CELLS + cell]
+                    views.setViewVisibility(cellId, View.GONE)
+                    views.setOnClickPendingIntent(cellId, null)
+                }
+                continue
+            }
+
+            views.setViewVisibility(lineId, View.VISIBLE)
+
+            for (cell in 0 until MAX_ROW_CELLS) {
+                val slot = line * MAX_ROW_CELLS + cell
+                val cellId = ROW_CELL_IDS[slot]
+                val item = row.items.getOrNull(cell)
+
+                if (item == null) {
+                    views.setViewVisibility(cellId, View.GONE)
+                    views.setOnClickPendingIntent(cellId, null)
+                    continue
+                }
+
+                renderRowItem(views, slot, item, textColor, pressFor)
+            }
+        }
+    }
+
+    private fun renderRowItem(
+        views: RemoteViews,
+        slot: Int,
+        item: RowItem,
+        textColor: Int,
+        pressFor: (String) -> PendingIntent,
+    ) {
+        val cellId = ROW_CELL_IDS[slot]
+        val iconId = ROW_ICON_IDS[slot]
+        val beforeId = ROW_BEFORE_IDS[slot]
+        val mainId = ROW_MAIN_IDS[slot]
+        val afterId = ROW_AFTER_IDS[slot]
+
+        val size = item.size.coerceIn(8f, 30f)
+        val smallSize = (size - 3f).coerceAtLeast(9f)
+
+        views.setViewVisibility(cellId, View.VISIBLE)
+        views.setInt(cellId, "setHorizontalGravity", alignGravity(item.align))
+        views.setInt(cellId, "setBackgroundResource", android.R.color.transparent)
+        views.setOnClickPendingIntent(cellId, null)
+
+        // Alle vier Slots erst einmal leeren
+        views.setViewVisibility(iconId, View.GONE)
+        views.setViewVisibility(beforeId, View.GONE)
+        views.setViewVisibility(mainId, View.GONE)
+        views.setViewVisibility(afterId, View.GONE)
+
+        when (item.type) {
+            "sensor" -> {
+                views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
+                views.setTextColor(mainId, color(item.color, textColor))
+                views.setTextViewText(mainId, item.text.orEmpty())
+                views.setViewVisibility(mainId, View.VISIBLE)
+
+                val label = item.label.orEmpty()
+                if (label.isNotBlank()) {
+                    views.setTextViewTextSize(beforeId, TypedValue.COMPLEX_UNIT_SP, smallSize)
+                    views.setTextViewText(beforeId, label)
+                    views.setViewVisibility(beforeId, View.VISIBLE)
+                }
+            }
+
+            "button" -> {
+                views.setImageViewResource(iconId, MdiIcons.drawable(item.icon))
+                views.setViewVisibility(iconId, View.VISIBLE)
+
+                views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
+                views.setTextColor(mainId, textColor)
+                views.setTextViewText(mainId, item.label.orEmpty())
+                views.setViewVisibility(mainId, View.VISIBLE)
+
+                val stateLabel = item.stateLabel.orEmpty()
+                if (stateLabel.isNotBlank()) {
+                    views.setTextViewTextSize(afterId, TypedValue.COMPLEX_UNIT_SP, smallSize)
+                    views.setTextViewText(afterId, stateLabel)
+                    views.setViewVisibility(afterId, View.VISIBLE)
+                }
+
+                views.setInt(
+                    cellId,
+                    "setBackgroundResource",
+                    when {
+                        !item.available -> R.drawable.widget_button_error
+                        item.active -> R.drawable.widget_button_active
+                        else -> R.drawable.widget_button
+                    },
+                )
+                item.key?.let { key -> views.setOnClickPendingIntent(cellId, pressFor(key)) }
+            }
+
+            else -> {
+                views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
+                views.setTextColor(mainId, color(item.color, textColor))
+                views.setTextViewText(mainId, item.text.orEmpty())
+                views.setViewVisibility(mainId, View.VISIBLE)
+            }
+        }
+    }
+
+    private fun alignGravity(align: String): Int = when (align.lowercase()) {
+        "left" -> Gravity.START
+        "right" -> Gravity.END
+        else -> Gravity.CENTER_HORIZONTAL
+    }
 
     /**
      * Werte in die vorab deklarierten Felder schreiben (zeilenweise gefüllt).

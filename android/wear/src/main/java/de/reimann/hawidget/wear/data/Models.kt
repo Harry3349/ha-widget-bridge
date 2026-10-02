@@ -24,6 +24,30 @@ data class ButtonState(
     val icon: String? = null,
 )
 
+/** Ein Objekt innerhalb einer Zeile (Text, Sensor oder Button). */
+data class RowItem(
+    /** text | sensor | button */
+    val type: String = "text",
+    val text: String? = null,
+    val entity: String? = null,
+    val label: String? = null,
+    val color: String? = null,
+    /** left | center | right */
+    val align: String = "center",
+    val size: Float = 14f,
+    // Button
+    val key: String? = null,
+    val icon: String? = null,
+    val stateLabel: String? = null,
+    val active: Boolean = false,
+    val available: Boolean = true,
+)
+
+/** Eine Zeile mit bis zu drei Objekten. */
+data class RowDef(
+    val items: List<RowItem> = emptyList(),
+)
+
 /** Fertig gerenderter Inhalt eines Widgets (Snapshot der Integration). */
 data class WidgetSnapshot(
     val id: String,
@@ -37,7 +61,11 @@ data class WidgetSnapshot(
     val valueColumns: Int = 1,
     /** true = Name über dem Wert (wie am Handy). */
     val valueLabelAbove: Boolean = false,
+    /** Zeilen-Layout aus dem Handy-Editor; leer = klassische Darstellung. */
+    val rows: List<RowDef> = emptyList(),
 ) {
+    val hasRows: Boolean get() = rows.any { it.items.isNotEmpty() }
+
     companion object {
         val EMPTY = WidgetSnapshot("", "", 0, "", emptyList(), emptyList(), null)
     }

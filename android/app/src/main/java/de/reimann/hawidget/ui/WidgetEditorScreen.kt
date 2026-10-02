@@ -126,6 +126,15 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
 
         HorizontalDivider()
 
+        // -------------------------------------------------- Zeilen (Handy+Uhr)
+        RowEditorSection(
+            rows = def.rows,
+            entities = vm.entities,
+            onRowsChange = { rows -> vm.updateEditor { current -> current.copy(rows = rows) } },
+        )
+
+        HorizontalDivider()
+
         // ------------------------------------------------------------- Buttons
         Text("Buttons", style = MaterialTheme.typography.titleMedium)
         Text(

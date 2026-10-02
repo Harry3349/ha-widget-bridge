@@ -24,6 +24,7 @@ object WidgetJson {
         template = json.stringOrNull("template"),
         values = parseValues(json.optJSONArray("values")),
         buttons = parseButtons(json.optJSONArray("buttons")),
+        rows = parseRows(json.optJSONArray("rows")),
         theme = parseTheme(json.optJSONObject("theme")),
         textSize = json.optDouble("text_size", 14.0).toFloat(),
         valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
@@ -47,6 +48,7 @@ object WidgetJson {
             valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
             valueLabelAbove = json.optBoolean("value_label_above", false),
             values = parseValueStates(json.optJSONArray("values")),
+            rows = parseRows(json.optJSONArray("rows")),
         )
     }
 
@@ -112,6 +114,51 @@ object WidgetJson {
                     stateEntity = json.stringOrNull("state_entity"),
                     stateLabelOn = json.stringOrNull("state_label_on"),
                     stateLabelOff = json.stringOrNull("state_label_off"),
+                )
+            )
+        }
+        return result
+    }
+
+    private fun parseRows(array: JSONArray?): List<RowDef> {
+        if (array == null) return emptyList()
+        val result = ArrayList<RowDef>(array.length())
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index) ?: continue
+            result.add(RowDef(items = parseRowItems(json.optJSONArray("items"))))
+        }
+        return result
+    }
+
+    private fun parseRowItems(array: JSONArray?): List<RowItem> {
+        if (array == null) return emptyList()
+        val result = ArrayList<RowItem>(array.length())
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index) ?: continue
+            result.add(
+                RowItem(
+                    type = json.optString("type", "text"),
+                    text = json.stringOrNull("text"),
+                    entity = json.stringOrNull("entity"),
+                    label = json.stringOrNull("label"),
+                    color = json.stringOrNull("color"),
+                    align = json.optString("align", "center"),
+                    size = json.optDouble("size", 14.0).toFloat(),
+                    threshold = if (json.has("threshold") && !json.isNull("threshold")) {
+                        json.optDouble("threshold")
+                    } else {
+                        null
+                    },
+                    key = json.stringOrNull("key"),
+                    icon = json.stringOrNull("icon"),
+                    service = json.optString("service", "switch.toggle"),
+                    entityId = json.stringOrNull("entity_id"),
+                    stateEntity = json.stringOrNull("state_entity"),
+                    stateLabelOn = json.stringOrNull("state_label_on"),
+                    stateLabelOff = json.stringOrNull("state_label_off"),
+                    stateLabel = json.stringOrNull("state_label"),
+                    active = json.optBoolean("active", false),
+                    available = json.optBoolean("available", true),
                 )
             )
         }
@@ -201,6 +248,46 @@ object WidgetJson {
             buttons.put(item)
         }
         json.put("buttons", buttons)
+
+        // Zeilen-Layout (gilt für Handy-Widget und Uhr-Tile gleichzeitig)
+        val rows = JSONArray()
+        def.rows.forEach { row ->
+            val matrix = JSONArray()
+            row.items.forEach { item ->
+                val entry = JSONObject()
+                entry.put("type", item.type)
+                entry.put("align", item.align)
+                entry.put("size", item.size.toDouble())
+                item.color?.takeIf { it.isNotBlank() }?.let { entry.put("color", it) }
+
+                when (item.type) {
+                    "sensor" -> {
+                        entry.put("entity", item.entity.orEmpty())
+                        item.label?.takeIf { it.isNotBlank() }?.let { entry.put("label", it) }
+                        item.threshold?.let { entry.put("threshold", it) }
+                    }
+
+                    "button" -> {
+                        item.key?.takeIf { it.isNotBlank() }?.let { entry.put("key", it) }
+                        entry.put("label", item.label.orEmpty())
+                        entry.put("service", item.service)
+                        item.icon?.takeIf { it.isNotBlank() }?.let { entry.put("icon", it) }
+                        item.entityId?.takeIf { it.isNotBlank() }
+                            ?.let { entry.put("entity_id", it) }
+                        item.stateEntity?.takeIf { it.isNotBlank() }
+                            ?.let { entry.put("state_entity", it) }
+                    }
+
+                    else -> entry.put("text", item.text.orEmpty())
+                }
+
+                matrix.put(entry)
+            }
+            val rowJson = JSONObject()
+            rowJson.put("items", matrix)
+            rows.put(rowJson)
+        }
+        json.put("rows", rows)
 
         val theme = JSONObject()
         theme.put("background", def.theme.background)

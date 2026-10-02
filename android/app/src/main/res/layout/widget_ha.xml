@@ -416,4 +416,183 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!--
+      Zeilen-Layout: acht Zeilen mit je drei Objekten (Text, Sensor, Button).
+      Die Objekte werden der Reihe nach gefüllt, leere Zellen ausgeblendet –
+      dadurch teilen sich die sichtbaren Objekte die Zeilenbreite. Ausrichtung
+      und Schriftgröße setzt die App pro Objekt.
+    -->
+    <LinearLayout
+        android:id="@+id/row_area"
+        style="@style/WidgetRowArea">
+
+        <LinearLayout android:id="@+id/row_1" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_1_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_1_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_1_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_1_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_1_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_1_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_1_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_1_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_1_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_1_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_1_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_1_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_1_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_1_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_1_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_2" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_2_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_2_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_2_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_2_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_2_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_2_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_2_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_2_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_2_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_2_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_2_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_2_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_2_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_2_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_2_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_3" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_3_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_3_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_3_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_3_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_3_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_3_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_3_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_3_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_3_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_3_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_3_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_3_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_3_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_3_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_3_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_4" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_4_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_4_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_4_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_4_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_4_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_4_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_4_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_4_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_4_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_4_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_4_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_4_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_4_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_4_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_4_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_5" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_5_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_5_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_5_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_5_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_5_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_5_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_5_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_5_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_5_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_5_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_5_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_5_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_5_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_5_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_5_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_6" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_6_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_6_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_6_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_6_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_6_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_6_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_6_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_6_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_6_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_6_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_6_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_6_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_6_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_6_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_6_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_7" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_7_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_7_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_7_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_7_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_7_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_7_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_7_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_7_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_7_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_7_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_7_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_7_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_7_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_7_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_7_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/row_8" style="@style/WidgetRow">
+            <LinearLayout android:id="@+id/row_8_cell_1" style="@style/WidgetRowCell">
+                <ImageView android:id="@+id/row_8_icon_1" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_8_before_1" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_8_main_1" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_8_after_1" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_8_cell_2" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_8_icon_2" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_8_before_2" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_8_main_2" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_8_after_2" style="@style/WidgetRowState" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/row_8_cell_3" style="@style/WidgetRowCellGap">
+                <ImageView android:id="@+id/row_8_icon_3" style="@style/WidgetRowIcon" />
+                <TextView android:id="@+id/row_8_before_3" style="@style/WidgetRowLabel" />
+                <TextView android:id="@+id/row_8_main_3" style="@style/WidgetRowText" />
+                <TextView android:id="@+id/row_8_after_3" style="@style/WidgetRowState" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
 </LinearLayout>

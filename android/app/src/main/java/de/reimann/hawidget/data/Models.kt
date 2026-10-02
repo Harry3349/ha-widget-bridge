@@ -20,6 +20,51 @@ data class WidgetButton(
     val stateLabelOff: String? = null,
 )
 
+/**
+ * Ein Objekt innerhalb einer Zeile.
+ *
+ * In der Definition stehen die Einstellungen (Text, Entity, Ausrichtung,
+ * Schriftgröße …), im Snapshot zusätzlich die fertig gerenderten Werte
+ * (`text`, `stateLabel`, `active`, `available`).
+ */
+data class RowItem(
+    /** text | sensor | button */
+    val type: String = "text",
+    val text: String? = null,
+    val entity: String? = null,
+    val label: String? = null,
+    val color: String? = null,
+    /** left | center | right */
+    val align: String = "center",
+    val size: Float = 14f,
+    val threshold: Double? = null,
+    // Button
+    val key: String? = null,
+    val icon: String? = null,
+    val service: String = "switch.toggle",
+    val entityId: String? = null,
+    val stateEntity: String? = null,
+    val stateLabelOn: String? = null,
+    val stateLabelOff: String? = null,
+    // gerendert (nur im Snapshot)
+    val stateLabel: String? = null,
+    val active: Boolean = false,
+    val available: Boolean = true,
+) {
+    /** Kurzbeschreibung für die Editor-Liste. */
+    val summary: String
+        get() = when (type) {
+            "sensor" -> "Sensor · ${label ?: entity.orEmpty()}"
+            "button" -> "Button · ${label ?: key.orEmpty()}"
+            else -> "Text · ${text.orEmpty()}"
+        }
+}
+
+/** Eine Zeile mit bis zu drei Objekten (Text, Sensor, Button). */
+data class RowDef(
+    val items: List<RowItem> = emptyList(),
+)
+
 /** Farben eines Widgets. */
 data class WidgetTheme(
     val background: String = "#00000000",
@@ -36,6 +81,8 @@ data class WidgetDef(
     val template: String? = null,
     val values: List<WidgetValue> = emptyList(),
     val buttons: List<WidgetButton> = emptyList(),
+    /** Freies Zeilen-Layout für Handy-Widget und Uhr-Tile. */
+    val rows: List<RowDef> = emptyList(),
     val theme: WidgetTheme = WidgetTheme(),
     val textSize: Float = 14f,
     /** 1 = Werte untereinander, 2 oder 3 = nebeneinander */
@@ -73,12 +120,29 @@ data class WidgetSnapshot(
     val valueColumns: Int = 1,
     val valueLabelAbove: Boolean = false,
     val values: List<ValueState> = emptyList(),
+    /** Zeilen-Layout; leer = klassische Darstellung aus Werten/Buttons. */
+    val rows: List<RowDef> = emptyList(),
 ) {
+
+    val hasRows: Boolean get() = rows.any { it.items.isNotEmpty() }
     /**
      * Zeilen für die Editor-Vorschau: die Werte in der eingestellten
      * Spaltenzahl, damit die Anordnung schon vor dem Speichern sichtbar ist.
+     * Ist ein Zeilen-Layout gesetzt, wird dieses gezeigt.
      */
     fun previewLines(): List<String> {
+        if (hasRows) {
+            return rows.filter { it.items.isNotEmpty() }.map { row ->
+                row.items.joinToString("    ") { item ->
+                    val text = when (item.type) {
+                        "sensor" -> listOfNotNull(item.label, item.text).joinToString(" ")
+                        "button" -> listOfNotNull(item.label, item.stateLabel).joinToString(" ")
+                        else -> item.text.orEmpty()
+                    }
+                    "$text [${item.align} ${item.size.toInt()}sp]"
+                }
+            }
+        }
         if (values.isEmpty()) return emptyList()
         val columns = valueColumns.coerceIn(1, 3)
         return values.chunked(columns).map { row ->
