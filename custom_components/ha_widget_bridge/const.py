@@ -59,6 +59,15 @@ TEXT_SIZE_MIN = 8.0
 TEXT_SIZE_MAX = 30.0
 DEFAULT_TEXT_SIZE = 14.0
 
+# --- Zeilen (freies Layout für Handy und Uhr) -----------------------------
+# Eine Zeile enthält 1–3 Objekte (Text, Sensor oder Button), jedes mit eigener
+# Ausrichtung. Fehlt 'rows', gilt weiter das alte Schema (values/buttons).
+MAX_ROWS = 8
+MAX_ROW_ITEMS = 3
+ROW_ITEM_TYPES = ("text", "sensor", "button")
+ROW_ALIGNMENTS = ("left", "center", "right")
+DEFAULT_ROW_ALIGN = "center"
+
 # Schwellwert in W, ab dem ein Wert als "aktiv" (grün) gilt
 DEFAULT_THRESHOLD = 0.5
 

@@ -32,7 +32,7 @@ from .const import (
     URL_WIDGET,
     URL_WIDGETS,
 )
-from .render import async_render_widget, button_view, value_view
+from .render import async_render_widget, button_view, row_view, value_view
 from .store import WidgetValidationError, get_store, normalize_widget
 
 _SERVICE_RE = re.compile(r"^[a-z0-9_]+\.[a-z0-9_]+$")
@@ -76,6 +76,7 @@ def _snapshot_payload(hass: HomeAssistant, widget: dict[str, Any], rendered: dic
         "value_columns": widget["value_columns"],
         "value_label_above": widget["value_label_above"],
         "values": value_view(hass, widget),
+        "rows": rendered.get("rows") or row_view(hass, widget),
         "buttons": button_view(hass, widget),
     }
 

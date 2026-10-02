@@ -334,6 +334,85 @@ mit_template = asyncio.run(render.async_render_widget(hass, {**widget, "template
 check(mit_template["template_used"] is True, "mit Template gilt der HTML-Inhalt")
 
 # --------------------------------------------------------------------------
+# Zeilen (freies Layout: Text, Sensor, Button – jedes mit Ausrichtung)
+# --------------------------------------------------------------------------
+
+zeilen_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Zeilen",
+        "text_size": 13,
+        "rows": [
+            {
+                "items": [
+                    {"type": "text", "text": "Wohnzimmer", "align": "left", "size": 15},
+                    {
+                        "type": "sensor",
+                        "entity": "sensor.wohnzimmer_shelly_erik_pc_leistung",
+                        "label": "PC",
+                        "align": "center",
+                    },
+                    {
+                        "type": "button",
+                        "label": "Licht",
+                        "service": "switch.toggle",
+                        "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                        "align": "right",
+                    },
+                ]
+            },
+            {
+                "items": [
+                    {
+                        "type": "sensor",
+                        "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
+                        "color": "#4DD0E1",
+                    }
+                ]
+            },
+        ],
+    },
+)
+check(len(zeilen_widget["rows"]) == 2, "zwei Zeilen übernommen")
+check(len(zeilen_widget["rows"][0]["items"]) == 3, "drei Objekte in der ersten Zeile")
+check(zeilen_widget["rows"][0]["items"][0]["align"] == "left", "Ausrichtung je Objekt")
+check(zeilen_widget["rows"][0]["items"][0]["size"] == 15.0, "Schriftgröße je Objekt")
+check(zeilen_widget["rows"][0]["items"][2]["key"] == "licht", "Zeilen-Button bekommt Schlüssel")
+check(
+    any(button["key"] == "licht" for button in zeilen_widget["buttons"]),
+    "Zeilen-Button wird als Button geführt (Drücken und Entität)",
+)
+
+zeilen = render.row_view(hass, zeilen_widget)
+check(zeilen[0]["items"][0]["text"] == "Wohnzimmer", "Text-Objekt wird geliefert")
+check(zeilen[0]["items"][1]["text"] != "", "Sensor-Objekt wird gerendert")
+check(zeilen[0]["items"][1]["align"] == "center", "Ausrichtung bleibt erhalten")
+check(zeilen[0]["items"][2]["state_label"] == "An", "Button-Objekt zeigt den Zustand")
+check(zeilen[1]["items"][0]["label"] != "", "Sensor-Objekt bekommt eine Beschriftung")
+check(zeilen[1]["items"][0]["color"] == "#4DD0E1", "eigene Sensor-Farbe übernommen")
+
+expect_error(
+    {"name": "Test", "rows": [{"items": [{"type": "lampe"}]}]},
+    "type",
+    "unbekannter Objekt-Typ",
+)
+expect_error(
+    {"name": "Test", "rows": [{"items": [{"type": "text", "align": "oben"}]}]},
+    "align",
+    "unbekannte Ausrichtung",
+)
+expect_error(
+    {"name": "Test", "rows": [{"items": [{"type": "text"}] * 4}]},
+    "maximal",
+    "zu viele Objekte pro Zeile",
+)
+expect_error(
+    {"name": "Test", "rows": [{"items": []}] * 9},
+    "Maximal",
+    "zu viele Zeilen",
+)
+
+# --------------------------------------------------------------------------
 # Ergebnis
 # --------------------------------------------------------------------------
 

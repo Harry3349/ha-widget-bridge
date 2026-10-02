@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DEFAULT_ROW_ALIGN,
     DEFAULT_THEME,
     DEFAULT_TEXT_SIZE,
     DEFAULT_THRESHOLD,
@@ -24,10 +25,14 @@ from .const import (
     DOMAIN,
     LOGGER,
     MAX_BUTTONS,
+    MAX_ROWS,
+    MAX_ROW_ITEMS,
     MAX_SERVICE_DATA_KEYS,
     MAX_TEMPLATE_LENGTH,
     MAX_VALUES,
     MAX_WIDGETS,
+    ROW_ALIGNMENTS,
+    ROW_ITEM_TYPES,
     SIGNAL_WIDGETS_UPDATED,
     STATE_DOMAINS,
     STORAGE_KEY,
@@ -134,6 +139,66 @@ def _normalize_values(raw: Any) -> list[dict[str, Any]]:
     return values
 
 
+def _normalize_button(hass: HomeAssistant, item: Any, field: str) -> dict[str, Any]:
+    """Einen Button prüfen und in die kanonische Form bringen."""
+    if not isinstance(item, dict):
+        raise WidgetValidationError(f"Jeder {field}-Eintrag muss ein Objekt sein")
+
+    label = str(item.get("label") or "").strip()[:30]
+    if not label:
+        raise WidgetValidationError(f"{field}.label fehlt")
+
+    key = slugify(item.get("key") or label)
+    if not key or not _SLUG_RE.match(key):
+        raise WidgetValidationError(f"{field}.key '{key}' ist ungültig")
+
+    service = str(item.get("service") or "").strip().lower()
+    if not _SERVICE_RE.match(service):
+        raise WidgetValidationError(
+            f"{field}.service '{service}' ist ungültig (erwartet z. B. 'switch.toggle')"
+        )
+    domain, _, service_name = service.partition(".")
+    if not hass.services.has_service(domain, service_name):
+        LOGGER.warning(
+            "Button '%s' (%s) nutzt den Service '%s', der aktuell nicht existiert",
+            key,
+            field,
+            service,
+        )
+
+    entity_id = _normalize_entity_list(item.get("entity_id"), f"{field}.entity_id")
+
+    state_entity = item.get("state_entity")
+    if state_entity:
+        state_entity = _check_entity_id(state_entity, f"{field}.state_entity")
+    elif entity_id and "," not in entity_id and entity_id.split(".", 1)[0] in STATE_DOMAINS:
+        state_entity = entity_id
+
+    service_data = item.get("service_data") or {}
+    if not isinstance(service_data, dict):
+        raise WidgetValidationError(f"{field}.service_data muss ein Objekt sein")
+    if len(service_data) > MAX_SERVICE_DATA_KEYS:
+        raise WidgetValidationError(f"{field}.service_data hat zu viele Felder")
+    if domain not in ("homeassistant", "script", "automation") and not entity_id:
+        LOGGER.warning("Button '%s' (%s) hat keine entity_id", key, service)
+
+    icon = str(item.get("icon") or "").strip() or None
+    if icon and not _ICON_RE.match(icon):
+        raise WidgetValidationError(f"{field}.icon '{icon}' ist kein mdi:-Icon")
+
+    return {
+        "key": key,
+        "label": label,
+        "icon": icon,
+        "service": service,
+        "entity_id": entity_id,
+        "state_entity": state_entity,
+        "state_label_on": str(item.get("state_label_on") or "").strip()[:20] or None,
+        "state_label_off": str(item.get("state_label_off") or "").strip()[:20] or None,
+        "service_data": {str(k): v for k, v in service_data.items()},
+    }
+
+
 def _normalize_buttons(hass: HomeAssistant, raw: Any) -> list[dict[str, Any]]:
     if raw in (None, ""):
         return []
@@ -145,65 +210,107 @@ def _normalize_buttons(hass: HomeAssistant, raw: Any) -> list[dict[str, Any]]:
     buttons: list[dict[str, Any]] = []
     seen: set[str] = set()
     for item in raw:
-        if not isinstance(item, dict):
-            raise WidgetValidationError("Jeder Button muss ein Objekt sein")
-
-        label = str(item.get("label") or "").strip()[:30]
-        if not label:
-            raise WidgetValidationError("buttons.label fehlt")
-
-        key = slugify(item.get("key") or label)
-        if not key or not _SLUG_RE.match(key):
-            raise WidgetValidationError(f"buttons.key '{key}' ist ungültig")
-        if key in seen:
-            raise WidgetValidationError(f"buttons.key '{key}' kommt doppelt vor")
-        seen.add(key)
-
-        service = str(item.get("service") or "").strip().lower()
-        if not _SERVICE_RE.match(service):
-            raise WidgetValidationError(
-                f"buttons.service '{service}' ist ungültig (erwartet z. B. 'switch.toggle')"
-            )
-        domain, _, service_name = service.partition(".")
-        if not hass.services.has_service(domain, service_name):
-            LOGGER.warning(
-                "Button '%s' nutzt den Service '%s', der aktuell nicht existiert", key, service
-            )
-
-        entity_id = _normalize_entity_list(item.get("entity_id"), "buttons.entity_id")
-
-        state_entity = item.get("state_entity")
-        if state_entity:
-            state_entity = _check_entity_id(state_entity, "buttons.state_entity")
-        elif entity_id and "," not in entity_id and entity_id.split(".", 1)[0] in STATE_DOMAINS:
-            state_entity = entity_id
-
-        service_data = item.get("service_data") or {}
-        if not isinstance(service_data, dict):
-            raise WidgetValidationError("buttons.service_data muss ein Objekt sein")
-        if len(service_data) > MAX_SERVICE_DATA_KEYS:
-            raise WidgetValidationError("buttons.service_data hat zu viele Felder")
-        if domain not in ("homeassistant", "script", "automation") and not entity_id:
-            LOGGER.warning("Button '%s' (%s) hat keine entity_id", key, service)
-
-        icon = str(item.get("icon") or "").strip() or None
-        if icon and not _ICON_RE.match(icon):
-            raise WidgetValidationError(f"buttons.icon '{icon}' ist kein mdi:-Icon")
-
-        buttons.append(
-            {
-                "key": key,
-                "label": label,
-                "icon": icon,
-                "service": service,
-                "entity_id": entity_id,
-                "state_entity": state_entity,
-                "state_label_on": str(item.get("state_label_on") or "").strip()[:20] or None,
-                "state_label_off": str(item.get("state_label_off") or "").strip()[:20] or None,
-                "service_data": {str(k): v for k, v in service_data.items()},
-            }
-        )
+        button = _normalize_button(hass, item, "buttons")
+        if button["key"] in seen:
+            raise WidgetValidationError(f"buttons.key '{button['key']}' kommt doppelt vor")
+        seen.add(button["key"])
+        buttons.append(button)
     return buttons
+
+
+def _normalize_rows(hass: HomeAssistant, raw: Any) -> list[dict[str, Any]]:
+    """Zeilen mit Objekten (Text, Sensor, Button) prüfen."""
+    if raw in (None, ""):
+        return []
+    if not isinstance(raw, list):
+        raise WidgetValidationError("'rows' muss eine Liste sein")
+    if len(raw) > MAX_ROWS:
+        raise WidgetValidationError(f"Maximal {MAX_ROWS} Zeilen pro Widget")
+
+    rows: list[dict[str, Any]] = []
+    seen_keys: set[str] = set()
+
+    for number, row in enumerate(raw, start=1):
+        if not isinstance(row, dict):
+            raise WidgetValidationError(f"Zeile {number} muss ein Objekt sein")
+
+        raw_items = row.get("items")
+        if raw_items in (None, ""):
+            raw_items = []
+        if not isinstance(raw_items, list):
+            raise WidgetValidationError(f"Zeile {number}: 'items' muss eine Liste sein")
+        if len(raw_items) > MAX_ROW_ITEMS:
+            raise WidgetValidationError(f"Zeile {number}: maximal {MAX_ROW_ITEMS} Objekte")
+
+        items = [_normalize_row_item(hass, item, number, seen_keys) for item in raw_items]
+        rows.append({"items": items})
+
+    return rows
+
+
+def _normalize_row_item(
+    hass: HomeAssistant, item: Any, row: int, seen_keys: set[str]
+) -> dict[str, Any]:
+    """Ein Objekt innerhalb einer Zeile prüfen."""
+    if not isinstance(item, dict):
+        raise WidgetValidationError(f"Zeile {row}: jedes Objekt muss ein Objekt sein")
+
+    kind = str(item.get("type") or "text").strip().lower()
+    if kind not in ROW_ITEM_TYPES:
+        raise WidgetValidationError(
+            f"Zeile {row}: type muss {'/'.join(ROW_ITEM_TYPES)} sein"
+        )
+
+    align = str(item.get("align") or DEFAULT_ROW_ALIGN).strip().lower()
+    if align not in ROW_ALIGNMENTS:
+        raise WidgetValidationError(f"Zeile {row}: align muss {'/'.join(ROW_ALIGNMENTS)} sein")
+
+    try:
+        size = float(item.get("size") or DEFAULT_TEXT_SIZE)
+    except (TypeError, ValueError) as err:
+        raise WidgetValidationError(f"Zeile {row}: size muss eine Zahl sein") from err
+    size = min(max(size, TEXT_SIZE_MIN), TEXT_SIZE_MAX)
+
+    color = str(item.get("color") or "").strip() or None
+    if color and not _COLOR_RE.match(color):
+        raise WidgetValidationError(f"Zeile {row}: color muss eine Hex-Farbe sein")
+
+    if kind == "text":
+        return {
+            "type": "text",
+            "text": str(item.get("text") or "")[:80],
+            "align": align,
+            "size": round(size, 1),
+            "color": color,
+        }
+
+    if kind == "sensor":
+        threshold: float | None = None
+        if item.get("threshold") is not None:
+            try:
+                threshold = float(item["threshold"])
+            except (TypeError, ValueError) as err:
+                raise WidgetValidationError(
+                    f"Zeile {row}: threshold muss eine Zahl sein"
+                ) from err
+        return {
+            "type": "sensor",
+            "entity": _check_entity_id(item.get("entity"), f"Zeile {row}.entity"),
+            "label": str(item.get("label") or "").strip()[:40] or None,
+            "align": align,
+            "size": round(size, 1),
+            "color": color,
+            "threshold": threshold,
+        }
+
+    button = _normalize_button(hass, item, f"Zeile {row}")
+    if button["key"] in seen_keys:
+        raise WidgetValidationError(
+            f"Zeile {row}: Schlüssel '{button['key']}' kommt doppelt vor"
+        )
+    seen_keys.add(button["key"])
+    button.update({"type": "button", "align": align, "size": round(size, 1), "color": color})
+    return button
 
 
 def _normalize_theme(raw: Any) -> dict[str, str]:
@@ -267,12 +374,26 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         payload.get("value_label_above", DEFAULT_VALUE_LABEL_ABOVE), "value_label_above"
     )
 
+    rows = _normalize_rows(hass, payload.get("rows"))
+    buttons = _normalize_buttons(hass, payload.get("buttons"))
+    # Buttons aus den Zeilen mit aufnehmen: nur so entstehen die
+    # button.<widget>_<key>-Entitäten und das Drücken funktioniert.
+    known = {button["key"] for button in buttons}
+    for row in rows:
+        for item in row["items"]:
+            if item["type"] == "button" and item["key"] not in known:
+                known.add(item["key"])
+                buttons.append(item)
+    if len(buttons) > MAX_BUTTONS:
+        raise WidgetValidationError(f"Maximal {MAX_BUTTONS} Buttons pro Widget")
+
     return {
         "id": widget_id,
         "name": name,
         "template": template,
         "values": _normalize_values(payload.get("values")),
-        "buttons": _normalize_buttons(hass, payload.get("buttons")),
+        "buttons": buttons,
+        "rows": rows,
         "theme": _normalize_theme(payload.get("theme")),
         "text_size": round(text_size, 1),
         "threshold": threshold,

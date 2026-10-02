@@ -23,6 +23,8 @@ from .const import (
     COLOR_ACTIVE,
     COLOR_ERROR,
     COLOR_IDLE,
+    DEFAULT_ROW_ALIGN,
+    DEFAULT_TEXT_SIZE,
     DEFAULT_THRESHOLD,
     LOGGER,
     UNAVAILABLE_STATES,
@@ -152,6 +154,80 @@ def value_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, An
     return result
 
 
+def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]]:
+    """Zeilen als fertige Objekte aufbereiten (Text, Sensor, Button).
+
+    Handy und Uhr zeichnen daraus dasselbe Layout; jedes Objekt bringt seine
+    Ausrichtung (``align``) und Schriftgröße (``size``) mit.
+    """
+    default_threshold = float(widget.get("threshold", DEFAULT_THRESHOLD))
+    default_size = float(widget.get("text_size", DEFAULT_TEXT_SIZE))
+    states = {button["key"]: button for button in button_view(hass, widget)}
+
+    rows: list[dict[str, Any]] = []
+    for row in widget.get("rows") or []:
+        items: list[dict[str, Any]] = []
+        for item in row.get("items") or []:
+            kind = item.get("type")
+            align = item.get("align") or DEFAULT_ROW_ALIGN
+            size = float(item.get("size") or default_size)
+            own_color = item.get("color")
+
+            if kind == "sensor":
+                entity_id = item["entity"]
+                state = hass.states.get(entity_id)
+                label = item.get("label") or display_name(hass, entity_id)
+                limit = item.get("threshold")
+                limit = default_threshold if limit is None else float(limit)
+                text, active = format_value(state, limit)
+                color = own_color if own_color and text != "offline" else color_for(text, active)
+                items.append(
+                    {
+                        "type": "sensor",
+                        "entity": entity_id,
+                        "label": label,
+                        "text": text,
+                        "color": color,
+                        "active": active,
+                        "available": text != "offline",
+                        "align": align,
+                        "size": size,
+                    }
+                )
+                continue
+
+            if kind == "button":
+                state = states.get(item["key"], {})
+                items.append(
+                    {
+                        "type": "button",
+                        "key": item["key"],
+                        "label": item["label"],
+                        "icon": item.get("icon"),
+                        "state_label": state.get("state_label", ""),
+                        "active": state.get("active", False),
+                        "available": state.get("available", False),
+                        "align": align,
+                        "size": size,
+                    }
+                )
+                continue
+
+            items.append(
+                {
+                    "type": "text",
+                    "text": item.get("text") or "",
+                    "color": own_color,
+                    "align": align,
+                    "size": size,
+                }
+            )
+
+        rows.append({"items": items})
+
+    return rows
+
+
 def build_auto_html(hass: HomeAssistant, widget: dict[str, Any]) -> str:
     """Anzeige aus ``values`` erzeugen.
 
@@ -203,6 +279,7 @@ async def async_render_widget(hass: HomeAssistant, widget: dict[str, Any]) -> di
         "text": html_to_text(html_out),
         "error": error,
         "template_used": template_used,
+        "rows": row_view(hass, widget),
     }
 
 
