@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,8 +29,12 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("Zurück") }
-            Spacer(Modifier.width(8.dp))
+            // Führt zum selben Weg wie der System-Zurück-Knopf (inkl. Rückfrage
+            // bei ungespeicherten Eingaben)
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Zurück zur Übersicht")
+            }
+            Spacer(Modifier.width(4.dp))
             Text(
                 if (def.isNew) "Neues Widget" else "Widget bearbeiten",
                 style = MaterialTheme.typography.headlineSmall,

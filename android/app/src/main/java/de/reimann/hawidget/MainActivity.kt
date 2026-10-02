@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,25 @@ class MainActivity : ComponentActivity() {
             HaWidgetBridgeTheme {
                 val vm: MainViewModel = viewModel()
                 var screen by remember { mutableStateOf(startScreen) }
+                var confirmDiscard by remember { mutableStateOf(false) }
+
+                // Verlässt den Editor – und fragt vorher nach, wenn noch etwas
+                // nicht gespeichert ist.
+                fun leaveEditor() {
+                    if (vm.editorDirty()) {
+                        confirmDiscard = true
+                    } else {
+                        vm.closeEditor()
+                        screen = Screen.WIDGETS
+                    }
+                }
+
+                // System-Zurück (Wischgeste / Knopf): aus dem Editor zurück in die
+                // Übersicht, aus der Einrichtung zurück zu den Widgets. Sonst gilt
+                // das normale Verhalten (App verlassen).
+                BackHandler(enabled = screen == Screen.EDITOR || (screen == Screen.SETUP && configured)) {
+                    if (screen == Screen.EDITOR) leaveEditor() else screen = Screen.WIDGETS
+                }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -101,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
                                 Screen.EDITOR -> WidgetEditorScreen(
                                     vm = vm,
-                                    onBack = { screen = Screen.WIDGETS },
+                                    onBack = { leaveEditor() },
                                 )
                             }
                         }
@@ -122,6 +142,34 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                // Rückfrage, wenn der Editor mit ungespeicherten Eingaben verlassen wird
+                if (confirmDiscard) {
+                    AlertDialog(
+                        onDismissRequest = { confirmDiscard = false },
+                        title = { Text("Änderungen verwerfen?") },
+                        text = {
+                            Text(
+                                "Im Editor sind Eingaben, die noch nicht gespeichert sind. " +
+                                    "Beim Verwerfen gehen sie verloren.",
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    confirmDiscard = false
+                                    vm.closeEditor()
+                                    screen = Screen.WIDGETS
+                                },
+                            ) { Text("Verwerfen") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { confirmDiscard = false }) {
+                                Text("Weiter bearbeiten")
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -129,7 +177,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val REQUEST_NOTIFICATIONS = 1001
 
-        /** Siehe oben: `--es screen watches` öffnet den Smartwatch-Bildschirm. */
+        /** Siehe oben: `--es screen setup` öffnet die Einrichtung. */
         private const val EXTRA_SCREEN = "screen"
     }
 }

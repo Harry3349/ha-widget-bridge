@@ -54,6 +54,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var editor by mutableStateOf<WidgetDef?>(null)
     var previewText by mutableStateOf<String?>(null)
 
+    /** Stand beim Öffnen des Editors – zum Erkennen ungespeicherter Änderungen. */
+    private var editorSource: WidgetDef? = null
+
     init {
         if (settings.isConfigured) {
             loadWidgets()
@@ -138,11 +141,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // ---------------------------------------------------------------- Editor
     fun startNewWidget() {
         editor = WidgetDef(id = "", name = "")
+        editorSource = editor
         previewText = null
     }
 
     fun startEdit(def: WidgetDef) {
         editor = def
+        editorSource = def
         previewText = null
     }
 
@@ -172,6 +177,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updateEditor(transform: (WidgetDef) -> WidgetDef) {
         val current = editor ?: return
         editor = transform(current)
+    }
+
+    /**
+     * Wurde im Editor etwas geändert, das noch nicht gespeichert ist? Damit fragt
+     * der Zurück-Weg nach, bevor Eingaben verloren gehen.
+     */
+    fun editorDirty(): Boolean {
+        val current = editor ?: return false
+        return current != editorSource
+    }
+
+    /** Editor verlassen (ohne zu speichern). */
+    fun closeEditor() {
+        editor = null
+        editorSource = null
+        previewText = null
     }
 
     // ---------------------------------------------------------- Smartwatches
@@ -333,6 +354,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             busy = false
             result.onSuccess { saved ->
                 editor = saved
+                editorSource = saved
                 message = "Widget „${saved.name}“ gespeichert"
                 loadWidgets()
                 Widgets.refreshAllAsync(getApplication())
