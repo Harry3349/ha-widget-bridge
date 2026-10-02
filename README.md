@@ -215,7 +215,23 @@ stabile `androidx.wear.tiles`-Bibliothek.
 | Fehler beim Schalten | Handy meldet es zurück, die Tile zeigt „Druck fehlgeschlagen“ |
 
 Die Tile kann nicht scrollen – es passt deshalb eine begrenzte Zahl von Werten auf den
-Bildschirm. Auf der Uhr werden höchstens drei Buttons nebeneinander dargestellt.
+Bildschirm.
+
+### Volle Liste mit Scrollen (Wischen und Krone)
+
+Wear OS-Kacheln können laut Google **nicht** gescrollt werden. Sobald die Zeilen nicht
+mehr ganz auf die Kachel passen (der Editor zeigt am Handy, ab welcher Zeile das so ist),
+blendet die Kachel den Hinweis **„Antippen: alle Zeilen, mit Wischen oder Krone“** ein.
+Ein Tipp irgendwo auf die Kachel öffnet dann die App-Ansicht auf der Uhr:
+
+* dieselben Zeilen wie Kachel und Handy-Widget (Text, Sensor, Button, mit Ausrichtung
+  und Schriftgröße aus dem Editor),
+* scrollbar **mit dem Finger** und **mit der Krone** (Drehknopf) – die Krone bewegt die
+  Liste in Rastschritten,
+* Buttons schalten wie auf der Kachel (Nachricht ans Handy, Rückmeldung ~1 s).
+
+Die Ansicht liegt zusätzlich in der App-Liste der Uhr und heißt dort *HA Widget*.
+Dadurch lässt sie sich auch öffnen, ohne zur Kachel zu wischen.
 
 
 ---

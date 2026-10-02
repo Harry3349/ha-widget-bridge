@@ -101,10 +101,11 @@ object RowCapacity {
         if (rows.isEmpty()) return "Uhr: noch keine Zeile angelegt."
         val visible = fittingRows(rows, WATCH_DP)
         return if (visible >= rows.size) {
-            "Uhr: alle ${rows.size} Zeilen sind gleichzeitig sichtbar."
+            "Uhr: alle ${rows.size} Zeilen passen gleichzeitig auf die Kachel."
         } else {
-            "Uhr: sichtbar bis Zeile $visible – ab Zeile ${visible + 1} muss auf der Uhr " +
-                "gescrollt werden."
+            "Uhr: auf der Kachel sichtbar bis Zeile $visible – die übrigen Zeilen zeigt " +
+                "die App auf der Uhr (Kachel antippen); dort lässt sich mit Wischen oder " +
+                "Krone scrollen."
         }
     }
 }

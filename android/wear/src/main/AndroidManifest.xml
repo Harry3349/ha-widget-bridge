@@ -12,6 +12,22 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true">
 
+        <!--
+            Volle Liste mit Scrollen (Wischen und Krone). Kacheln können laut
+            Wear OS nicht scrollen – deshalb öffnet ein Tipp auf die Kachel
+            diese Ansicht. Sie liegt auch in der App-Liste der Uhr.
+        -->
+        <activity
+            android:name=".app.WearAppActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.DeviceDefault">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".tile.WidgetTileService"
             android:description="@string/tile_description"

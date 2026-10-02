@@ -46,7 +46,9 @@ fun RowEditorSection(
             "Pro Zeile bis zu drei Objekte – Text, Sensor oder Button – jeweils mit " +
             "eigenem Text, eigener Ausrichtung (links/mitte/rechts) und Schriftgröße. " +
             "Sobald eine Zeile angelegt ist, ersetzt dieses Layout die Werte- und " +
-            "Button-Liste oben.",
+            "Button-Liste oben. Auf der Uhr passen nur so viele Zeilen auf die Kachel, " +
+            "wie ohne Scrollen hineingehen; ein Tipp auf die Kachel öffnet die volle " +
+            "Liste, die sich mit Wischen oder Krone scrollen lässt.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -68,7 +70,7 @@ fun RowEditorSection(
             CapacityDivider("Ab hier braucht das Handy-Widget mehr Höhe")
         }
         if (watchScroll != null && rowIndex == watchScroll - 1) {
-            CapacityDivider("Ab hier muss auf der Uhr gescrollt werden")
+            CapacityDivider("Ab hier auf der Uhr nur in der App (Kachel antippen)")
         }
 
         Card(modifier = Modifier.fillMaxWidth()) {

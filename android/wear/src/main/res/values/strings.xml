@@ -10,4 +10,7 @@
     <string name="tile_waiting">Stand wird vom Handy geholt …</string>
     <string name="tile_stale">Stand %1$s – Handy nicht erreichbar</string>
     <string name="tile_updated">Stand %1$s</string>
+    <string name="tile_more_rows">Antippen: alle Zeilen, mit Wischen oder Krone</string>
+    <string name="wear_list_empty">Noch keine Zeile angelegt – im Editor am Handy einrichten.</string>
+    <string name="wear_list_hint">Wischen oder Krone drehen zum Scrollen</string>
 </resources>

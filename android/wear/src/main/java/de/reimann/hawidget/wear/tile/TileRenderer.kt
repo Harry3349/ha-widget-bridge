@@ -24,6 +24,11 @@ object TileRenderer {
     /** Kennung der klickbaren Buttons in der Tile. */
     const val PRESS_PREFIX = "press:"
 
+    /** Kennung des Klicks, der die App-Ansicht öffnet. */
+    const val OPEN_PREFIX = "open:"
+
+    private const val APP_ACTIVITY = "de.reimann.hawidget.wear.app.WearAppActivity"
+
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
@@ -37,34 +42,38 @@ object TileRenderer {
         snapshot: WidgetSnapshot?,
         fetchedAt: Long,
         screenWidthDp: Int,
+        screenHeightDp: Int = 192,
         note: String? = null,
     ): LayoutElementBuilders.LayoutElement {
         // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
         val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
 
-        // Wird der Inhalt höher als die Anzeige, darf die Kachel nicht auf die
-        // Bildschirmhöhe festgelegt werden (expand): dann schneidet die Uhr den
-        // Rest ab. Mit wrap nimmt sie ihre natürliche Höhe ein und Wear OS legt
-        // sie in einen Scrollbereich – Wischen und Krone scrollen.
-        val scrollable = rows.isNotEmpty()
+        // Kacheln können laut Wear OS nicht scrollen. Passt nicht alles auf die
+        // Anzeige, weist eine Hinweiszeile auf die App-Ansicht hin: Dort lassen
+        // sich alle Zeilen mit Wischen und mit der Krone durchblättern.
+        val showsAllRows = fitsOnScreen(rows, screenHeightDp)
 
         val column = LayoutElementBuilders.Column.Builder()
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
             .setWidth(DimensionBuilders.expand())
-            .setHeight(
-                if (scrollable) DimensionBuilders.wrap() else DimensionBuilders.expand()
-            )
-            // Runde Displays schneiden oben und an den Seiten ab – ohne Abstand
-            // verschwindet der Titel in der Rundung.
+            .setHeight(DimensionBuilders.expand())
             .setModifiers(
                 ModifiersBuilders.Modifiers.Builder()
+                    // Tipp irgendwo auf die Kachel = volle Liste
+                    .setClickable(
+                        ModifiersBuilders.Clickable.Builder()
+                            .setId(OPEN_PREFIX)
+                            .setOnClick(openAppAction(context))
+                            .build()
+                    )
+                    // Runde Displays schneiden oben und an den Seiten ab – ohne Abstand
+                    // verschwindet der Titel in der Rundung.
                     .setPadding(
                         ModifiersBuilders.Padding.Builder()
                             .setTop(DimensionBuilders.dp(10f))
                             .setStart(DimensionBuilders.dp(8f))
                             .setEnd(DimensionBuilders.dp(8f))
-                            .setBottom(if (scrollable) DimensionBuilders.dp(14f) else DimensionBuilders.dp(0f))
                             .build()
                     )
                     .build()
@@ -96,6 +105,12 @@ object TileRenderer {
 
         // Zeilen-Layout: gleiche Zeilen und Ausrichtungen wie am Handy.
         if (rows.isNotEmpty()) {
+            if (!showsAllRows) {
+                // Sichtbarer Hinweis: der Rest liegt in der App-Ansicht
+                column.addContent(
+                    text(context.getString(R.string.tile_more_rows), ACCENT, 9f)
+                )
+            }
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
             // das Display die ersten Zeichen der äußeren Objekte ab.
             val inset = (screenWidthDp * 0.09f).coerceIn(14f, 24f)
@@ -147,6 +162,36 @@ object TileRenderer {
         }
 
         return column.build()
+    }
+
+    /**
+     * Ein Tipp auf die Kachel öffnet die App-Ansicht: nur dort lässt sich der
+     * Inhalt scrollen (Wischen und Krone).
+     */
+    private fun openAppAction(context: Context): ActionBuilders.Action =
+        ActionBuilders.LaunchAction.Builder()
+            .setAndroidActivity(
+                ActionBuilders.AndroidActivity.Builder()
+                    .setPackageName(context.packageName)
+                    .setClassName(APP_ACTIVITY)
+                    .build()
+            )
+            .build()
+
+    /** Grobe Schätzung, ob alle Zeilen gleichzeitig auf die Anzeige passen. */
+    private fun fitsOnScreen(rows: List<RowDef>, screenHeightDp: Int): Boolean {
+        if (rows.isEmpty()) return true
+        // Titel + Stand bleiben oben stehen
+        var used = 42f
+        rows.forEach { row ->
+            used += row.items.maxOfOrNull { item ->
+                when (item.type) {
+                    "button", "sensor" -> 32f
+                    else -> item.size.coerceIn(8f, 30f) * 1.7f + 8f
+                }
+            } ?: 0f
+        }
+        return used <= screenHeightDp
     }
 
     /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */

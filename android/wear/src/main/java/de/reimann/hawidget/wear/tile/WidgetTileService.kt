@@ -55,6 +55,7 @@ class WidgetTileService : TileService() {
             loadSnapshot(settings),
             settings.lastRefresh,
             requestParams.deviceParameters?.screenWidthDp ?: 192,
+            requestParams.deviceParameters?.screenHeightDp ?: 192,
             statusNote(settings, now, pressedKey != null),
         )
 
