@@ -82,8 +82,12 @@ class WidgetTileService : TileService() {
         TileIcons.all.forEach { (id, drawableRes) ->
             builder.addIdToImageMapping(
                 id,
-                ResourceBuilders.AndroidImageResourceByResId.Builder()
-                    .setResourceId(drawableRes)
+                ResourceBuilders.ImageResource.Builder()
+                    .setAndroidResourceByResId(
+                        ResourceBuilders.AndroidImageResourceByResId.Builder()
+                            .setResourceId(drawableRes)
+                            .build()
+                    )
                     .build()
             )
         }
