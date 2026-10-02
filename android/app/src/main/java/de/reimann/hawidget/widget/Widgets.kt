@@ -81,6 +81,7 @@ object Widgets {
         assignMissingWidgets(context, client, ids)
 
         val cache = HashMap<String, WidgetSnapshot?>()
+        val raw = HashMap<String, String>()
         val failed = HashSet<String>()
 
         for (appWidgetId in ids) {
@@ -92,10 +93,11 @@ object Widgets {
             }
 
             if (!cache.containsKey(widgetId)) {
-                val raw = runCatching { client.snapshotRaw(widgetId) }.getOrNull()
-                if (raw != null) {
-                    WidgetPrefs.saveSnapshot(context, widgetId, raw)
-                    cache[widgetId] = runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
+                val json = runCatching { client.snapshotRaw(widgetId) }.getOrNull()
+                if (json != null) {
+                    WidgetPrefs.saveSnapshot(context, widgetId, json)
+                    raw[widgetId] = json
+                    cache[widgetId] = runCatching { WidgetJson.parseSnapshot(json) }.getOrNull()
                 } else {
                     failed.add(widgetId)
                     cache[widgetId] = cachedSnapshot(context, widgetId)
@@ -109,6 +111,55 @@ object Widgets {
                 else -> null
             }
             update(context, appWidgetId, snapshot, status)
+        }
+
+        pushToWatches(context, client, raw)
+    }
+
+    /**
+     * Stand an die Uhren schicken.
+     *
+     * Der Data Layer kennt nur „an alle Uhren“ – damit jede Uhr ihre eigene Fassung
+     * zeigen kann, geht der Stand als Nachricht an genau den Knoten der Uhr. Ohne
+     * eigene Fassung zeigt die Uhr das Widget, das auch am Handy hängt.
+     */
+    private suspend fun pushToWatches(
+        context: Context,
+        client: HaClient,
+        known: Map<String, String>,
+    ) {
+        val raw = HashMap(known)
+
+        /** Stand eines Widgets – möglichst aus dem gerade geholten Abruf. */
+        suspend fun rawOf(widgetId: String): String? = raw[widgetId] ?: withContext(Dispatchers.IO) {
+            runCatching { client.snapshotRaw(widgetId) }.getOrNull()?.also { json ->
+                WidgetPrefs.saveSnapshot(context, widgetId, json)
+                raw[widgetId] = json
+            }
+        }
+
+        val widgets = withContext(Dispatchers.IO) {
+            runCatching { client.listWidgets() }.getOrNull()
+        } ?: return
+
+        // Das Widget, das am Handy hängt (die reine Uhr-Fassungen ausschließen)
+        val home = widgets.firstOrNull { !it.isWatchOnly } ?: widgets.firstOrNull()
+        val nodes = withContext(Dispatchers.IO) { Watches.connected(context) }
+
+        if (nodes.isEmpty()) {
+            // Keine Uhr verbunden: wie bisher an alle schicken, die Uhr holt sich
+            // den Stand später auch selbst über ihre Nachricht.
+            home?.let { rawOf(it.id) }?.let { WearSync.pushSnapshot(context, it) }
+            return
+        }
+
+        for (node in nodes) {
+            val chosen = widgets.firstOrNull {
+                it.target == "watch" && it.watchNodes.contains(node.id)
+            } ?: widgets.firstOrNull { it.isWatchOnly && it.watchNodes.isEmpty() }
+                ?: home ?: continue
+
+            rawOf(chosen.id)?.let { WearSync.pushSnapshotToNode(context, node.id, it) }
         }
     }
 

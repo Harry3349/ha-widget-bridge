@@ -40,6 +40,8 @@ object Watches {
                 name = node.displayName?.takeIf { it.isNotBlank() } ?: "Uhr",
                 nearby = node.isNearby,
             )
+        }.also { list ->
+            Log.i(TAG, "Uhren: " + list.joinToString { "${it.name}=${it.id} (nah: ${it.nearby})" })
         }
     }.onFailure { Log.w(TAG, "Uhren konnten nicht gelesen werden: ${it.message}") }
         .getOrDefault(emptyList())

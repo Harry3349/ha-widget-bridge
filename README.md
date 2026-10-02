@@ -233,6 +233,33 @@ Ein Tipp irgendwo auf die Kachel öffnet dann die App-Ansicht auf der Uhr:
 Die Ansicht liegt zusätzlich in der App-Liste der Uhr und heißt dort *HA Widget*.
 Dadurch lässt sie sich auch öffnen, ohne zur Kachel zu wischen.
 
+### Mehrere Uhren: welche Uhr zeigt welches Widget?
+
+Im Handy-Widget-Bildschirm gibt es den Knopf **„Smartwatches (Widget auf der Uhr
+wählen)“**. Dort stehen alle Uhren, die per Bluetooth mit dem Handy verbunden sind (die
+Wear-App muss dort einmal geöffnet worden sein, damit die Uhr bekannt ist).
+
+Jede Uhr zeigt entweder das **gemeinsame Widget** (das Widget, das auch am Handy hängt)
+oder eine **eigene Fassung**. Eine eigene Fassung legst du an, indem du ein
+**Handy-Widget kopierst**:
+
+1. Im Bildschirm *Smartwatches* bei der Uhr auf **„Vom Handy kopieren“** tippen – oder
+   unten auf **„Widget vom Handy kopieren“** (dann gilt die Fassung für alle Uhren).
+2. Das gewünschte Handy-Widget aus der Liste auswählen. Es entsteht eine Kopie mit dem
+   Namen `… (Uhr)`; sie ist von Anfang an **nur für die Uhr** gedacht.
+3. Über **„Fassung wählen“** einer Uhr zuordnen. Eine Fassung kann auf mehreren Uhren
+   liegen; eine Uhr hat aber immer nur **eine** Fassung.
+
+In der Kopie kannst du danach alles ändern, ohne das Homescreen-Widget anzufassen:
+Zeilen weglassen (Schalter **Auf der Uhr anzeigen**), die Schrift vergrößern, Buttons
+austauschen usw. Die aktuelle Zuordnung steht immer unter dem Namen der Uhr
+(*„Zeigt: …“*).
+
+Damit die Uhren unterschiedliche Stände bekommen können, schickt die Handy-App den
+Snapshot **gezielt an die jeweilige Uhr** (statt an alle). Ein Button-Druck von der Uhr
+enthält die Kennung der angezeigten Fassung, damit das Handy den richtigen Service
+aufruft – auch wenn zwei Uhren verschiedene Fassungen zeigen.
+
 
 ---
 
@@ -387,6 +414,8 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `rows[]` | Liste (max. 8) | Zeilen-Layout für Handy **und** Uhr, siehe unten |
 | `watch_rows` | Zahl (0–8) | Zeilen auf der Uhr-Kachel; `0` = automatisch |
 | `watch_scale` | Zahl (0.6–1.8) | Schriftgrößen-Faktor für die Uhr (1.0 = unverändert) |
+| `target` | `both` \| `phone` \| `watch` | wo das Widget erscheint (Standard `both`) |
+| `watch_nodes` | Liste (max. 5) | Kennungen der Uhren, die dieses Widget zeigen (leer = alle Uhren) |
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
 | `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |
 | `value_label_above` | true/false | `true` = Name oben, Wert darunter (Standard: `Name · Wert` in einer Zeile) |
