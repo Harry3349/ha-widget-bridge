@@ -14,13 +14,11 @@ import androidx.compose.ui.unit.dp
 import de.reimann.hawidget.data.WidgetDef
 
 /**
- * Duplizieren: Vorlage, Ziel (Handy oder Uhr) und – bei einer Uhr – die Uhr, die
- * die Kopie sofort zeigen soll.
+ * Duplizieren: Vorlage und Ziel (Handy oder Uhr).
  */
 private data class DuplicateRequest(
     val source: WidgetDef? = null,
     val target: String = "watch",
-    val nodeId: String? = null,
 )
 
 /**
@@ -119,7 +117,7 @@ fun WidgetListScreen(
                     vm.startEdit(def)
                     onEdit()
                 },
-                onDuplicate = { duplicate = DuplicateRequest(def, oppositeOf(def), null) },
+                onDuplicate = { duplicate = DuplicateRequest(def, oppositeOf(def)) },
                 onDelete = { vm.deleteWidget(def.id) },
             )
         }
@@ -149,11 +147,6 @@ fun WidgetListScreen(
                 watch = watch,
                 widgets = vm.watchWidgets(),
                 onAssign = { widget -> vm.assignWatchWidget(widget, watch.id) },
-                onCopy = { duplicate = DuplicateRequest(null, "watch", watch.id) },
-                onEdit = { widget ->
-                    vm.startEdit(widget)
-                    onEdit()
-                },
             )
         }
 
@@ -167,13 +160,13 @@ fun WidgetListScreen(
         }
 
         OutlinedButton(
-            onClick = { duplicate = DuplicateRequest(null, "watch", null) },
+            onClick = { duplicate = DuplicateRequest(null, "watch") },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Uhr-Fassung aus einem Handy-Widget anlegen")
         }
 
-        val watchWidgets = vm.watchOnlyWidgets()
+        val watchWidgets = vm.watchWidgets()
         if (watchWidgets.isEmpty() && !vm.busy) {
             Text(
                 "Noch keine eigene Fassung für die Uhr – die Uhren zeigen das gemeinsame Widget.",
@@ -189,7 +182,7 @@ fun WidgetListScreen(
                     vm.startEdit(def)
                     onEdit()
                 },
-                onDuplicate = { duplicate = DuplicateRequest(def, "watch", null) },
+                onDuplicate = { duplicate = DuplicateRequest(def, "watch") },
                 onDelete = { vm.deleteWidget(def.id) },
             )
         }
@@ -298,9 +291,10 @@ private fun DuplicateDialog(
                 }
                 Text(
                     if (target == "watch") {
-                        "Die Kopie heißt „… (Uhr)“ und erscheint nur auf der Uhr. Dort kannst " +
-                            "du sie bearbeiten (Zeilen weglassen, Schrift größer stellen), ohne " +
-                            "das Homescreen-Widget zu verändern."
+                        "Die Kopie heißt „… (Uhr)“ und erscheint nur auf der Uhr – oben bei " +
+                            "der Uhr ordnest du sie zu. Dort kannst du sie bearbeiten (Zeilen " +
+                            "weglassen, Schrift größer stellen), ohne das Homescreen-Widget " +
+                            "zu verändern."
                     } else {
                         "Die Kopie heißt „… (Handy)“ und erscheint nur auf dem Homescreen. " +
                             "Hefte sie danach über „Widget zum Homescreen hinzufügen“ an."
@@ -308,21 +302,13 @@ private fun DuplicateDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-
-                request.nodeId?.let { node ->
-                    Text(
-                        "Wird sofort dieser Uhr zugeordnet: ${watchName(vm, node)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = source != null && vm.widgets.isNotEmpty(),
                 onClick = {
-                    source?.let { vm.duplicateWidget(it, target, request.nodeId) }
+                    source?.let { vm.duplicateWidget(it, target) }
                     onDismiss()
                 },
             ) { Text("Duplizieren") }

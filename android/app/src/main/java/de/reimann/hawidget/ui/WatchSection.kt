@@ -13,16 +13,15 @@ import de.reimann.hawidget.wear.WatchNode
 /**
  * Eine verbundene Uhr mit der Auswahl ihrer Fassung.
  *
- * Wird in der Widget-Übersicht unter „Smartwatch (Uhr)“ angezeigt: Hier wird
- * eingestellt, welches der verfügbaren Widgets diese Uhr verwendet.
+ * Wird in der Widget-Übersicht unter „Smartwatch (Uhr)“ angezeigt: Hier wird nur
+ * eingestellt, welche der vorhandenen Uhr-Fassungen diese Uhr verwendet. Angelegt
+ * und bearbeitet werden die Fassungen in der Liste darunter.
  */
 @Composable
 internal fun WatchCard(
     watch: WatchNode,
     widgets: List<WidgetDef>,
     onAssign: (WidgetDef) -> Unit,
-    onCopy: () -> Unit,
-    onEdit: (WidgetDef) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
     val assigned = widgets.firstOrNull { it.watchNodes.contains(watch.id) }
@@ -48,37 +47,30 @@ internal fun WatchCard(
                 style = MaterialTheme.typography.bodyMedium,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box {
-                    OutlinedButton(onClick = { open = true }) {
-                        Text("Fassung wählen")
-                        Spacer(Modifier.width(6.dp))
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            Box {
+                OutlinedButton(onClick = { open = true }) {
+                    Text("Fassung wählen")
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+                }
+                DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                    if (widgets.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("Noch keine Uhr-Fassung angelegt") },
+                            enabled = false,
+                            onClick = { open = false },
+                        )
                     }
-                    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                        if (widgets.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("Noch keine Uhr-Fassung angelegt") },
-                                enabled = false,
-                                onClick = { open = false },
-                            )
-                        }
-                        widgets.forEach { widget ->
-                            DropdownMenuItem(
-                                text = { Text(widget.name) },
-                                onClick = {
-                                    onAssign(widget)
-                                    open = false
-                                },
-                            )
-                        }
+                    widgets.forEach { widget ->
+                        DropdownMenuItem(
+                            text = { Text(widget.name) },
+                            onClick = {
+                                onAssign(widget)
+                                open = false
+                            },
+                        )
                     }
                 }
-                OutlinedButton(onClick = onCopy) { Text("Kopie anlegen") }
-            }
-
-            if (assigned != null) {
-                TextButton(onClick = { onEdit(assigned) }) { Text("Fassung bearbeiten") }
             }
         }
     }

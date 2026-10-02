@@ -210,23 +210,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Widgets für den Homescreen (auch die, die zusätzlich auf der Uhr liegen). */
+    /** Widgets für den Homescreen. */
     fun phoneWidgets(): List<WidgetDef> = widgets.filter { !it.isWatchOnly }
 
-    /** Uhr-Fassungen (alles, was der Uhr zugeordnet werden kann). */
+    /** Uhr-Fassungen – sie lassen sich einer Uhr zuordnen. */
     fun watchWidgets(): List<WidgetDef> = widgets.filter { it.isWatchOnly }
-
-    /** Reine Uhr-Fassungen (Kopien für die Smartwatch). */
-    fun watchOnlyWidgets(): List<WidgetDef> = widgets.filter { it.isWatchOnly }
 
     /**
      * Ein Widget duplizieren – wahlweise als **Handy-Widget** (Homescreen) oder als
      * **Smartwatch-Widget** (Fassung für die Uhr).
-     *
-     * ``nodeId`` ordnet die Kopie zusätzlich sofort einer Uhr zu; dabei wird sie aus
-     * allen anderen Uhr-Fassungen gelöst, damit eine Uhr nur eine zeigt.
      */
-    fun duplicateWidget(source: WidgetDef, target: String, nodeId: String? = null) {
+    fun duplicateWidget(source: WidgetDef, target: String) {
         val client = clientOrNull() ?: return
         val forWatch = target == "watch"
 
@@ -234,22 +228,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
-                    val copy = source.copy(
-                        id = uniqueId(source.id + if (forWatch) "_uhr" else "_handy"),
-                        name = (source.name + if (forWatch) " (Uhr)" else " (Handy)").take(80),
-                        target = if (forWatch) "watch" else "phone",
-                        watchNodes = listOfNotNull(nodeId?.takeIf { it.isNotBlank() }),
-                        revision = 0,
+                    client.saveWidget(
+                        source.copy(
+                            id = uniqueId(source.id + if (forWatch) "_uhr" else "_handy"),
+                            name = (source.name + if (forWatch) " (Uhr)" else " (Handy)").take(80),
+                            target = if (forWatch) "watch" else "phone",
+                            watchNodes = emptyList(),
+                            revision = 0,
+                        )
                     )
-                    val saved = client.saveWidget(copy)
-                    if (!nodeId.isNullOrBlank()) {
-                        widgets.filter { other ->
-                            other.target == "watch" && other.watchNodes.contains(nodeId)
-                        }.forEach { other ->
-                            client.saveWidget(other.copy(watchNodes = other.watchNodes - nodeId))
-                        }
-                    }
-                    saved
                 }
             }
             busy = false
