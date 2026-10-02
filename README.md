@@ -175,7 +175,7 @@ Oder: `android/` in Android Studio öffnen und „Run“ drücken.
 
 ## 5. Wear OS (Uhr)
 
-Das Wear-Modul zeigt dasselbe Widget als **Tile** auf der Uhr – mit Werten **und**
+Das Wear-Modul zeigt die **Uhr-Fassung** als **Tile** auf der Uhr – mit Werten **und**
 Buttons in einer Oberfläche, im selben Aufbau wie am Handy (Titel + Stand, Buttons,
 darunter die Werte als Raster mit dem Namen über dem Wert – Spaltenzahl und
 „Wert unter dem Namen“ kommen aus der Widget-Definition).
@@ -190,8 +190,8 @@ Home Assistant ──HTTP──▶ Handy-App ──Wearable Data Layer──▶ 
 ```
 
 * Die Handy-App legt nach jedem Abruf (Intervall, Live-Modus, Antippen, Button) den
-  Snapshot für die Uhr ab – auch wenn die Handy-App geschlossen ist, weckt der
-  Data-Layer-Dienst sie.
+  Snapshot **gezielt für die Uhren** ab, die eine Fassung haben – auch wenn die Handy-App
+  geschlossen ist, weckt der Data-Layer-Dienst sie.
 * Die Uhr zeigt den zwischengespeicherten Snapshot und schickt nur kurze Nachrichten:
   „Button gedrückt“ (Handy schaltet und schickt den neuen Stand zurück) und „bitte
   aktualisieren“ (Handy holt einen frischen Stand).
