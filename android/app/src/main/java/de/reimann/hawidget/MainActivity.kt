@@ -42,12 +42,19 @@ class MainActivity : ComponentActivity() {
 
         val configured = Settings(applicationContext).isConfigured
 
+        // Kleine Hilfe beim Testen: Mit `adb shell am start … --es screen watches`
+        // lässt sich der Smartwatch-Bildschirm direkt öffnen (auf manchen Geräten
+        // ist Tippen per adb gesperrt). Ohne Extra bleibt es beim normalen Start.
+        val startScreen = when (intent?.getStringExtra(EXTRA_SCREEN)) {
+            "watches" -> Screen.WATCHES
+            "setup" -> Screen.SETUP
+            else -> if (configured) Screen.WIDGETS else Screen.SETUP
+        }
+
         setContent {
             HaWidgetBridgeTheme {
                 val vm: MainViewModel = viewModel()
-                var screen by remember {
-                    mutableStateOf(if (configured) Screen.WIDGETS else Screen.SETUP)
-                }
+                var screen by remember { mutableStateOf(startScreen) }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -134,5 +141,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private const val REQUEST_NOTIFICATIONS = 1001
+
+        /** Siehe oben: `--es screen watches` öffnet den Smartwatch-Bildschirm. */
+        private const val EXTRA_SCREEN = "screen"
     }
 }

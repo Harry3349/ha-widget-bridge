@@ -150,6 +150,13 @@ gradle wrapper --gradle-version 8.9     # einmalig
 
 Oder: `android/` in Android Studio öffnen und „Run“ drücken.
 
+> **Wichtig für die Uhr:** Das Wear-Modul benutzt **denselben Paketnamen** wie die
+> Handy-App (`de.reimann.hawidget`). Der Wearable Data Layer ordnet Nachrichten und
+> Daten ausschließlich über den Paketnamen zu – bei einem anderen Namen kommen auf der
+> Uhr keine Aktualisierungen an (`WearableService: Failed to deliver message to AppKey`).
+> Telefon- und Uhren-App werden nie auf demselben Gerät installiert, deshalb ist das
+> kein Konflikt.
+
 ## 3. App einrichten
 
 1. In Home Assistant einen **Long-Lived Access Token** erzeugen:
