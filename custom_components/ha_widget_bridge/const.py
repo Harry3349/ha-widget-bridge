@@ -77,6 +77,15 @@ WATCH_SCALE_MIN = 0.6
 WATCH_SCALE_MAX = 1.8
 DEFAULT_WATCH_SCALE = 1.0
 
+# Ziel eines Widgets: "both" = Handy + Uhr (Standard), "phone" = nur Handy,
+# "watch" = eigene Fassung für die Uhr (in der App vom Handy-Widget kopiert).
+WIDGET_TARGETS = ("both", "phone", "watch")
+DEFAULT_TARGET = "both"
+
+# Auf welchen Uhren (Wear-Knoten) dieses Widget erscheinen soll (leer = alle).
+MAX_WATCH_NODES = 5
+WATCH_NODE_LENGTH = 80
+
 # Schwellwert in W, ab dem ein Wert als "aktiv" (grün) gilt
 DEFAULT_THRESHOLD = 0.5
 

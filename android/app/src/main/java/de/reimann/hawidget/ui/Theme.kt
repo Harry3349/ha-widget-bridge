@@ -29,6 +29,7 @@ fun HaWidgetBridgeTheme(content: @Composable () -> Unit) {
 /** Bildschirme der App (bewusst ohne Navigations-Bibliothek). */
 enum class Screen {
     WIDGETS,
+    WATCHES,
     EDITOR,
     SETUP,
 }

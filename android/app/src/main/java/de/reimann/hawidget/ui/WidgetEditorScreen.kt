@@ -262,7 +262,7 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
 private const val NEW_ENTRY = -1
 
 @Composable
-private fun ListRow(
+internal fun ListRow(
     title: String,
     subtitle: String,
     onEdit: () -> Unit,

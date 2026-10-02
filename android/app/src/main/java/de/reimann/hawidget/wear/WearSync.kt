@@ -33,6 +33,21 @@ object WearSync {
         }.onFailure { Log.w(TAG, "Data Layer nicht verfügbar: ${it.message}") }
     }
 
+    /**
+     * Snapshot gezielt an *eine* Uhr schicken (Nachricht an ihren Knoten).
+     *
+     * So kann jede Uhr eine eigene Fassung zeigen; der Data Layer oben verteilt
+     * einen Snapshot immer an alle Uhren.
+     */
+    fun pushSnapshotToNode(context: Context, nodeId: String, json: String?) {
+        if (json.isNullOrBlank() || nodeId.isBlank()) return
+        runCatching {
+            Wearable.getMessageClient(context)
+                .sendMessage(nodeId, PATH_SNAPSHOT, json.toByteArray())
+        }.onSuccess { Log.d(TAG, "Snapshot an die Uhr $nodeId übertragen") }
+            .onFailure { Log.w(TAG, "Übertragen an $nodeId fehlgeschlagen: ${it.message}") }
+    }
+
     /** Kurze Nachricht an die Uhr (z. B. „Druck fehlgeschlagen“). */
     fun sendToWatch(context: Context, path: String, payload: String = "") {
         runCatching {

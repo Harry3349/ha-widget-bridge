@@ -31,8 +31,20 @@ object WidgetJson {
         valueLabelAbove = json.optBoolean("value_label_above", false),
         watchRows = json.optInt("watch_rows", 0).coerceIn(0, 8),
         watchScale = json.optDouble("watch_scale", 1.0).toFloat().coerceIn(0.6f, 1.8f),
+        target = json.optString("target", "both").ifBlank { "both" },
+        watchNodes = parseWatchNodes(json.optJSONArray("watch_nodes")),
         revision = json.optInt("revision", 0),
     )
+
+    private fun parseWatchNodes(array: JSONArray?): List<String> {
+        if (array == null) return emptyList()
+        val result = ArrayList<String>(array.length())
+        for (index in 0 until array.length()) {
+            val node = array.optString(index).trim()
+            if (node.isNotEmpty() && node.length <= 80) result.add(node)
+        }
+        return result
+    }
 
     fun parseSnapshot(body: String): WidgetSnapshot {
         val json = JSONObject(body)
@@ -305,6 +317,10 @@ object WidgetJson {
         json.put("rows", rows)
         json.put("watch_rows", def.watchRows.coerceIn(0, 8))
         json.put("watch_scale", def.watchScale.coerceIn(0.6f, 1.8f).toDouble())
+        json.put("target", def.target)
+        val nodes = JSONArray()
+        def.watchNodes.take(5).forEach { node -> nodes.put(node) }
+        json.put("watch_nodes", nodes)
 
         val theme = JSONObject()
         theme.put("background", def.theme.background)

@@ -35,10 +35,26 @@ class SnapshotListener : WearableListenerService() {
     }
 
     override fun onMessageReceived(event: MessageEvent) {
-        if (event.path != Bridge.PATH_PRESS_FAILED) return
-        Log.w(TAG, "Handy meldet fehlgeschlagenen Tastendruck")
-        Settings(this).pressFailedAt = System.currentTimeMillis()
-        Bridge.updateTile(this)
+        when (event.path) {
+            // Eigene Fassung für diese Uhr (aus dem Smartwatch-Bereich der App)
+            Bridge.PATH_SNAPSHOT -> {
+                val raw = event.data?.toString(Charsets.UTF_8).orEmpty()
+                if (raw.isBlank()) return
+                val settings = Settings(this)
+                settings.snapshotJson = raw
+                settings.lastRefresh = System.currentTimeMillis()
+                Log.d(TAG, "Snapshot für diese Uhr erhalten (${raw.length} Zeichen)")
+                Bridge.updateTile(this)
+            }
+
+            Bridge.PATH_PRESS_FAILED -> {
+                Log.w(TAG, "Handy meldet fehlgeschlagenen Tastendruck")
+                Settings(this).pressFailedAt = System.currentTimeMillis()
+                Bridge.updateTile(this)
+            }
+
+            else -> Unit
+        }
     }
 
     companion object {

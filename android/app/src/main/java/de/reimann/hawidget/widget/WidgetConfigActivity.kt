@@ -56,7 +56,8 @@ class WidgetConfigActivity : ComponentActivity() {
                         runCatching { settings.client().listWidgets() }
                     }
                     loading = false
-                    result.onSuccess { widgets = it }
+                    // Reine Uhr-Fassungen gehören nicht auf den Homescreen
+                    result.onSuccess { all -> widgets = all.filter { !it.isWatchOnly } }
                         .onFailure { error = it.message ?: "Unbekannter Fehler" }
                 }
 

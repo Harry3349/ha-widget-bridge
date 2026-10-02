@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_VALUE_LABEL_ABOVE,
     DEFAULT_WATCH_ROWS,
     DEFAULT_WATCH_SCALE,
+    DEFAULT_TARGET,
     DOMAIN,
     LOGGER,
     MAX_BUTTONS,
@@ -33,6 +34,7 @@ from .const import (
     MAX_TEMPLATE_LENGTH,
     MAX_VALUES,
     MAX_WIDGETS,
+    MAX_WATCH_NODES,
     ROW_ALIGNMENTS,
     ROW_ITEM_TYPES,
     SIGNAL_WIDGETS_UPDATED,
@@ -43,10 +45,12 @@ from .const import (
     TEXT_SIZE_MIN,
     VALUE_COLUMNS_MAX,
     VALUE_COLUMNS_MIN,
+    WATCH_NODE_LENGTH,
     WATCH_ROWS_MAX,
     WATCH_ROWS_MIN,
     WATCH_SCALE_MAX,
     WATCH_SCALE_MIN,
+    WIDGET_TARGETS,
 )
 
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,49}$")
@@ -412,6 +416,25 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
     except (TypeError, ValueError) as err:
         raise WidgetValidationError("watch_scale muss eine Zahl sein") from err
     watch_scale = min(max(watch_scale, WATCH_SCALE_MIN), WATCH_SCALE_MAX)
+
+    # Ziel: nur am Handy, nur auf der Uhr oder beides (Standard)
+    target = str(payload.get("target") or DEFAULT_TARGET).strip().lower()
+    if target not in WIDGET_TARGETS:
+        raise WidgetValidationError(f"target muss {'/'.join(WIDGET_TARGETS)} sein")
+
+    # Wear-Knoten (Uhren), auf denen dieses Widget erscheinen soll
+    raw_nodes = payload.get("watch_nodes") or []
+    if isinstance(raw_nodes, str):
+        raw_nodes = [part.strip() for part in raw_nodes.split(",") if part.strip()]
+    if not isinstance(raw_nodes, list):
+        raise WidgetValidationError("'watch_nodes' muss eine Liste sein")
+    watch_nodes: list[str] = []
+    for node in raw_nodes:
+        node_id = str(node).strip()[:WATCH_NODE_LENGTH]
+        if node_id and node_id not in watch_nodes:
+            watch_nodes.append(node_id)
+    if len(watch_nodes) > MAX_WATCH_NODES:
+        raise WidgetValidationError(f"Maximal {MAX_WATCH_NODES} Uhren pro Widget")
     buttons = _normalize_buttons(hass, payload.get("buttons"))
     # Buttons aus den Zeilen mit aufnehmen: nur so entstehen die
     # button.<widget>_<key>-Entitäten und das Drücken funktioniert.
@@ -433,6 +456,8 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         "rows": rows,
         "watch_rows": watch_rows,
         "watch_scale": round(watch_scale, 2),
+        "target": target,
+        "watch_nodes": watch_nodes,
         "theme": _normalize_theme(payload.get("theme")),
         "text_size": round(text_size, 1),
         "threshold": threshold,

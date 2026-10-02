@@ -16,6 +16,8 @@ import de.reimann.hawidget.data.WidgetDef
 import de.reimann.hawidget.data.WidgetJson
 import de.reimann.hawidget.widget.HaWidgetProvider
 import de.reimann.hawidget.widget.Widgets
+import de.reimann.hawidget.wear.Watches
+import de.reimann.hawidget.wear.WatchNode
 import de.reimann.hawidget.work.LiveUpdateService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,6 +42,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var instanceCount by mutableStateOf(0)
     var busy by mutableStateOf(false)
     var message by mutableStateOf<String?>(null)
+
+    // Smartwatches
+    /** Verbundene Uhren (Wearable Data Layer). */
+    var watches by mutableStateOf<List<WatchNode>>(emptyList())
+        private set
+    var watchesLoading by mutableStateOf(false)
+        private set
 
     // Editor
     var editor by mutableStateOf<WidgetDef?>(null)
@@ -127,7 +136,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ---------------------------------------------------------------- Editor
-
     fun startNewWidget() {
         editor = WidgetDef(id = "", name = "")
         previewText = null
@@ -164,6 +172,115 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updateEditor(transform: (WidgetDef) -> WidgetDef) {
         val current = editor ?: return
         editor = transform(current)
+    }
+
+    // ---------------------------------------------------------- Smartwatches
+
+    /** Verbundene Uhren abfragen (Bluetooth braucht einen Moment). */
+    fun loadWatches() {
+        watchesLoading = true
+        viewModelScope.launch {
+            val found = withContext(Dispatchers.IO) { Watches.connected(getApplication()) }
+            watches = found
+            watchesLoading = false
+            if (found.isEmpty()) {
+                message = "Keine Uhr gefunden – ist sie per Bluetooth mit dem Handy verbunden?"
+            }
+        }
+    }
+
+    /** Widgets, die für die Uhr gedacht sind. */
+    fun watchWidgets(): List<WidgetDef> = widgets.filter { it.target != "phone" }
+
+    /** Widgets, die als Vorlage taugen (alles außer reine Uhr-Fassungen). */
+    fun copyableWidgets(): List<WidgetDef> = widgets.filter { !it.isWatchOnly }
+
+    /**
+     * Ein Handy-Widget als eigene Fassung für die Uhr kopieren und – wenn eine Uhr
+     * gewählt ist – direkt dieser Uhr zuordnen.
+     */
+    fun copyToWatch(source: WidgetDef, nodeId: String?) {
+        val client = clientOrNull() ?: return
+        val copy = source.copy(
+            id = "${source.id}_uhr".take(50),
+            name = "${source.name} (Uhr)".take(80),
+            target = "watch",
+            watchNodes = listOfNotNull(nodeId?.takeIf { it.isNotBlank() }),
+            revision = 0,
+        )
+        busy = true
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { client.saveWidget(copy) } }
+            busy = false
+            result.onSuccess { saved ->
+                message = "„${saved.name}“ für die Uhr angelegt"
+                loadWidgets()
+                Widgets.refreshAllAsync(getApplication())
+            }.onFailure { message = "Kopieren fehlgeschlagen: ${it.message}" }
+        }
+    }
+
+    /**
+     * Festlegen, welche Fassung eine Uhr zeigt.
+     *
+     * Der Knoten wird aus allen anderen Uhr-Widgets entfernt, damit die
+     * Zuordnung eindeutig bleibt. Ohne Angabe (null) gilt wieder das gemeinsame
+     * Widget („Handy + Uhr“).
+     */
+    fun assignWatchWidget(widget: WidgetDef, nodeId: String?) {
+        val client = clientOrNull() ?: return
+        if (nodeId.isNullOrBlank()) return
+
+        busy = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    // Andere Widgets von dieser Uhr lösen
+                    widgets.filter { other ->
+                        other.id != widget.id && other.target == "watch" &&
+                            other.watchNodes.contains(nodeId)
+                    }.forEach { other ->
+                        client.saveWidget(other.copy(watchNodes = other.watchNodes - nodeId))
+                    }
+                    // und dieses Widget dieser Uhr zuordnen
+                    client.saveWidget(
+                        widget.copy(watchNodes = (widget.watchNodes + nodeId).distinct())
+                    )
+                }
+            }
+            busy = false
+            result.onSuccess {
+                message = "„${widget.name}“ ist jetzt auf dieser Uhr"
+                loadWidgets()
+                Widgets.refreshAllAsync(getApplication())
+            }.onFailure { message = "Zuordnen fehlgeschlagen: ${it.message}" }
+        }
+    }
+
+    /** Zuordnung einer Uhr aufheben (zurück zum gemeinsamen Widget). */
+    fun clearWatchAssignment(nodeId: String) {
+        val client = clientOrNull() ?: return
+        val assigned = widgets.filter { it.target == "watch" && it.watchNodes.contains(nodeId) }
+        if (assigned.isEmpty()) {
+            message = "Diese Uhr nutzt bereits das gemeinsame Widget"
+            return
+        }
+        busy = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    assigned.forEach { widget ->
+                        client.saveWidget(widget.copy(watchNodes = widget.watchNodes - nodeId))
+                    }
+                }
+            }
+            busy = false
+            result.onSuccess {
+                message = "Diese Uhr zeigt wieder das gemeinsame Widget"
+                loadWidgets()
+                Widgets.refreshAllAsync(getApplication())
+            }.onFailure { message = "Zurücksetzen fehlgeschlagen: ${it.message}" }
+        }
     }
 
     fun saveEditor() {

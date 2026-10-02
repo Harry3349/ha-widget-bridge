@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 fun WidgetListScreen(
     vm: MainViewModel,
     onEdit: () -> Unit,
+    onWatchSettings: () -> Unit,
     onAddToHomeScreen: () -> Unit,
 ) {
     Column(
@@ -53,6 +54,10 @@ fun WidgetListScreen(
             Text("Widget zum Homescreen hinzufügen")
         }
 
+        OutlinedButton(onClick = onWatchSettings, modifier = Modifier.fillMaxWidth()) {
+            Text("Smartwatches (Widget auf der Uhr wählen)")
+        }
+
         Row(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -78,7 +83,8 @@ fun WidgetListScreen(
                 ) {
                     Text(def.name, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "id: ${def.id} · ${def.values.size} Werte · ${def.buttons.size} Buttons · " +
+                        "id: ${def.id} · ${targetLabel(def)} · ${def.values.size} Werte · " +
+                            "${def.buttons.size} Buttons · " +
                             (if (def.rows.isNotEmpty()) "${def.rows.size} Zeilen · " else "") +
                             "Revision ${def.revision}",
                         style = MaterialTheme.typography.bodySmall,

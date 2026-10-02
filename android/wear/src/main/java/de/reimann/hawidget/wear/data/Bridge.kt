@@ -23,7 +23,12 @@ object Bridge {
 
     private const val TAG = "HAWidgetBridge"
 
-    fun press(context: Context, buttonKey: String) = send(context, PATH_PRESS, buttonKey)
+    fun press(context: Context, widgetId: String?, buttonKey: String) {
+        // Die Uhr kennt ihr Widget – das Handy braucht die Kennung, wenn mehrere
+        // Uhren unterschiedliche Widgets zeigen.
+        val payload = if (widgetId.isNullOrBlank()) buttonKey else "$widgetId|$buttonKey"
+        send(context, PATH_PRESS, payload)
+    }
 
     fun refresh(context: Context) = send(context, PATH_REFRESH, "")
 

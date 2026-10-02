@@ -105,9 +105,16 @@ data class WidgetDef(
     val valueColumns: Int = 1,
     /** true = Name in der ersten Zeile, Wert darunter */
     val valueLabelAbove: Boolean = false,
+    /** both = Handy + Uhr, phone = nur Handy, watch = eigene Fassung für die Uhr. */
+    val target: String = "both",
+    /** Wear-Knoten (Uhren), auf denen dieses Widget erscheinen soll (leer = alle). */
+    val watchNodes: List<String> = emptyList(),
     val revision: Int = 0,
 ) {
     val isNew: Boolean get() = revision == 0
+
+    /** Eigene Fassung nur für die Uhr (nicht auf dem Homescreen anbieten). */
+    val isWatchOnly: Boolean get() = target == "watch"
 }
 
 /** Zustand eines Buttons, wie ihn Home Assistant meldet. */

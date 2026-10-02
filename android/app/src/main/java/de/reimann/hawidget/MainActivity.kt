@@ -21,6 +21,7 @@ import de.reimann.hawidget.ui.HaWidgetBridgeTheme
 import de.reimann.hawidget.ui.MainViewModel
 import de.reimann.hawidget.ui.Screen
 import de.reimann.hawidget.ui.SetupScreen
+import de.reimann.hawidget.ui.WatchScreen
 import de.reimann.hawidget.ui.WidgetEditorScreen
 import de.reimann.hawidget.ui.WidgetListScreen
 
@@ -91,7 +92,17 @@ class MainActivity : ComponentActivity() {
                                 Screen.WIDGETS -> WidgetListScreen(
                                     vm = vm,
                                     onEdit = { screen = Screen.EDITOR },
+                                    onWatchSettings = { screen = Screen.WATCHES },
                                     onAddToHomeScreen = { vm.pinWidget() },
+                                )
+
+                                Screen.WATCHES -> WatchScreen(
+                                    vm = vm,
+                                    onBack = { screen = Screen.WIDGETS },
+                                    onEdit = { def ->
+                                        vm.startEdit(def)
+                                        screen = Screen.EDITOR
+                                    },
                                 )
 
                                 Screen.EDITOR -> WidgetEditorScreen(

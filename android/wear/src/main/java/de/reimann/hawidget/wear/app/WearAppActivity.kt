@@ -227,7 +227,7 @@ class WearAppActivity : Activity() {
                 cell.setOnClickListener {
                     val key = item.key
                     if (key.isNullOrBlank()) return@setOnClickListener
-                    Bridge.press(this, key)
+                    Bridge.press(this, snapshot?.id, key)
                     // Das Handy schaltet und schickt den neuen Stand zurück
                     handler.removeCallbacks(rerender)
                     handler.postDelayed(rerender, PRESS_RERENDER_MS)

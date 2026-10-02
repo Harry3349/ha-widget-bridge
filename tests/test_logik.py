@@ -464,6 +464,36 @@ check(breiten_render[0]["items"][1]["show_state"] is False,
 check(store.normalize_widget(hass, {"name": "Ohne"})["buttons"] == [],
       "ohne Buttons bleibt die Liste leer")
 
+# Ziel (Handy/Uhr) und Zuordnung zu konkreten Uhren
+ziel_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Uhr-Fassung",
+        "target": "watch",
+        "watch_nodes": ["abc123", "abc123", "def456"],
+    },
+)
+check(ziel_widget["target"] == "watch", "Ziel 'watch' wird gespeichert")
+check(ziel_widget["watch_nodes"] == ["abc123", "def456"], "Uhren werden entdoppelt")
+check(store.normalize_widget(hass, {"name": "Standard"})["target"] == "both",
+      "Standardziel ist Handy + Uhr")
+check(store.normalize_widget(hass, {"name": "Standard"})["watch_nodes"] == [],
+      "ohne Angabe sind alle Uhren gemeint")
+check(store.normalize_widget(hass, {"name": "Text", "watch_nodes": "abc, def"})["watch_nodes"]
+      == ["abc", "def"], "Uhrenliste darf auch als Text kommen")
+check(len(store.normalize_widget(hass, {"name": "Viele", "watch_nodes": ["a", "b", "c", "d", "e"]})["watch_nodes"]) == 5,
+      "bis zu fuenf Uhren erlaubt")
+try:
+    store.normalize_widget(hass, {"name": "Falsch", "target": "fernseher"})
+    check(False, "ungueltiges Ziel wird abgelehnt")
+except store.WidgetValidationError:
+    check(True, "ungueltiges Ziel wird abgelehnt")
+try:
+    store.normalize_widget(hass, {"name": "Zuviele", "watch_nodes": ["a", "b", "c", "d", "e", "f"]})
+    check(False, "zu viele Uhren werden abgelehnt")
+except store.WidgetValidationError:
+    check(True, "zu viele Uhren werden abgelehnt")
+
 expect_error(
     {"name": "Test", "rows": [{"items": [{"type": "lampe"}]}]},
     "type",

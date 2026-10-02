@@ -39,12 +39,13 @@ class WidgetTileService : TileService() {
 
         val settings = Settings(this)
         val now = System.currentTimeMillis()
+        val snapshot = loadSnapshot(settings)
 
         if (!pressedKey.isNullOrBlank()) {
             Log.d(TAG, "Button geklickt: $pressedKey")
             // Alte Fehlermeldung quittieren und das Handy schalten lassen
             settings.pressFailedAt = 0L
-            Bridge.press(this, pressedKey)
+            Bridge.press(this, snapshot?.id, pressedKey)
         } else if (now - settings.lastRefresh > DISPLAY_REFRESH_MS) {
             // Handy um einen frischen Stand bitten (es überträgt ihn selbst)
             Bridge.refresh(this)
@@ -52,7 +53,7 @@ class WidgetTileService : TileService() {
 
         val layout = TileRenderer.render(
             this,
-            loadSnapshot(settings),
+            snapshot,
             settings.lastRefresh,
             requestParams.deviceParameters?.screenWidthDp ?: 192,
             requestParams.deviceParameters?.screenHeightDp ?: 192,
