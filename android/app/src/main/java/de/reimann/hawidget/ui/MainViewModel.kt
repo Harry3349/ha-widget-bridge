@@ -189,34 +189,71 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Widgets, die für die Uhr gedacht sind. */
+    /** Widgets für den Homescreen (auch die, die zusätzlich auf der Uhr liegen). */
+    fun phoneWidgets(): List<WidgetDef> = widgets.filter { !it.isWatchOnly }
+
+    /** Widgets, die es (auch) auf der Uhr gibt – als Vorlage für eine Uhr-Fassung. */
     fun watchWidgets(): List<WidgetDef> = widgets.filter { it.target != "phone" }
 
-    /** Widgets, die als Vorlage taugen (alles außer reine Uhr-Fassungen). */
-    fun copyableWidgets(): List<WidgetDef> = widgets.filter { !it.isWatchOnly }
+    /** Reine Uhr-Fassungen (Kopien für die Smartwatch). */
+    fun watchOnlyWidgets(): List<WidgetDef> = widgets.filter { it.isWatchOnly }
 
     /**
-     * Ein Handy-Widget als eigene Fassung für die Uhr kopieren und – wenn eine Uhr
-     * gewählt ist – direkt dieser Uhr zuordnen.
+     * Ein Widget duplizieren – wahlweise als **Handy-Widget** (Homescreen) oder als
+     * **Smartwatch-Widget** (Fassung für die Uhr).
+     *
+     * ``nodeId`` ordnet die Kopie zusätzlich sofort einer Uhr zu; dabei wird sie aus
+     * allen anderen Uhr-Fassungen gelöst, damit eine Uhr nur eine zeigt.
      */
-    fun copyToWatch(source: WidgetDef, nodeId: String?) {
+    fun duplicateWidget(source: WidgetDef, target: String, nodeId: String? = null) {
         val client = clientOrNull() ?: return
-        val copy = source.copy(
-            id = "${source.id}_uhr".take(50),
-            name = "${source.name} (Uhr)".take(80),
-            target = "watch",
-            watchNodes = listOfNotNull(nodeId?.takeIf { it.isNotBlank() }),
-            revision = 0,
-        )
+        val forWatch = target == "watch"
+
         busy = true
         viewModelScope.launch {
-            val result = runCatching { withContext(Dispatchers.IO) { client.saveWidget(copy) } }
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val copy = source.copy(
+                        id = uniqueId(source.id + if (forWatch) "_uhr" else "_handy"),
+                        name = (source.name + if (forWatch) " (Uhr)" else " (Handy)").take(80),
+                        target = if (forWatch) "watch" else "phone",
+                        watchNodes = listOfNotNull(nodeId?.takeIf { it.isNotBlank() }),
+                        revision = 0,
+                    )
+                    val saved = client.saveWidget(copy)
+                    if (!nodeId.isNullOrBlank()) {
+                        widgets.filter { other ->
+                            other.target == "watch" && other.watchNodes.contains(nodeId)
+                        }.forEach { other ->
+                            client.saveWidget(other.copy(watchNodes = other.watchNodes - nodeId))
+                        }
+                    }
+                    saved
+                }
+            }
             busy = false
             result.onSuccess { saved ->
-                message = "„${saved.name}“ für die Uhr angelegt"
+                message = if (forWatch) {
+                    "„${saved.name}“ als Uhr-Widget angelegt"
+                } else {
+                    "„${saved.name}“ als Handy-Widget angelegt"
+                }
                 loadWidgets()
                 Widgets.refreshAllAsync(getApplication())
-            }.onFailure { message = "Kopieren fehlgeschlagen: ${it.message}" }
+            }.onFailure { message = "Duplizieren fehlgeschlagen: ${it.message}" }
+        }
+    }
+
+    /** Kennung, die noch nicht vergeben ist (Anhang ``_2``, ``_3`` …). */
+    private fun uniqueId(base: String): String {
+        val taken = widgets.map { it.id }.toSet()
+        val trimmed = base.take(50)
+        if (trimmed !in taken) return trimmed
+        var suffix = 2
+        while (true) {
+            val candidate = trimmed.take(46) + "_" + suffix
+            if (candidate !in taken) return candidate
+            suffix++
         }
     }
 

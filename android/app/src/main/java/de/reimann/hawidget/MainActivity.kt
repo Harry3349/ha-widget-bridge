@@ -21,7 +21,6 @@ import de.reimann.hawidget.ui.HaWidgetBridgeTheme
 import de.reimann.hawidget.ui.MainViewModel
 import de.reimann.hawidget.ui.Screen
 import de.reimann.hawidget.ui.SetupScreen
-import de.reimann.hawidget.ui.WatchScreen
 import de.reimann.hawidget.ui.WidgetEditorScreen
 import de.reimann.hawidget.ui.WidgetListScreen
 
@@ -42,11 +41,9 @@ class MainActivity : ComponentActivity() {
 
         val configured = Settings(applicationContext).isConfigured
 
-        // Kleine Hilfe beim Testen: Mit `adb shell am start … --es screen watches`
-        // lässt sich der Smartwatch-Bildschirm direkt öffnen (auf manchen Geräten
-        // ist Tippen per adb gesperrt). Ohne Extra bleibt es beim normalen Start.
+        // Kleine Hilfe beim Testen: `adb shell am start … --es screen setup` öffnet
+        // die Einrichtung, auch wenn schon eingerichtet ist.
         val startScreen = when (intent?.getStringExtra(EXTRA_SCREEN)) {
-            "watches" -> Screen.WATCHES
             "setup" -> Screen.SETUP
             else -> if (configured) Screen.WIDGETS else Screen.SETUP
         }
@@ -99,17 +96,7 @@ class MainActivity : ComponentActivity() {
                                 Screen.WIDGETS -> WidgetListScreen(
                                     vm = vm,
                                     onEdit = { screen = Screen.EDITOR },
-                                    onWatchSettings = { screen = Screen.WATCHES },
                                     onAddToHomeScreen = { vm.pinWidget() },
-                                )
-
-                                Screen.WATCHES -> WatchScreen(
-                                    vm = vm,
-                                    onBack = { screen = Screen.WIDGETS },
-                                    onEdit = { def ->
-                                        vm.startEdit(def)
-                                        screen = Screen.EDITOR
-                                    },
                                 )
 
                                 Screen.EDITOR -> WidgetEditorScreen(
