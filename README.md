@@ -326,6 +326,13 @@ App-Einstellungen abschaltbar; ohne ihn aktualisiert das Widget alle 15 Minuten,
 Antippen und nach jedem Button-Druck. Bei ausgeschaltetem Bildschirm trennt der Dienst die
 Verbindung und verbindet sich beim Einschalten neu – dann wird sofort aktualisiert.
 
+**Nach einem Home-Assistant-Neustart** verbindet sich der Live-Modus selbsttätig wieder:
+Ein Wächter prüft alle 15 s, ob eine Verbindung besteht, baut sie bei Bedarf neu auf und
+holt sofort einen frischen Snapshot (der Fehlerhinweis im Widget verschwindet damit von
+allein). Die Dauerbenachrichtigung zeigt den Zustand („Live-Verbindung steht“ bzw.
+„Live-Verbindung wird neu aufgebaut …“). Ohne Live-Modus aktualisiert sich das Widget beim
+nächsten Intervall, beim Antippen oder beim Öffnen der App.
+
 ---
 
 ## Fehlersuche
@@ -377,6 +384,9 @@ aktualisieren und keine Handkopie parallel pflegen.
   (mit `https://` und Port, z. B. `https://homeassistant.local:8123`).
 * Das Widget zeigt bei Netzproblemen den zuletzt bekannten Stand weiter an (Cache);
   die kleine Zeile oben rechts nennt dann den Fehler.
+* Nach einem Home-Assistant-Neustart erholt sich das Widget im Live-Modus innerhalb von
+  etwa 15 Sekunden von selbst. Ohne Live-Modus hilft Antippen, ein Button-Druck oder das
+  Öffnen der App – oder das nächste Intervall abwarten.
 
 ## Bekannte Einschränkungen
 

@@ -49,7 +49,9 @@ class LiveUpdateService : Service() {
         .build()
 
     private var socket: WebSocket? = null
+    private val socketLock = Any()
     private var refreshJob: Job? = null
+    private var watchdogJob: Job? = null
     private var running = false
     private var screenReceiverRegistered = false
 
@@ -92,21 +94,20 @@ class LiveUpdateService : Service() {
         if (!running) {
             running = true
             refreshJob = scope.launch { refreshLoop() }
+            watchdogJob = scope.launch { connectionWatchdog() }
         }
-        // Nur verbinden, wenn noch keine Verbindung besteht und das Widget
-        // sichtbar sein kann (sonst wartet der Dienst auf SCREEN_ON)
-        if (socket == null && ScreenState.isVisible(this)) {
-            connect()
-        }
+        // Nur verbinden, wenn das Widget sichtbar sein kann (sonst wartet der
+        // Dienst auf SCREEN_ON). Mehrfache Aufrufe sind unschädlich.
+        connect()
 
         return START_STICKY
     }
 
     override fun onDestroy() {
         running = false
-        runCatching { socket?.close(1000, null) }
-        socket = null
+        runCatching { takeSocket()?.close(1000, null) }
         refreshJob?.cancel()
+        watchdogJob?.cancel()
         if (screenReceiverRegistered) {
             runCatching { unregisterReceiver(screenReceiver) }
             screenReceiverRegistered = false
@@ -119,14 +120,14 @@ class LiveUpdateService : Service() {
 
     private fun pauseForScreenOff() {
         Log.d(TAG, "Bildschirm aus – Live-Verbindung wird getrennt")
-        runCatching { socket?.close(1000, null) }
-        socket = null
+        val current = takeSocket()
+        runCatching { current?.close(1000, null) }
     }
 
     private fun resumeForScreenOn() {
         if (!ScreenState.isVisible(this)) return
         Log.d(TAG, "Bildschirm an – Live-Verbindung wird aufgebaut")
-        if (socket == null) connect()
+        connect()
         // Einmal sofort aktualisieren, damit das Widget nicht mit alten Werten
         // erscheint, während die Events eintrudeln.
         changes.trySend(Unit)
@@ -134,46 +135,83 @@ class LiveUpdateService : Service() {
 
     // ------------------------------------------------------------ WebSocket
 
+    /**
+     * Verbindung aufbauen, falls keine besteht.
+     *
+     * Bewusst mehrfach aufrufbar: Wächter, Display-Ereignis und Dienststart
+     * dürfen sich nicht gegenseitig überholen.
+     */
     private fun connect() {
+        if (!ScreenState.isVisible(this)) return
+
         val settings = Settings(this)
         if (!settings.isConfigured) return
 
-        val request = Request.Builder().url(settings.client().websocketUrl()).build()
-
-        socket = http.newWebSocket(
-            request,
-            object : WebSocketListener() {
-                override fun onMessage(webSocket: WebSocket, text: String) {
-                    val json = runCatching { JSONObject(text) }.getOrNull() ?: return
-                    when (json.optString("type")) {
-                        "auth_required" -> webSocket.send(authMessage(settings.token))
-                        "auth_ok" -> webSocket.send(SUBSCRIBE_MESSAGE)
-                        "event" -> changes.trySend(Unit)
-                    }
-                }
-
-                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                    scheduleReconnect()
-                }
-
-                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                    scheduleReconnect()
-                }
-            },
-        )
+        synchronized(socketLock) {
+            if (socket != null) return
+            val request = Request.Builder().url(settings.client().websocketUrl()).build()
+            socket = http.newWebSocket(request, listener(settings))
+        }
     }
 
-    private fun authMessage(token: String): String =
-        JSONObject().put("type", "auth").put("access_token", token).toString()
+    /** Feld leeren (unter Sperre) und die alte Verbindung zurückgeben. */
+    private fun takeSocket(): WebSocket? = synchronized(socketLock) {
+        val current = socket
+        socket = null
+        current
+    }
 
-    private fun scheduleReconnect() {
-        if (!running) return
-        scope.launch {
-            delay(RECONNECT_DELAY_MS)
-            // Bei ausgeschaltetem Bildschirm wartet der Dienst auf SCREEN_ON
-            if (running && socket == null && ScreenState.isVisible(this@LiveUpdateService)) {
-                connect()
+    /**
+     * Verbindung aus dem Feld entfernen – aber nur, wenn sie noch die aktuelle
+     * ist. Sonst würde das Schließen einer alten Verbindung die neue verwerfen.
+     */
+    private fun dropSocket(webSocket: WebSocket) {
+        synchronized(socketLock) {
+            if (socket === webSocket) socket = null
+        }
+    }
+
+    private fun listener(settings: Settings) = object : WebSocketListener() {
+        override fun onMessage(webSocket: WebSocket, text: String) {
+            val json = runCatching { JSONObject(text) }.getOrNull() ?: return
+            when (json.optString("type")) {
+                "auth_required" -> webSocket.send(authMessage(settings.token))
+                "auth_ok" -> {
+                    webSocket.send(SUBSCRIBE_MESSAGE)
+                    Log.d(TAG, "Live-Verbindung steht")
+                    updateNotification(getString(R.string.live_status_connected))
+                    // Sofort einmal aktualisieren: nach einem HA-Neustart bleibt das
+                    // Widget sonst mit dem Fehlerhinweis stehen, obwohl der Server
+                    // längst wieder antwortet (Events kommen erst nach dem Abo).
+                    changes.trySend(Unit)
+                }
+                "event" -> changes.trySend(Unit)
             }
+        }
+
+        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            Log.w(TAG, "Live-Verbindung verloren: ${t.message}")
+            dropSocket(webSocket)
+            updateNotification(getString(R.string.live_status_reconnecting))
+        }
+
+        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            dropSocket(webSocket)
+        }
+    }
+
+    /**
+     * Wächter für die Verbindung.
+     *
+     * Ohne ihn blieb das Widget nach einem Home-Assistant-Neustart dauerhaft auf
+     * dem Fehlerstand: Der WebSocket scheiterte, das Feld ``socket`` blieb aber
+     * gesetzt – dadurch verband sich der Dienst nie wieder.
+     */
+    private suspend fun connectionWatchdog() {
+        while (running) {
+            delay(RECONNECT_CHECK_MS)
+            if (!ScreenState.isVisible(this)) continue
+            connect()
         }
     }
 
@@ -205,13 +243,7 @@ class LiveUpdateService : Service() {
 
     private fun startForegroundWithNotification(text: String) {
         ensureChannel()
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_power)
-            .setContentTitle(getString(R.string.live_notification_title))
-            .setContentText(text)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+        val notification = buildNotification(text)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -219,6 +251,20 @@ class LiveUpdateService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
     }
+
+    /** Zustand der Live-Verbindung in der Dauerbenachrichtigung zeigen. */
+    private fun updateNotification(text: String) {
+        runCatching { notificationManager().notify(NOTIFICATION_ID, buildNotification(text)) }
+    }
+
+    private fun buildNotification(text: String): Notification =
+        NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_power)
+            .setContentTitle(getString(R.string.live_notification_title))
+            .setContentText(text)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
 
     private fun ensureChannel() {
         val manager = notificationManager()
@@ -245,7 +291,7 @@ class LiveUpdateService : Service() {
         private const val CHANNEL_ID = "hawidget_live"
         private const val NOTIFICATION_ID = 4711
         private const val DEBOUNCE_MS = 1500L
-        private const val RECONNECT_DELAY_MS = 15_000L
+        private const val RECONNECT_CHECK_MS = 15_000L
         private const val SUBSCRIBE_MESSAGE =
             "{\"id\":1,\"type\":\"subscribe_events\",\"event_type\":\"state_changed\"}"
 
