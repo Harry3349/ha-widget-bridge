@@ -37,7 +37,10 @@ fun RowEditorSection(
     rows: List<RowDef>,
     values: List<WidgetValue>,
     buttons: List<WidgetButton>,
+    watchRows: Int,
+    watchScale: Float,
     onRowsChange: (List<RowDef>) -> Unit,
+    onWatchChange: (Int, Float) -> Unit,
 ) {
     var dialog by remember { mutableStateOf<RowDialog?>(null) }
 
@@ -57,7 +60,8 @@ fun RowEditorSection(
 
     val itemsPerRow = rows.map { it.items }
     val phoneGrow = RowCapacity.phoneGrowFrom(itemsPerRow)
-    val watchScroll = RowCapacity.watchScrollFrom(itemsPerRow)
+    // Erste Zeile, die auf der Uhr nicht mehr auftaucht (berücksichtigt die Uhr-Auswahl)
+    val watchCut = RowCapacity.watchCutIndex(rows, watchRows)
 
     if (rows.isEmpty()) {
         Text(
@@ -71,7 +75,7 @@ fun RowEditorSection(
         if (phoneGrow != null && rowIndex == phoneGrow - 1) {
             CapacityDivider("Ab hier braucht das Handy-Widget mehr Höhe")
         }
-        if (watchScroll != null && rowIndex == watchScroll - 1) {
+        if (watchCut != null && rowIndex == watchCut) {
             CapacityDivider("Ab hier auf der Uhr nur in der App (Kachel antippen)")
         }
 
@@ -79,6 +83,14 @@ fun RowEditorSection(
             Column(modifier = Modifier.padding(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Zeile ${rowIndex + 1}", style = MaterialTheme.typography.titleSmall)
+                    if (!row.watch) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "nur am Handy",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                     Spacer(Modifier.weight(1f))
                     IconButton(
                         onClick = { onRowsChange(rows.moveItem(rowIndex, -1)) },
@@ -141,6 +153,29 @@ fun RowEditorSection(
                         modifier = Modifier.padding(top = 4.dp),
                     ) { Text("Objekt hinzufügen") }
                 }
+
+                // Uhr: einzelne Zeilen abwählen
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(
+                        checked = row.watch,
+                        onCheckedChange = { checked ->
+                            onRowsChange(
+                                rows.mapIndexed { index, current ->
+                                    if (index == rowIndex) current.copy(watch = checked) else current
+                                }
+                            )
+                        },
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text("Auf der Uhr anzeigen", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Aus: die Zeile erscheint nur im Widget am Handy.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
@@ -158,6 +193,45 @@ fun RowEditorSection(
         )
     }
 
+    // ------------------------------------------------------- Einstellungen Uhr
+    Text("Uhr", style = MaterialTheme.typography.titleMedium)
+    Text(
+        "Die Kachel auf der Uhr ist klein. Hier stellst du ein, was sie zeigt: die " +
+            "Häkchen „Auf der Uhr anzeigen“ oben je Zeile, die Zahl der Zeilen auf der " +
+            "Kachel und die Schriftgröße. Alles Weitere zeigt die App auf der Uhr – die " +
+            "Kachel öffnet sie per Tipp.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = watchRows.toString(),
+            onValueChange = { text ->
+                val parsed = text.filter(Char::isDigit).take(1).toIntOrNull() ?: 0
+                onWatchChange(parsed.coerceIn(0, MAX_ROW_LINES), watchScale)
+            },
+            label = { Text("Zeilen auf der Kachel") },
+            supportingText = { Text("0 = automatisch (so viele, wie hineinpassen)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        OutlinedTextField(
+            value = (watchScale * 100f).toInt().toString(),
+            onValueChange = { text ->
+                val parsed = text.filter(Char::isDigit).take(3).toIntOrNull() ?: 100
+                onWatchChange(watchRows, (parsed.coerceIn(60, 180) / 100f))
+            },
+            label = { Text("Schriftgröße") },
+            suffix = { Text("%") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+        )
+    }
+
     // ------------------------------------------------------------ Hinweise
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -165,7 +239,10 @@ fun RowEditorSection(
             Spacer(Modifier.height(4.dp))
             Text(RowCapacity.phoneHint(itemsPerRow), style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(4.dp))
-            Text(RowCapacity.watchHint(itemsPerRow), style = MaterialTheme.typography.bodySmall)
+            Text(
+                RowCapacity.watchHint(rows, watchRows),
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.height(6.dp))
             Text(
                 "Schätzung: ca. ${RowCapacity.heightDp(itemsPerRow).toInt()} dp Inhaltshöhe. " +
@@ -438,24 +515,19 @@ private fun RowSensorDialog(
                     )
                 } else {
                     Text("Sensor aus der Liste oben", style = MaterialTheme.typography.bodyMedium)
-                    Column(
-                        modifier = Modifier
-                            .heightIn(max = 200.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        values.forEach { value ->
-                            PickerRow(
-                                selected = value.entity == entity,
-                                title = value.label ?: value.entity,
-                                subtitle = value.entity,
-                                onSelect = {
-                                    entity = value.entity
-                                    label = value.label.orEmpty()
-                                    color = value.color.orEmpty()
-                                },
-                            )
-                        }
-                    }
+                    PickerDropdown(
+                        hint = "Sensor auswählen",
+                        selected = values.firstOrNull { it.entity == entity }
+                            ?.let { it.label ?: it.entity }
+                            .orEmpty(),
+                        options = values.map { (it.label ?: it.entity) to it.entity },
+                        onSelect = { index ->
+                            val value = values[index]
+                            entity = value.entity
+                            label = value.label.orEmpty()
+                            color = value.color.orEmpty()
+                        },
+                    )
 
                     OutlinedTextField(
                         value = label,
@@ -498,29 +570,57 @@ private fun RowSensorDialog(
     )
 }
 
-/** Auswahlliste mit Radioknopf (Sensoren und Buttons aus den Listen oben). */
+/**
+ * Aufklappbare Auswahl: zeigt nur den gewählten Eintrag, die Liste öffnet sich
+ * erst beim Antippen (statt einer dauerhaft sichtbaren Liste).
+ *
+ * @param options Paare aus Titel und Untertitel (z. B. Name und Entity-ID)
+ */
 @Composable
-private fun PickerRow(
-    selected: Boolean,
-    title: String,
-    subtitle: String,
-    onSelect: () -> Unit,
+private fun PickerDropdown(
+    hint: String,
+    selected: String,
+    options: List<Pair<String, String>>,
+    onSelect: (Int) -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onSelect)
-            .padding(vertical = 4.dp),
-    ) {
-        RadioButton(selected = selected, onClick = onSelect)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+    var open by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { open = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = options.isNotEmpty(),
+        ) {
             Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                selected.ifBlank { hint },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Auswahl öffnen")
+        }
+
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEachIndexed { index, option ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(option.first, style = MaterialTheme.typography.bodyLarge)
+                            if (option.second.isNotBlank()) {
+                                Text(
+                                    option.second,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        onSelect(index)
+                        open = false
+                    },
+                )
+            }
         }
     }
 }
@@ -552,21 +652,14 @@ private fun RowButtonDialog(
                     )
                 } else {
                     Text("Button aus der Liste oben", style = MaterialTheme.typography.bodyMedium)
-                    Column(
-                        modifier = Modifier
-                            .heightIn(max = 200.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        buttons.forEach { button ->
-                            PickerRow(
-                                selected = button.key == key,
-                                title = button.label,
-                                subtitle = button.service +
-                                    (button.entityId?.let { " · $it" } ?: ""),
-                                onSelect = { key = button.key },
-                            )
-                        }
-                    }
+                    PickerDropdown(
+                        hint = "Button auswählen",
+                        selected = buttons.firstOrNull { it.key == key }?.label.orEmpty(),
+                        options = buttons.map { button ->
+                            button.label to (button.service + (button.entityId?.let { " · $it" } ?: ""))
+                        },
+                        onSelect = { index -> key = buttons[index].key },
+                    )
                     AlignSizeFields(align, { align = it }, size, { size = it })
                 }
             }

@@ -116,7 +116,7 @@ class WearAppActivity : Activity() {
         }
         column.addView(block(note.first, 11f, note.second, Typeface.NORMAL, Gravity.CENTER_HORIZONTAL))
 
-        val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
+        val rows = snapshot?.watchRowsList.orEmpty()
         if (rows.isEmpty()) {
             column.addView(
                 block(
@@ -130,6 +130,9 @@ class WearAppActivity : Activity() {
             return
         }
 
+        // Schriftgröße aus dem Editor, angepasst an die Einstellung „Uhr“
+        val scale = snapshot.watchScale
+
         rows.forEach { row ->
             val line = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -138,7 +141,7 @@ class WearAppActivity : Activity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = dp(4f) }
             }
-            row.items.take(MAX_ROW_ITEMS).forEach { item -> line.addView(cell(item)) }
+            row.items.take(MAX_ROW_ITEMS).forEach { item -> line.addView(cell(item, scale)) }
             column.addView(line)
         }
 
@@ -154,9 +157,9 @@ class WearAppActivity : Activity() {
     }
 
     /** Ein Objekt einer Zeile: Text, Sensor (Name über Wert) oder Button. */
-    private fun cell(item: RowItem): View {
+    private fun cell(item: RowItem, scale: Float): View {
         val align = alignGravity(item.align)
-        val size = item.size.coerceIn(8f, 30f)
+        val size = (item.size * scale).coerceIn(8f, 30f)
         val small = (size - 3f).coerceAtLeast(9f)
 
         val cell = LinearLayout(this).apply {

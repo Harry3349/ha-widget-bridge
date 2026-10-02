@@ -62,6 +62,8 @@ data class RowItem(
 
 /** Eine Zeile mit bis zu drei Objekten (Text, Sensor, Button). */
 data class RowDef(
+    /** false = diese Zeile nur am Handy zeigen, nicht auf der Uhr. */
+    val watch: Boolean = true,
     val items: List<RowItem> = emptyList(),
 )
 
@@ -83,6 +85,10 @@ data class WidgetDef(
     val buttons: List<WidgetButton> = emptyList(),
     /** Freies Zeilen-Layout für Handy-Widget und Uhr-Tile. */
     val rows: List<RowDef> = emptyList(),
+    /** Zeilen auf der Uhr-Kachel; 0 = so viele, wie hineinpassen. */
+    val watchRows: Int = 0,
+    /** Schriftgrößen-Faktor für die Uhr (1.0 = wie eingestellt). */
+    val watchScale: Float = 1f,
     val theme: WidgetTheme = WidgetTheme(),
     val textSize: Float = 14f,
     /** 1 = Werte untereinander, 2 oder 3 = nebeneinander */
@@ -122,6 +128,10 @@ data class WidgetSnapshot(
     val values: List<ValueState> = emptyList(),
     /** Zeilen-Layout; leer = klassische Darstellung aus Werten/Buttons. */
     val rows: List<RowDef> = emptyList(),
+    /** Zeilen auf der Uhr-Kachel; 0 = so viele, wie hineinpassen. */
+    val watchRows: Int = 0,
+    /** Schriftgrößen-Faktor für die Uhr (1.0 = wie eingestellt). */
+    val watchScale: Float = 1f,
 ) {
 
     val hasRows: Boolean get() = rows.any { it.items.isNotEmpty() }

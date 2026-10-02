@@ -19,6 +19,8 @@ object WidgetJson {
             valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
             valueLabelAbove = json.optBoolean("value_label_above", false),
             rows = parseRows(json.optJSONArray("rows")),
+            watchRows = json.optInt("watch_rows", 0).coerceIn(0, 8),
+            watchScale = json.optDouble("watch_scale", 1.0).toFloat().coerceIn(0.6f, 1.8f),
         )
     }
 
@@ -27,7 +29,12 @@ object WidgetJson {
         val result = ArrayList<RowDef>(array.length())
         for (index in 0 until array.length()) {
             val json = array.optJSONObject(index) ?: continue
-            result.add(RowDef(items = parseRowItems(json.optJSONArray("items"))))
+            result.add(
+                RowDef(
+                    watch = json.optBoolean("watch", true),
+                    items = parseRowItems(json.optJSONArray("items")),
+                )
+            )
         }
         return result
     }

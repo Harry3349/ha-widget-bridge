@@ -225,7 +225,8 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                 }
             )
 
-        rows.append({"items": items})
+        # "watch" sagt der Uhr, ob die Zeile dort erscheinen soll
+        rows.append({"items": items, "watch": row.get("watch", True)})
 
     return rows
 
@@ -282,6 +283,8 @@ async def async_render_widget(hass: HomeAssistant, widget: dict[str, Any]) -> di
         "error": error,
         "template_used": template_used,
         "rows": row_view(hass, widget),
+        "watch_rows": widget.get("watch_rows", 0),
+        "watch_scale": widget.get("watch_scale", 1.0),
     }
 
 

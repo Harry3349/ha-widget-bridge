@@ -55,21 +55,26 @@ object TileRenderer {
         note: String? = null,
     ): LayoutElementBuilders.LayoutElement {
         // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
-        // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
-        val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
+        // gleiche Ausrichtung – nur auf die runde Anzeige angepasst. Welche
+        // Zeilen auf die Uhr kommen, entscheidet der Editor am Handy.
+        val allWatchRows = snapshot?.watchRowsList.orEmpty()
+        val scale = snapshot?.watchScale ?: 1f
+        // Feste Zeilenzahl aus dem Editor (0 = so viele, wie hineinpassen)
+        val limit = snapshot?.watchRows ?: 0
+        val rows = if (limit > 0) allWatchRows.take(limit) else allWatchRows
 
         // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt,
         // was ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
         // App-Ansicht hin (Wischen und Krone). Der untere Rand der runden Anzeige
         // bleibt dabei frei, dort würde der Text seitlich abgeschnitten.
         val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
-        val visible = fittingRows(rows, band)
-        val truncated = rows.size > visible
+        val visible = fittingRows(rows, band, scale)
+        val truncated = allWatchRows.size > visible || rows.size > visible
         val shown = if (!truncated) {
             rows
         } else {
             // eine Zeile Platz für den Hinweis lassen
-            rows.take(fittingRows(rows, band - HINT_DP).coerceAtLeast(1))
+            rows.take(fittingRows(rows, band - HINT_DP, scale).coerceAtLeast(1))
         }
 
         val column = LayoutElementBuilders.Column.Builder()
@@ -144,7 +149,7 @@ object TileRenderer {
                         )
                         .build()
                 )
-            shown.forEach { row -> rowArea.addContent(rowLine(row)) }
+            shown.forEach { row -> rowArea.addContent(rowLine(row, scale)) }
             column.addContent(rowArea.build())
             return column.build()
         }
@@ -197,21 +202,21 @@ object TileRenderer {
             .build()
 
     /** Grobe Schätzung der Höhe einer Zeile (Objekt mit der größten Schrift zählt). */
-    private fun rowHeightDp(row: RowDef): Float =
+    private fun rowHeightDp(row: RowDef, scale: Float): Float =
         row.items.maxOfOrNull { item ->
             when (item.type) {
                 "button" -> 34f
                 "sensor" -> 30f
-                else -> item.size.coerceIn(8f, 30f) * 1.5f + 8f
+                else -> (item.size * scale).coerceIn(8f, 30f) * 1.5f + 8f
             }
         } ?: 0f
 
     /** Wie viele Zeilen passen in die angegebene Höhe? */
-    private fun fittingRows(rows: List<RowDef>, available: Float): Int {
+    private fun fittingRows(rows: List<RowDef>, available: Float, scale: Float): Int {
         var used = 0f
         var count = 0
         for (row in rows) {
-            val next = used + rowHeightDp(row)
+            val next = used + rowHeightDp(row, scale)
             if (next > available) break
             used = next
             count++
@@ -220,10 +225,10 @@ object TileRenderer {
     }
 
     /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */
-    private fun rowLine(row: RowDef): LayoutElementBuilders.Row {
+    private fun rowLine(row: RowDef, scale: Float): LayoutElementBuilders.Row {
         val builder = LayoutElementBuilders.Row.Builder()
             .setWidth(DimensionBuilders.expand())
-        row.items.take(3).forEach { item -> builder.addContent(rowCell(item)) }
+        row.items.take(3).forEach { item -> builder.addContent(rowCell(item, scale)) }
         return builder.build()
     }
 
@@ -232,13 +237,14 @@ object TileRenderer {
      * wie die anderen Objekte der Zeile (``expand``), die Ausrichtung aus dem
      * Editor bestimmt die Position des Inhalts darin.
      */
-    private fun rowCell(item: RowItem): LayoutElementBuilders.Box {
+    private fun rowCell(item: RowItem, scale: Float): LayoutElementBuilders.Box {
         val align = when (item.align.lowercase()) {
             "left" -> LayoutElementBuilders.HORIZONTAL_ALIGN_START
             "right" -> LayoutElementBuilders.HORIZONTAL_ALIGN_END
             else -> LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER
         }
-        val size = item.size.coerceIn(8f, 30f)
+        // Schriftgröße aus dem Editor, angepasst an die Einstellung „Uhr“
+        val size = (item.size * scale).coerceIn(8f, 30f)
         val small = (size - 3f).coerceAtLeast(9f)
 
         val box = LayoutElementBuilders.Box.Builder()

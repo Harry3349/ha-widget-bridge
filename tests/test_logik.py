@@ -391,6 +391,35 @@ check(zeilen[0]["items"][2]["state_label"] == "An", "Button-Objekt zeigt den Zus
 check(zeilen[1]["items"][0]["label"] == "", "ohne Namen wird kein Name geliefert")
 check(zeilen[1]["items"][0]["color"] == "#4DD0E1", "eigene Sensor-Farbe übernommen")
 check(zeilen[0]["items"][1]["label"] == "PC", "eingetragener Name wird geliefert")
+check(all(row["watch"] for row in zeilen), "Zeilen sind standardmäßig auch auf der Uhr")
+
+# Uhr-Einstellungen: Zeilen-Auswahl, Anzahl auf der Kachel, Schriftgröße
+uhr_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Uhr",
+        "rows": [
+            {"items": [{"type": "text", "text": "A"}]},
+            {"items": [{"type": "text", "text": "B"}], "watch": False},
+        ],
+        "watch_rows": 99,
+        "watch_scale": 9.0,
+    },
+)
+check(uhr_widget["rows"][1]["watch"] is False, "Zeile kann für die Uhr abgewählt werden")
+check(uhr_widget["watch_rows"] == 8, "watch_rows wird begrenzt")
+check(uhr_widget["watch_scale"] == 1.8, "watch_scale wird begrenzt")
+check(uhr_widget["rows"][0]["watch"] is True, "Standard: Zeile erscheint auf der Uhr")
+
+uhr_render = render.row_view(hass, uhr_widget)
+check(uhr_render[1]["watch"] is False, "Uhr-Kennzeichnung kommt im Snapshot an")
+check(uhr_render[0]["watch"] is True, "Standardkennzeichnung kommt im Snapshot an")
+check(
+    store.normalize_widget(hass, {"name": "Klein", "watch_scale": 0.1})["watch_scale"] == 0.6,
+    "zu kleine Uhr-Schriftgröße wird angehoben",
+)
+check(store.normalize_widget(hass, {"name": "Standard"})["watch_rows"] == 0,
+      "Standard: so viele Zeilen wie passen")
 
 expect_error(
     {"name": "Test", "rows": [{"items": [{"type": "lampe"}]}]},

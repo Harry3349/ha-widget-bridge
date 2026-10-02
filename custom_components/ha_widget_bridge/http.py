@@ -77,6 +77,8 @@ def _snapshot_payload(hass: HomeAssistant, widget: dict[str, Any], rendered: dic
         "value_label_above": widget["value_label_above"],
         "values": value_view(hass, widget),
         "rows": rendered.get("rows") or row_view(hass, widget),
+        "watch_rows": widget.get("watch_rows", 0),
+        "watch_scale": widget.get("watch_scale", 1.0),
         "buttons": button_view(hass, widget),
     }
 

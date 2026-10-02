@@ -68,6 +68,15 @@ ROW_ITEM_TYPES = ("text", "sensor", "button")
 ROW_ALIGNMENTS = ("left", "center", "right")
 DEFAULT_ROW_ALIGN = "center"
 
+# Einstellungen für die Uhr (die Kachel ist klein – der Nutzer entscheidet in der
+# Handy-App, welche Zeilen dorthin kommen und wie groß sie sind).
+WATCH_ROWS_MIN = 0  # 0 = so viele Zeilen zeigen, wie auf die Kachel passen
+WATCH_ROWS_MAX = MAX_ROWS
+DEFAULT_WATCH_ROWS = 0
+WATCH_SCALE_MIN = 0.6
+WATCH_SCALE_MAX = 1.8
+DEFAULT_WATCH_SCALE = 1.0
+
 # Schwellwert in W, ab dem ein Wert als "aktiv" (grün) gilt
 DEFAULT_THRESHOLD = 0.5
 

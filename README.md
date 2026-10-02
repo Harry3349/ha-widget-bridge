@@ -319,8 +319,24 @@ sie über den Data Layer vom Handy).
 
 Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehungsweise
 *Buttons*) – dort werden sie aus Home Assistant ausgewählt und benannt. Im Zeilen-Editor
-wählst du sie anschließend nur noch aus; wird ein Eintrag oben gelöscht, markiert der
-Editor die betroffenen Objekte mit „nicht mehr in der Liste oben“.
+wählst du sie anschließend über ein **Aufklapp-Menü** aus; wird ein Eintrag oben gelöscht,
+markiert der Editor die betroffenen Objekte mit „nicht mehr in der Liste oben“.
+
+### Was die Uhr zeigt (Einstellungen in der Handy-App)
+
+Der Abschnitt **Uhr** im Editor steuert die Uhr – alles andere ergibt sich aus denselben
+Zeilen wie am Handy:
+
+| Einstellung | Wirkung |
+|---|---|
+| **Auf der Uhr anzeigen** (Schalter je Zeile) | Aus = die Zeile erscheint nur im Widget am Handy |
+| **Zeilen auf der Kachel** | `0` = automatisch (so viele, wie hineinpassen), sonst genau diese Zahl |
+| **Schriftgröße** | 60–180 % – vergrößert/verkleinert alle Texte auf der Uhr |
+
+Die Kachel zeigt nur, was ganz auf die runde Anzeige passt; für den Rest blendet sie den
+Hinweis **„Antippen: alle Zeilen“** ein (Kacheln können laut Wear OS nicht scrollen). Ein
+Tipp auf die Kachel öffnet die App auf der Uhr mit allen ausgewählten Zeilen – dort lässt
+sich mit **Wischen** oder mit der **Krone** scrollen.
 
 Die Objekte einer Zeile teilen sich die Breite: ein Objekt füllt die ganze Zeile, zwei
 je die Hälfte, drei je ein Drittel. Sobald **mindestens eine Zeile** angelegt ist,
@@ -362,6 +378,8 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `values[]` | Liste | `entity`, optional `label`, `threshold` (W), `color` (Hex) |
 | `buttons[]` | Liste (max. 6) | siehe unten |
 | `rows[]` | Liste (max. 8) | Zeilen-Layout für Handy **und** Uhr, siehe unten |
+| `watch_rows` | Zahl (0–8) | Zeilen auf der Uhr-Kachel; `0` = automatisch |
+| `watch_scale` | Zahl (0.6–1.8) | Schriftgrößen-Faktor für die Uhr (1.0 = unverändert) |
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
 | `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |
 | `value_label_above` | true/false | `true` = Name oben, Wert darunter (Standard: `Name · Wert` in einer Zeile) |
@@ -384,6 +402,7 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | Feld | Bedeutung |
 |---|---|
 | `type` | `text`, `sensor` oder `button` |
+| `watch` | `false` = diese Zeile nur am Handy zeigen (Standard: `true`) |
 | `align` | `left`, `center` (Standard) oder `right` |
 | `size` | Schriftgröße des Objekts (8–30, Standard: `text_size`) |
 | `color` | optionale Hex-Farbe (bei `sensor` sonst die automatische Farbe) |

@@ -45,6 +45,8 @@ data class RowItem(
 
 /** Eine Zeile mit bis zu drei Objekten. */
 data class RowDef(
+    /** false = nur am Handy zeigen. */
+    val watch: Boolean = true,
     val items: List<RowItem> = emptyList(),
 )
 
@@ -63,8 +65,16 @@ data class WidgetSnapshot(
     val valueLabelAbove: Boolean = false,
     /** Zeilen-Layout aus dem Handy-Editor; leer = klassische Darstellung. */
     val rows: List<RowDef> = emptyList(),
+    /** Zeilen auf der Kachel; 0 = so viele, wie hineinpassen. */
+    val watchRows: Int = 0,
+    /** Schriftgrößen-Faktor für die Uhr (1.0 = wie eingestellt). */
+    val watchScale: Float = 1f,
 ) {
     val hasRows: Boolean get() = rows.any { it.items.isNotEmpty() }
+
+    /** Nur die Zeilen, die auf der Uhr erscheinen sollen. */
+    val watchRowsList: List<RowDef>
+        get() = rows.filter { it.watch && it.items.isNotEmpty() }
 
     companion object {
         val EMPTY = WidgetSnapshot("", "", 0, "", emptyList(), emptyList(), null)

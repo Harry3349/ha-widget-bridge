@@ -162,7 +162,12 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
             rows = def.rows,
             values = def.values,
             buttons = def.buttons,
+            watchRows = def.watchRows,
+            watchScale = def.watchScale,
             onRowsChange = { rows -> vm.updateEditor { current -> current.copy(rows = rows) } },
+            onWatchChange = { rows, scale ->
+                vm.updateEditor { current -> current.copy(watchRows = rows, watchScale = scale) }
+            },
         )
 
         HorizontalDivider()

@@ -11,6 +11,6 @@
     <string name="tile_stale">Stand %1$s – Handy nicht erreichbar</string>
     <string name="tile_updated">Stand %1$s</string>
     <string name="tile_more_rows">Antippen: alle Zeilen</string>
-    <string name="wear_list_empty">Noch keine Zeile angelegt – im Editor am Handy einrichten.</string>
+    <string name="wear_list_empty">Keine Zeile für die Uhr ausgewählt – im Editor am Handy unter „Uhr“ einstellen.</string>
     <string name="wear_list_hint">Wischen oder Krone drehen zum Scrollen</string>
 </resources>

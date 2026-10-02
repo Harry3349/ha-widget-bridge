@@ -22,6 +22,8 @@ from .const import (
     DEFAULT_THRESHOLD,
     DEFAULT_VALUE_COLUMNS,
     DEFAULT_VALUE_LABEL_ABOVE,
+    DEFAULT_WATCH_ROWS,
+    DEFAULT_WATCH_SCALE,
     DOMAIN,
     LOGGER,
     MAX_BUTTONS,
@@ -41,6 +43,10 @@ from .const import (
     TEXT_SIZE_MIN,
     VALUE_COLUMNS_MAX,
     VALUE_COLUMNS_MIN,
+    WATCH_ROWS_MAX,
+    WATCH_ROWS_MIN,
+    WATCH_SCALE_MAX,
+    WATCH_SCALE_MIN,
 )
 
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,49}$")
@@ -243,7 +249,9 @@ def _normalize_rows(hass: HomeAssistant, raw: Any) -> list[dict[str, Any]]:
             raise WidgetValidationError(f"Zeile {number}: maximal {MAX_ROW_ITEMS} Objekte")
 
         items = [_normalize_row_item(hass, item, number, seen_keys) for item in raw_items]
-        rows.append({"items": items})
+        # "watch" = diese Zeile auch auf der Uhr zeigen (Standard: ja)
+        keep = _as_bool(row.get("watch", True), f"Zeile {number}.watch")
+        rows.append({"items": items, "watch": keep})
 
     return rows
 
@@ -375,6 +383,18 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
     )
 
     rows = _normalize_rows(hass, payload.get("rows"))
+
+    try:
+        watch_rows = int(payload.get("watch_rows", DEFAULT_WATCH_ROWS))
+    except (TypeError, ValueError) as err:
+        raise WidgetValidationError("watch_rows muss eine Zahl sein") from err
+    watch_rows = min(max(watch_rows, WATCH_ROWS_MIN), WATCH_ROWS_MAX)
+
+    try:
+        watch_scale = float(payload.get("watch_scale", DEFAULT_WATCH_SCALE))
+    except (TypeError, ValueError) as err:
+        raise WidgetValidationError("watch_scale muss eine Zahl sein") from err
+    watch_scale = min(max(watch_scale, WATCH_SCALE_MIN), WATCH_SCALE_MAX)
     buttons = _normalize_buttons(hass, payload.get("buttons"))
     # Buttons aus den Zeilen mit aufnehmen: nur so entstehen die
     # button.<widget>_<key>-Entitäten und das Drücken funktioniert.
@@ -394,6 +414,8 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         "values": _normalize_values(payload.get("values")),
         "buttons": buttons,
         "rows": rows,
+        "watch_rows": watch_rows,
+        "watch_scale": round(watch_scale, 2),
         "theme": _normalize_theme(payload.get("theme")),
         "text_size": round(text_size, 1),
         "threshold": threshold,
