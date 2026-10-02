@@ -39,10 +39,22 @@ object TileRenderer {
         screenWidthDp: Int,
         note: String? = null,
     ): LayoutElementBuilders.LayoutElement {
+        // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
+        // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
+        val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
+
+        // Wird der Inhalt höher als die Anzeige, darf die Kachel nicht auf die
+        // Bildschirmhöhe festgelegt werden (expand): dann schneidet die Uhr den
+        // Rest ab. Mit wrap nimmt sie ihre natürliche Höhe ein und Wear OS legt
+        // sie in einen Scrollbereich – Wischen und Krone scrollen.
+        val scrollable = rows.isNotEmpty()
+
         val column = LayoutElementBuilders.Column.Builder()
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
             .setWidth(DimensionBuilders.expand())
-            .setHeight(DimensionBuilders.expand())
+            .setHeight(
+                if (scrollable) DimensionBuilders.wrap() else DimensionBuilders.expand()
+            )
             // Runde Displays schneiden oben und an den Seiten ab – ohne Abstand
             // verschwindet der Titel in der Rundung.
             .setModifiers(
@@ -52,6 +64,7 @@ object TileRenderer {
                             .setTop(DimensionBuilders.dp(10f))
                             .setStart(DimensionBuilders.dp(8f))
                             .setEnd(DimensionBuilders.dp(8f))
+                            .setBottom(if (scrollable) DimensionBuilders.dp(14f) else DimensionBuilders.dp(0f))
                             .build()
                     )
                     .build()
@@ -81,9 +94,7 @@ object TileRenderer {
             )
         )
 
-        // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
-        // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
-        val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
+        // Zeilen-Layout: gleiche Zeilen und Ausrichtungen wie am Handy.
         if (rows.isNotEmpty()) {
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
             // das Display die ersten Zeichen der äußeren Objekte ab.
