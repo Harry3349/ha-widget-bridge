@@ -421,6 +421,49 @@ check(
 check(store.normalize_widget(hass, {"name": "Standard"})["watch_rows"] == 0,
       "Standard: so viele Zeilen wie passen")
 
+# Blöcke in der Zeile: Breite in Prozent und "An/Aus" abschaltbar
+breiten_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Breiten",
+        "buttons": [
+            {
+                "key": "licht",
+                "label": "Licht",
+                "service": "switch.toggle",
+                "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                "show_state": False,
+            }
+        ],
+        "rows": [
+            {
+                "items": [
+                    {"type": "text", "text": "A", "width": 40},
+                    {
+                        "type": "button",
+                        "key": "licht",
+                        "label": "Licht",
+                        "service": "switch.toggle",
+                        "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                        "width": 200,
+                    },
+                ]
+            }
+        ],
+    },
+)
+check(breiten_widget["rows"][0]["items"][0]["width"] == 40.0, "Blockbreite übernommen")
+check(breiten_widget["rows"][0]["items"][1]["width"] == 100.0, "zu große Blockbreite wird begrenzt")
+check(breiten_widget["buttons"][0]["show_state"] is False, "Button kennt die An/Aus-Einstellung")
+check(render.button_view(hass, breiten_widget)[0]["show_state"] is False,
+      "Snapshot meldet An/Aus aus")
+breiten_render = render.row_view(hass, breiten_widget)
+check(breiten_render[0]["items"][1]["width"] == 100.0, "Breite kommt im Snapshot an")
+check(breiten_render[0]["items"][1]["show_state"] is False,
+      "An/Aus-Einstellung kommt im Snapshot an")
+check(store.normalize_widget(hass, {"name": "Ohne"})["buttons"] == [],
+      "ohne Buttons bleibt die Liste leer")
+
 expect_error(
     {"name": "Test", "rows": [{"items": [{"type": "lampe"}]}]},
     "type",

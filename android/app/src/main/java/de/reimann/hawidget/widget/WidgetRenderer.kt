@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.text.Html
 import android.util.TypedValue
 import android.view.Gravity
@@ -39,6 +40,12 @@ object WidgetRenderer {
     /** Zeilen-Layout: 8 Zeilen à 3 Objekte (Text, Sensor, Button). */
     private const val MAX_ROW_LINES = 8
     private const val MAX_ROW_CELLS = 3
+
+    /** Polsterung des Widgets (siehe `WidgetRoot`) – für die Blockbreiten. */
+    private const val ROOT_PADDING_DP = 10f
+
+    /** Fallback, wenn der Launcher keine Größe liefert (Standardgröße 250 dp). */
+    private const val DEFAULT_WIDGET_WIDTH_DP = 250f
 
     private val ROW_IDS = intArrayOf(
         R.id.btn_row_1, R.id.btn_row_2, R.id.btn_row_3,
@@ -236,7 +243,13 @@ object WidgetRenderer {
             views.setViewVisibility(rowId, View.VISIBLE)
             views.setImageViewResource(ICON_IDS[index], MdiIcons.drawable(button.icon))
             views.setTextViewText(LABEL_IDS[index], button.label)
-            views.setTextViewText(STATE_IDS[index], button.stateLabel)
+            // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
+            if (button.showState) {
+                views.setTextViewText(STATE_IDS[index], button.stateLabel)
+                views.setViewVisibility(STATE_IDS[index], View.VISIBLE)
+            } else {
+                views.setViewVisibility(STATE_IDS[index], View.GONE)
+            }
             views.setInt(
                 rowId,
                 "setBackgroundResource",
@@ -257,6 +270,7 @@ object WidgetRenderer {
                 views = views,
                 rows = rows,
                 textColor = color(theme.textColor, Color.WHITE),
+                rowWidthDp = rowWidthDp(context, appWidgetId),
                 pressFor = { key -> pressIntent(context, appWidgetId, key) },
             )
         }
@@ -280,6 +294,7 @@ object WidgetRenderer {
         views: RemoteViews,
         rows: List<RowDef>,
         textColor: Int,
+        rowWidthDp: Float,
         pressFor: (String) -> PendingIntent,
     ) {
         for (line in 0 until MAX_ROW_LINES) {
@@ -298,6 +313,18 @@ object WidgetRenderer {
 
             views.setViewVisibility(lineId, View.VISIBLE)
 
+            // Blockbreiten: nur wenn der Nutzer Breiten eingestellt hat, bekommen
+            // die Zellen eine eigene Breite (sonst teilen sie sich gleichmäßig).
+            val customWidths = row.items.any { it.width > 0f }
+            val flexible = row.items.count { it.width <= 0f }
+            val fixedDp = row.items.filter { it.width > 0f }
+                .sumOf { (it.width / 100f * rowWidthDp).toDouble() }.toFloat()
+            val flexibleDp = if (flexible > 0) {
+                ((rowWidthDp - fixedDp) / flexible).coerceAtLeast(24f)
+            } else {
+                0f
+            }
+
             for (cell in 0 until MAX_ROW_CELLS) {
                 val slot = line * MAX_ROW_CELLS + cell
                 val cellId = ROW_CELL_IDS[slot]
@@ -309,7 +336,15 @@ object WidgetRenderer {
                     continue
                 }
 
-                renderRowItem(views, slot, item, textColor, pressFor)
+                val widthDp = if (!customWidths) {
+                    null
+                } else if (item.width > 0f) {
+                    (item.width / 100f * rowWidthDp).coerceAtLeast(16f)
+                } else {
+                    flexibleDp
+                }
+
+                renderRowItem(views, slot, item, textColor, widthDp, pressFor)
             }
         }
     }
@@ -319,6 +354,7 @@ object WidgetRenderer {
         slot: Int,
         item: RowItem,
         textColor: Int,
+        widthDp: Float?,
         pressFor: (String) -> PendingIntent,
     ) {
         val cellId = ROW_CELL_IDS[slot]
@@ -335,6 +371,11 @@ object WidgetRenderer {
         // 0 = kein Hintergrund (nur Buttons bekommen gleich eine Fläche)
         views.setInt(cellId, "setBackgroundResource", 0)
         views.setOnClickPendingIntent(cellId, null)
+
+        // Eigene Blockbreite (ab Android 12; sonst teilen sich die Blöcke die Zeile)
+        if (widthDp != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            views.setViewLayoutWidth(cellId, widthDp, TypedValue.COMPLEX_UNIT_DIP)
+        }
 
         // Alle vier Slots erst einmal leeren
         views.setViewVisibility(iconId, View.GONE)
@@ -367,7 +408,8 @@ object WidgetRenderer {
                 views.setViewVisibility(mainId, View.VISIBLE)
 
                 val stateLabel = item.stateLabel.orEmpty()
-                if (stateLabel.isNotBlank()) {
+                // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
+                if (item.showState && stateLabel.isNotBlank()) {
                     views.setTextViewTextSize(afterId, TypedValue.COMPLEX_UNIT_SP, smallSize)
                     views.setTextViewText(afterId, stateLabel)
                     views.setViewVisibility(afterId, View.VISIBLE)
@@ -398,6 +440,19 @@ object WidgetRenderer {
         "left" -> Gravity.START
         "right" -> Gravity.END
         else -> Gravity.CENTER_HORIZONTAL
+    }
+
+    /**
+     * Breite, die den Zeilen im Widget zur Verfügung steht (dp).
+     *
+     * Der Launcher legt die Widget-Größe fest; daraus ergeben sich die
+     * Prozentangaben für die Blöcke.
+     */
+    private fun rowWidthDp(context: Context, appWidgetId: Int): Float {
+        val options = AppWidgetManager.getInstance(context).getAppWidgetOptions(appWidgetId)
+        val width = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 0
+        val widgetWidth = if (width > 0) width.toFloat() else DEFAULT_WIDGET_WIDTH_DP
+        return (widgetWidth - ROOT_PADDING_DP * 2f).coerceAtLeast(80f)
     }
 
     /**

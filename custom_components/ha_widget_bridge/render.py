@@ -163,6 +163,9 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
     default_threshold = float(widget.get("threshold", DEFAULT_THRESHOLD))
     default_size = float(widget.get("text_size", DEFAULT_TEXT_SIZE))
     states = {button["key"]: button for button in button_view(hass, widget)}
+    # "An/Aus" ist eine Eigenschaft des Buttons (oben im Editor), nicht der Zeile:
+    # so wirkt eine nderung dort sofort in allen Zeilen.
+    definitions = {b["key"]: b for b in widget.get("buttons") or []}
 
     rows: list[dict[str, Any]] = []
     for row in widget.get("rows") or []:
@@ -194,6 +197,7 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                         "available": text != "offline",
                         "align": align,
                         "size": size,
+                        "width": float(item.get("width") or 0),
                     }
                 )
                 continue
@@ -207,10 +211,12 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                         "label": item["label"],
                         "icon": item.get("icon"),
                         "state_label": state.get("state_label", ""),
+                        "show_state": definitions.get(item["key"], item).get("show_state", True),
                         "active": state.get("active", False),
                         "available": state.get("available", False),
                         "align": align,
                         "size": size,
+                        "width": float(item.get("width") or 0),
                     }
                 )
                 continue
@@ -222,6 +228,7 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                     "color": own_color,
                     "align": align,
                     "size": size,
+                    "width": float(item.get("width") or 0),
                 }
             )
 
@@ -315,6 +322,8 @@ def button_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, A
                 "state_entity": entity_id,
                 "state": state.state if state is not None else None,
                 "state_label": state_label,
+                # „An/Aus“ anzeigen? (im Editor abschaltbar)
+                "show_state": button.get("show_state", True),
                 "active": available and raw in ACTIVE_STATES,
                 "available": available,
             }

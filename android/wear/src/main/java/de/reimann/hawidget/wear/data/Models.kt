@@ -20,6 +20,8 @@ data class ButtonState(
     val available: Boolean,
     /** „An“ oder „Aus“ – wie am Handy. */
     val stateLabel: String = "",
+    /** false = im Editor abgeschaltet, dann ohne „An/Aus“. */
+    val showState: Boolean = true,
     /** ``mdi:``-Name des Symbols. */
     val icon: String? = null,
 )
@@ -35,6 +37,10 @@ data class RowItem(
     /** left | center | right */
     val align: String = "center",
     val size: Float = 14f,
+    /** Breite des Blocks in der Zeile in Prozent (0 = gleiche Anteile). */
+    val width: Float = 0f,
+    /** „An/Aus“ anzeigen (nur Buttons). */
+    val showState: Boolean = true,
     // Button
     val key: String? = null,
     val icon: String? = null,

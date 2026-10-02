@@ -149,7 +149,9 @@ object TileRenderer {
                         )
                         .build()
                 )
-            shown.forEach { row -> rowArea.addContent(rowLine(row, scale)) }
+            shown.forEach { row ->
+                rowArea.addContent(rowLine(row, scale, screenWidthDp))
+            }
             column.addContent(rowArea.build())
             return column.build()
         }
@@ -225,10 +227,22 @@ object TileRenderer {
     }
 
     /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */
-    private fun rowLine(row: RowDef, scale: Float): LayoutElementBuilders.Row {
+    private fun rowLine(row: RowDef, scale: Float, screenWidthDp: Int): LayoutElementBuilders.Row {
         val builder = LayoutElementBuilders.Row.Builder()
             .setWidth(DimensionBuilders.expand())
-        row.items.take(3).forEach { item -> builder.addContent(rowCell(item, scale)) }
+
+        // Blöcke mit eigener Breite bekommen sie in dp, die übrigen teilen sich
+        // den Rest (expand).
+        val items = row.items.take(3)
+        val customWidths = items.any { it.width > 0f }
+        items.forEach { item ->
+            val width = if (customWidths && item.width > 0f) {
+                DimensionBuilders.dp((screenWidthDp * item.width / 100f).coerceAtLeast(24f))
+            } else {
+                DimensionBuilders.expand()
+            }
+            builder.addContent(rowCell(item, scale, width))
+        }
         return builder.build()
     }
 
@@ -237,7 +251,11 @@ object TileRenderer {
      * wie die anderen Objekte der Zeile (``expand``), die Ausrichtung aus dem
      * Editor bestimmt die Position des Inhalts darin.
      */
-    private fun rowCell(item: RowItem, scale: Float): LayoutElementBuilders.Box {
+    private fun rowCell(
+        item: RowItem,
+        scale: Float,
+        width: DimensionBuilders.ContainerDimension,
+    ): LayoutElementBuilders.Box {
         val align = when (item.align.lowercase()) {
             "left" -> LayoutElementBuilders.HORIZONTAL_ALIGN_START
             "right" -> LayoutElementBuilders.HORIZONTAL_ALIGN_END
@@ -248,7 +266,7 @@ object TileRenderer {
         val small = (size - 3f).coerceAtLeast(9f)
 
         val box = LayoutElementBuilders.Box.Builder()
-            .setWidth(DimensionBuilders.expand())
+            .setWidth(width)
             .setHorizontalAlignment(align)
 
         when (item.type) {
@@ -306,7 +324,8 @@ object TileRenderer {
                     )
                     .addContent(text(" " + item.label.orEmpty(), Color.WHITE, size))
                 val state = item.stateLabel.orEmpty()
-                if (state.isNotBlank()) {
+                // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
+                if (item.showState && state.isNotBlank()) {
                     content.addContent(
                         text(" " + state, if (item.active) ACCENT else LABEL_COLOR, small)
                     )
@@ -408,7 +427,6 @@ object TileRenderer {
             .setMaxLines(1)
             .setFontStyle(fontStyle(if (state.active) ACCENT else LABEL_COLOR, 11f))
             .build()
-
         val icon = LayoutElementBuilders.Image.Builder()
             .setResourceId(TileIcons.id(state.icon))
             .setWidth(DimensionBuilders.dp(16f))
@@ -418,7 +436,10 @@ object TileRenderer {
         val content = LayoutElementBuilders.Row.Builder()
             .addContent(icon)
             .addContent(label)
-            .addContent(stateText)
+        // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
+        if (state.showState) {
+            content.addContent(stateText)
+        }
             .build()
 
         return LayoutElementBuilders.Box.Builder()

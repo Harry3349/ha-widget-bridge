@@ -116,6 +116,7 @@ object WidgetJson {
                     service = json.optString("service", "switch.toggle"),
                     entityId = json.stringOrNull("entity_id"),
                     stateEntity = json.stringOrNull("state_entity"),
+                    showState = json.optBoolean("show_state", true),
                     stateLabelOn = json.stringOrNull("state_label_on"),
                     stateLabelOff = json.stringOrNull("state_label_off"),
                 )
@@ -148,6 +149,8 @@ object WidgetJson {
                     color = json.stringOrNull("color"),
                     align = json.optString("align", "center"),
                     size = json.optDouble("size", 14.0).toFloat(),
+                    width = json.optDouble("width", 0.0).toFloat().coerceIn(0f, 100f),
+                    showState = json.optBoolean("show_state", true),
                     threshold = if (json.has("threshold") && !json.isNull("threshold")) {
                         json.optDouble("threshold")
                     } else {
@@ -247,6 +250,7 @@ object WidgetJson {
             item.put("label", button.label)
             item.put("service", button.service)
             button.icon?.takeIf { it.isNotBlank() }?.let { item.put("icon", it) }
+            item.put("show_state", button.showState)
             button.entityId?.takeIf { it.isNotBlank() }?.let { item.put("entity_id", it) }
             button.stateEntity?.takeIf { it.isNotBlank() }?.let { item.put("state_entity", it) }
             buttons.put(item)
@@ -262,6 +266,8 @@ object WidgetJson {
                 entry.put("type", item.type)
                 entry.put("align", item.align)
                 entry.put("size", item.size.toDouble())
+                // Breite des Blocks in der Zeile (Prozent, 0 = gleiche Anteile)
+                entry.put("width", item.width.coerceIn(0f, 100f).toDouble())
                 item.color?.takeIf { it.isNotBlank() }?.let { entry.put("color", it) }
 
                 when (item.type) {
@@ -275,6 +281,8 @@ object WidgetJson {
                         item.key?.takeIf { it.isNotBlank() }?.let { entry.put("key", it) }
                         entry.put("label", item.label.orEmpty())
                         entry.put("service", item.service)
+                        // "show_state" wird bewusst NICHT mitgeschrieben: es gehört zum
+                        // Button im Abschnitt "Buttons" und wirkt für alle Zeilen.
                         item.icon?.takeIf { it.isNotBlank() }?.let { entry.put("icon", it) }
                         item.entityId?.takeIf { it.isNotBlank() }
                             ?.let { entry.put("entity_id", it) }

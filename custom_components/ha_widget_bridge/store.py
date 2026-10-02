@@ -199,6 +199,8 @@ def _normalize_button(hass: HomeAssistant, item: Any, field: str) -> dict[str, A
         "service": service,
         "entity_id": entity_id,
         "state_entity": state_entity,
+        # "An/Aus" im Widget anzeigen?
+        "show_state": _as_bool(item.get("show_state", True), f"{field}.show_state"),
         "state_label_on": str(item.get("state_label_on") or "").strip()[:20] or None,
         "state_label_off": str(item.get("state_label_off") or "").strip()[:20] or None,
         "service_data": {str(k): v for k, v in service_data.items()},
@@ -283,12 +285,20 @@ def _normalize_row_item(
     if color and not _COLOR_RE.match(color):
         raise WidgetValidationError(f"Zeile {row}: color muss eine Hex-Farbe sein")
 
+    # Breite des Blocks innerhalb der Zeile (Prozent, 0 = gleiche Anteile)
+    try:
+        width = float(item.get("width") or 0)
+    except (TypeError, ValueError) as err:
+        raise WidgetValidationError(f"Zeile {row}: width muss eine Zahl sein") from err
+    width = round(min(max(width, 0.0), 100.0), 1)
+
     if kind == "text":
         return {
             "type": "text",
             "text": str(item.get("text") or "")[:80],
             "align": align,
             "size": round(size, 1),
+            "width": width,
             "color": color,
         }
 
@@ -307,6 +317,7 @@ def _normalize_row_item(
             "label": str(item.get("label") or "").strip()[:40] or None,
             "align": align,
             "size": round(size, 1),
+            "width": width,
             "color": color,
             "threshold": threshold,
         }
@@ -317,7 +328,13 @@ def _normalize_row_item(
             f"Zeile {row}: Schlüssel '{button['key']}' kommt doppelt vor"
         )
     seen_keys.add(button["key"])
-    button.update({"type": "button", "align": align, "size": round(size, 1), "color": color})
+    button.update({
+        "type": "button",
+        "align": align,
+        "size": round(size, 1),
+        "width": width,
+        "color": color,
+    })
     return button
 
 

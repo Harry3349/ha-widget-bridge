@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.reimann.hawidget.data.RowDef
 import de.reimann.hawidget.data.RowItem
@@ -122,7 +123,8 @@ fun RowEditorSection(
                             Text(item.summary, style = MaterialTheme.typography.bodyMedium)
                             val missing = isMissing(item, values, buttons)
                             Text(
-                                "Ausrichtung ${alignLabel(item.align)} · ${item.size.toInt()} sp" +
+                                "Ausrichtung ${alignLabel(item.align)} · ${item.size.toInt()} sp · " +
+                                    item.widthLabel +
                                     if (missing) " · nicht mehr in der Liste oben" else "",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (missing) {
@@ -403,13 +405,15 @@ private fun RowTypeDialog(onDismiss: () -> Unit, onPick: (String) -> Unit) {
     )
 }
 
-/** Ausrichtung und Schriftgröße – in allen Objekt-Dialogen gleich. */
+/** Ausrichtung, Schriftgröße und Blockbreite – in allen Objekt-Dialogen gleich. */
 @Composable
 private fun AlignSizeFields(
     align: String,
     onAlign: (String) -> Unit,
     size: String,
     onSize: (String) -> Unit,
+    width: String = "",
+    onWidth: (String) -> Unit = {},
 ) {
     Text("Ausrichtung", style = MaterialTheme.typography.bodyMedium)
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -422,15 +426,30 @@ private fun AlignSizeFields(
         }
     }
 
-    OutlinedTextField(
-        value = size,
-        onValueChange = { text -> onSize(text.filter(Char::isDigit).take(2)) },
-        label = { Text("Schriftgröße (8–30)") },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth(),
-    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = size,
+            onValueChange = { text -> onSize(text.filter(Char::isDigit).take(2)) },
+            label = { Text("Schriftgröße (8–30)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+        )
+        OutlinedTextField(
+            value = width,
+            onValueChange = { text -> onWidth(text.filter(Char::isDigit).take(3)) },
+            label = { Text("Breite") },
+            suffix = { Text("%") },
+            supportingText = { Text("0 = gleiche Breite") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+        )
+    }
 }
+
+private fun widthOf(value: String): Float =
+    (value.toFloatOrNull() ?: 0f).coerceIn(0f, 100f)
 
 private fun sizeOf(value: String, fallback: Float): Float =
     (value.toFloatOrNull() ?: fallback).coerceIn(8f, 30f)
@@ -444,6 +463,7 @@ private fun RowTextDialog(
     var text by remember { mutableStateOf(initial?.text.orEmpty()) }
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
+    var width by remember { mutableStateOf(widthText(initial?.width)) }
     var color by remember { mutableStateOf(initial?.color.orEmpty()) }
 
     AlertDialog(
@@ -464,7 +484,7 @@ private fun RowTextDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                AlignSizeFields(align, { align = it }, size, { size = it })
+                AlignSizeFields(align, { align = it }, size, { size = it }, width, { width = it })
             }
         },
         confirmButton = {
@@ -478,6 +498,7 @@ private fun RowTextDialog(
                             color = color.trim().ifBlank { null },
                             align = align,
                             size = sizeOf(size, 14f),
+                            width = widthOf(width),
                         )
                     )
                 },
@@ -499,6 +520,7 @@ private fun RowSensorDialog(
     var color by remember { mutableStateOf(initial?.color.orEmpty()) }
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
+    var width by remember { mutableStateOf(widthText(initial?.width)) }
 
     val chosen = values.firstOrNull { it.entity == entity }
 
@@ -544,7 +566,7 @@ private fun RowSensorDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    AlignSizeFields(align, { align = it }, size, { size = it })
+                    AlignSizeFields(align, { align = it }, size, { size = it }, width, { width = it })
                 }
             }
         },
@@ -560,6 +582,7 @@ private fun RowSensorDialog(
                             color = color.trim().ifBlank { null },
                             align = align,
                             size = sizeOf(size, 14f),
+                            width = widthOf(width),
                             threshold = chosen?.threshold ?: initial?.threshold,
                         )
                     )
@@ -635,6 +658,7 @@ private fun RowButtonDialog(
     var key by remember { mutableStateOf(initial?.key.orEmpty()) }
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
+    var width by remember { mutableStateOf(widthText(initial?.width)) }
 
     val chosen = buttons.firstOrNull { it.key == key }
 
@@ -660,7 +684,18 @@ private fun RowButtonDialog(
                         },
                         onSelect = { index -> key = buttons[index].key },
                     )
-                    AlignSizeFields(align, { align = it }, size, { size = it })
+                    AlignSizeFields(align, { align = it }, size, { size = it }, width, { width = it })
+                    chosen?.let { button ->
+                        Text(
+                            if (button.showState) {
+                                "„An/Aus“ wird angezeigt – abschaltbar oben im Abschnitt „Buttons“."
+                            } else {
+                                "„An/Aus“ ist oben im Abschnitt „Buttons“ abgeschaltet."
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         },
@@ -678,10 +713,12 @@ private fun RowButtonDialog(
                             service = button.service,
                             entityId = button.entityId,
                             stateEntity = button.stateEntity,
+                            showState = button.showState,
                             stateLabelOn = button.stateLabelOn,
                             stateLabelOff = button.stateLabelOff,
                             align = align,
                             size = sizeOf(size, 14f),
+                            width = widthOf(width),
                         )
                     )
                 },

@@ -53,6 +53,8 @@ object WidgetJson {
                     color = json.optString("color").takeIf { it.isNotBlank() },
                     align = json.optString("align", "center"),
                     size = json.optDouble("size", 14.0).toFloat(),
+                    width = json.optDouble("width", 0.0).toFloat().coerceIn(0f, 100f),
+                    showState = json.optBoolean("show_state", true),
                     key = json.optString("key").takeIf { it.isNotBlank() },
                     icon = json.optString("icon").takeIf { it.isNotBlank() },
                     stateLabel = json.optString("state_label").takeIf { it.isNotBlank() },
@@ -106,6 +108,7 @@ object WidgetJson {
                     active = json.optBoolean("active", false),
                     available = json.optBoolean("available", true),
                     stateLabel = json.optString("state_label"),
+                    showState = json.optBoolean("show_state", true),
                     icon = json.optString("icon").takeIf { it.isNotBlank() },
                 )
             )

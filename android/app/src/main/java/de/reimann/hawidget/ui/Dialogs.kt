@@ -188,6 +188,7 @@ fun ButtonEditorDialog(
     var entityId by remember { mutableStateOf(initial?.entityId.orEmpty()) }
     var stateEntity by remember { mutableStateOf(initial?.stateEntity.orEmpty()) }
     var icon by remember { mutableStateOf(initial?.icon ?: MdiIcons.DEFAULT) }
+    var showState by remember { mutableStateOf(initial?.showState ?: true) }
     var pickerTarget by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -242,6 +243,20 @@ fun ButtonEditorDialog(
                 )
                 OutlinedButton(onClick = { pickerTarget = "state" }) { Text("Zustands-Entity wählen" ) }
 
+                // „An/Aus“ neben dem Namen anzeigen oder nicht
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = showState, onCheckedChange = { showState = it })
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text("An/Aus anzeigen", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Zeigt den Zustand der Zustands-Entity neben der Beschriftung.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
                 Text("Symbol", style = MaterialTheme.typography.bodyMedium)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -277,6 +292,7 @@ fun ButtonEditorDialog(
                             service = service.trim(),
                             entityId = entityId.trim().ifBlank { null },
                             stateEntity = stateEntity.trim().ifBlank { null },
+                            showState = showState,
                             stateLabelOn = initial?.stateLabelOn,
                             stateLabelOff = initial?.stateLabelOff,
                         )

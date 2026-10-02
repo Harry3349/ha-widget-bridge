@@ -131,7 +131,7 @@ class WearAppActivity : Activity() {
         }
 
         // Schriftgröße aus dem Editor, angepasst an die Einstellung „Uhr“
-        val scale = snapshot.watchScale
+        val scale = snapshot?.watchScale ?: 1f
 
         rows.forEach { row ->
             val line = LinearLayout(this).apply {
@@ -141,8 +141,7 @@ class WearAppActivity : Activity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = dp(4f) }
             }
-            row.items.take(MAX_ROW_ITEMS).forEach { item -> line.addView(cell(item, scale)) }
-            column.addView(line)
+            row.items.take(MAX_ROW_ITEMS).forEach { item -> line.addView(cell(item, scale)) }            column.addView(line)
         }
 
         column.addView(
@@ -165,10 +164,13 @@ class WearAppActivity : Activity() {
         val cell = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL or align
+            // Blöcke mit eigener Breite bekommen ein passendes Gewicht,
+            // die übrigen teilen sich den Rest gleichmäßig.
+            val weight = if (item.width > 0f) item.width else 0f
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f,
+                if (weight > 0f) weight else 1f,
             )
         }
 
@@ -205,7 +207,8 @@ class WearAppActivity : Activity() {
                     )
                 )
                 val state = item.stateLabel.orEmpty()
-                if (state.isNotBlank()) {
+                // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
+                if (item.showState && state.isNotBlank()) {
                     cell.addView(
                         inline(" $state", small, if (item.active) ACCENT else LABEL_COLOR)
                     )

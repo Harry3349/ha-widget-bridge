@@ -16,6 +16,8 @@ data class WidgetButton(
     val service: String = "switch.toggle",
     val entityId: String? = null,
     val stateEntity: String? = null,
+    /** „An/Aus“ im Widget anzeigen. */
+    val showState: Boolean = true,
     val stateLabelOn: String? = null,
     val stateLabelOff: String? = null,
 )
@@ -37,6 +39,10 @@ data class RowItem(
     /** left | center | right */
     val align: String = "center",
     val size: Float = 14f,
+    /** Breite des Blocks in der Zeile in Prozent (0 = gleiche Anteile). */
+    val width: Float = 0f,
+    /** „An/Aus“ anzeigen (nur Buttons). */
+    val showState: Boolean = true,
     val threshold: Double? = null,
     // Button
     val key: String? = null,
@@ -58,6 +64,10 @@ data class RowItem(
             "button" -> "Button · ${label ?: key.orEmpty()}"
             else -> "Text · ${text.orEmpty()}"
         }
+
+    /** Breite in Prozent, wie sie im Editor angezeigt wird (0 = automatisch). */
+    val widthLabel: String
+        get() = if (width > 0f) "${width.toInt()} % breit" else "gleiche Breite"
 }
 
 /** Eine Zeile mit bis zu drei Objekten (Text, Sensor, Button). */
