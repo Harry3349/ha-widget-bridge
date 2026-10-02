@@ -5,7 +5,7 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import de.reimann.hawidget.data.HaClient
 import de.reimann.hawidget.data.Settings
-import de.reimann.hawidget.widget.WidgetPrefs
+import de.reimann.hawidget.data.WidgetPrefs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -30,16 +30,17 @@ class WearMessageListener : WearableListenerService() {
     /** Button drücken und danach den neuen Stand an die Uhr schicken. */
     private fun handlePress(buttonKey: String) {
         if (buttonKey.isBlank()) return
-        val settings = Settings(this)
+        val context = applicationContext
+        val settings = Settings(context)
         if (!settings.isConfigured) {
-            WearSync.sendToWatch(this, PATH_PRESS_FAILED)
+            WearSync.sendToWatch(context, PATH_PRESS_FAILED)
             return
         }
 
         runBlocking {
             val client = settings.client()
             val widgetId = resolveWidgetId(client) ?: run {
-                WearSync.sendToWatch(this, PATH_PRESS_FAILED)
+                WearSync.sendToWatch(context, PATH_PRESS_FAILED)
                 return@runBlocking
             }
             try {
@@ -48,18 +49,19 @@ class WearMessageListener : WearableListenerService() {
                 // Kurz warten, damit Home Assistant den neuen Zustand meldet
                 delay(400)
                 val raw = client.snapshotRaw(widgetId)
-                WidgetPrefs.saveSnapshot(this, widgetId, raw)
-                WearSync.pushSnapshot(this, raw)
+                WidgetPrefs.saveSnapshot(context, widgetId, raw)
+                WearSync.pushSnapshot(context, raw)
             } catch (error: Exception) {
                 Log.w(TAG, "Druck fehlgeschlagen: ${error.message}")
-                WearSync.sendToWatch(this, PATH_PRESS_FAILED)
+                WearSync.sendToWatch(context, PATH_PRESS_FAILED)
             }
         }
     }
 
     /** Snapshot neu holen und an die Uhr schicken (z. B. beim Anzeigen der Tile). */
     private fun handleRefresh() {
-        val settings = Settings(this)
+        val context = applicationContext
+        val settings = Settings(context)
         if (!settings.isConfigured) return
 
         runBlocking {
@@ -67,8 +69,8 @@ class WearMessageListener : WearableListenerService() {
             val widgetId = resolveWidgetId(client) ?: return@runBlocking
             runCatching { client.snapshotRaw(widgetId) }
                 .onSuccess { raw ->
-                    WidgetPrefs.saveSnapshot(this, widgetId, raw)
-                    WearSync.pushSnapshot(this, raw)
+                    WidgetPrefs.saveSnapshot(context, widgetId, raw)
+                    WearSync.pushSnapshot(context, raw)
                 }
                 .onFailure { Log.w(TAG, "Aktualisieren fehlgeschlagen: ${it.message}") }
         }

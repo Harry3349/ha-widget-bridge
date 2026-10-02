@@ -11,7 +11,8 @@ import de.reimann.hawidget.wear.R
 import de.reimann.hawidget.wear.data.ButtonState
 import de.reimann.hawidget.wear.data.ValueState
 import de.reimann.hawidget.wear.data.WidgetSnapshot
-import java.time.OffsetDateTime
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** Baut aus einem Snapshot die Tile-Oberfläche (ProtoLayout). */
@@ -86,7 +87,7 @@ object TileRenderer {
             val stacked = snapshot?.valueLabelAbove == true
             if (columns > 1 && stacked) {
                 // Raster mit dem Namen über dem Wert – wie das Werte-Raster am Handy
-                val cell = ((screenWidthDp - 24) / columns - 4).coerceAtLeast(36)
+                val cell = ((screenWidthDp - 24f) / columns - 4f).coerceAtLeast(36f)
                 values.chunked(columns).forEach { chunk ->
                     column.addContent(gridRow(chunk, columns, cell))
                 }
