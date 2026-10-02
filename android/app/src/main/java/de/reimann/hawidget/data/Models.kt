@@ -118,6 +118,8 @@ data class ButtonState(
     val stateLabel: String,
     val active: Boolean,
     val available: Boolean,
+    /** false = im Editor abgeschaltet, dann ohne „An/Aus“. */
+    val showState: Boolean = true,
 )
 
 /** Fertig gerenderter Inhalt eines Widgets. */

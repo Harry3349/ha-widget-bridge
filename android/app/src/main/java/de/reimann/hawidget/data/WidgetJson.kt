@@ -203,6 +203,7 @@ object WidgetJson {
                     stateLabel = json.optString("state_label"),
                     active = json.optBoolean("active", false),
                     available = json.optBoolean("available", false),
+                    showState = json.optBoolean("show_state", true),
                 )
             )
         }
