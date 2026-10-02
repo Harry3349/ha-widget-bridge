@@ -119,7 +119,7 @@ fun WidgetListScreen(
                     vm.startEdit(def)
                     onEdit()
                 },
-                onDuplicate = { duplicate = DuplicateRequest(def, "phone", null) },
+                onDuplicate = { duplicate = DuplicateRequest(def, oppositeOf(def), null) },
                 onDelete = { vm.deleteWidget(def.id) },
             )
         }
@@ -364,3 +364,9 @@ internal fun targetLabel(widget: WidgetDef): String = when (widget.target) {
     "phone" -> "nur Handy"
     else -> "Handy + Uhr"
 }
+
+/**
+ * Die jeweils andere Seite – die Kopie soll in der Regel dorthin wandern, wo das
+ * Widget noch nicht liegt (Handy-Widget → Uhr-Fassung und umgekehrt).
+ */
+private fun oppositeOf(widget: WidgetDef): String = if (widget.isWatchOnly) "phone" else "watch"

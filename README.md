@@ -242,25 +242,42 @@ Dadurch lässt sie sich auch öffnen, ohne zur Kachel zu wischen.
 
 ### Mehrere Uhren: welche Uhr zeigt welches Widget?
 
-Im Handy-Widget-Bildschirm gibt es den Knopf **„Smartwatches (Widget auf der Uhr
-wählen)“**. Dort stehen alle Uhren, die per Bluetooth mit dem Handy verbunden sind (die
-Wear-App muss dort einmal geöffnet worden sein, damit die Uhr bekannt ist).
+Die Widget-Übersicht in der App ist in **zwei getrennte Bereiche** geteilt:
 
-Jede Uhr zeigt entweder das **gemeinsame Widget** (das Widget, das auch am Handy hängt)
-oder eine **eigene Fassung**. Eine eigene Fassung legst du an, indem du ein
-**Handy-Widget kopierst**:
+| Bereich | Inhalt |
+|---|---|
+| **Handy (Homescreen)** | Widgets, die auf dem Homescreen liegen – hier steht auch „Widget zum Homescreen hinzufügen“ |
+| **Smartwatch (Uhr)** | je verbundene Uhr die Auswahl ihrer Fassung, darunter die angelegten Uhr-Fassungen |
 
-1. Im Bildschirm *Smartwatches* bei der Uhr auf **„Vom Handy kopieren“** tippen – oder
-   unten auf **„Widget vom Handy kopieren“** (dann gilt die Fassung für alle Uhren).
-2. Das gewünschte Handy-Widget aus der Liste auswählen. Es entsteht eine Kopie mit dem
-   Namen `… (Uhr)`; sie ist von Anfang an **nur für die Uhr** gedacht.
-3. Über **„Fassung wählen“** einer Uhr zuordnen. Eine Fassung kann auf mehreren Uhren
-   liegen; eine Uhr hat aber immer nur **eine** Fassung.
+Jedes Widget hat drei Knöpfe: **Bearbeiten**, **Duplizieren** und **Löschen**.
 
-In der Kopie kannst du danach alles ändern, ohne das Homescreen-Widget anzufassen:
-Zeilen weglassen (Schalter **Auf der Uhr anzeigen**), die Schrift vergrößern, Buttons
-austauschen usw. Die aktuelle Zuordnung steht immer unter dem Namen der Uhr
-(*„Zeigt: …“*).
+**Duplizieren** fragt, was aus der Kopie werden soll:
+
+* **Handy-Widget** → die Kopie heißt `… (Handy)` und erscheint nur auf dem Homescreen
+  (anschließend anheften).
+* **Smartwatch-Widget** → die Kopie heißt `… (Uhr)` und liegt nur auf der Uhr. Dort kannst du
+  sie danach bearbeiten (Zeilen weglassen, Schrift größer stellen), ohne das
+  Homescreen-Widget zu verändern.
+
+Als Vorlage ist immer das Widget vorbelegt, das du angeklickt hast – du kannst im Dialog aber
+jedes andere wählen.
+
+Im Bereich **Smartwatch** steht unter jeder Uhr:
+
+| Element | Wirkung |
+|---|---|
+| **Kopfzeile** | Name der Uhr + „verbunden · \<Knoten-ID\>“ |
+| **Zeigt: …** | aktuelle Zuordnung; ohne eigene Fassung „Zeigt das gemeinsame Widget (Handy + Uhr)“ |
+| **„Fassung wählen“** (Aufklapp-Menü) | welche Fassung **diese Uhr** zeigt – das gemeinsame Widget oder eine Uhr-Fassung |
+| **„Kopie anlegen“** | dupliziert ein Widget und ordnet die Kopie **sofort dieser Uhr** zu |
+| **„Fassung bearbeiten“** | springt in den Editor der zugeordneten Fassung |
+| **„Uhren suchen“** | fragt die per Bluetooth verbundenen Uhren erneut ab |
+
+Unter der Widget-Liste steht bei jeder Uhr-Fassung, wo sie verwendet wird
+(*„Verwendet auf: Pixel Watch 3“*, *„alle Uhren“* oder *„keiner Uhr zugeordnet“*).
+
+Eine Uhr hat immer genau **eine** Fassung: Ordnest du einer Uhr eine andere zu, wird der
+Knoten automatisch aus der bisherigen Fassung entfernt.
 
 Damit die Uhren unterschiedliche Stände bekommen können, schickt die Handy-App den
 Snapshot **gezielt an die jeweilige Uhr** (statt an alle). Ein Button-Druck von der Uhr
