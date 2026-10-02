@@ -29,6 +29,12 @@ object TileRenderer {
 
     private const val APP_ACTIVITY = "de.reimann.hawidget.wear.app.WearAppActivity"
 
+    /** Höhe von Titel und Zeile „Stand …“ mit Polsterung. */
+    private const val HEADER_DP = 46f
+
+    /** Platz für die Hinweiszeile („Antippen …“). */
+    private const val HINT_DP = 14f
+
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
@@ -49,10 +55,17 @@ object TileRenderer {
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
         val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
 
-        // Kacheln können laut Wear OS nicht scrollen. Passt nicht alles auf die
-        // Anzeige, weist eine Hinweiszeile auf die App-Ansicht hin: Dort lassen
-        // sich alle Zeilen mit Wischen und mit der Krone durchblättern.
-        val showsAllRows = fitsOnScreen(rows, screenHeightDp)
+        // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt,
+        // was ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
+        // App-Ansicht hin (Wischen und Krone).
+        val visible = fittingRows(rows, screenHeightDp - HEADER_DP)
+        val truncated = rows.size > visible
+        val shown = if (!truncated) {
+            rows
+        } else {
+            // eine Zeile Platz für den Hinweis lassen
+            rows.take(fittingRows(rows, screenHeightDp - HEADER_DP - HINT_DP).coerceAtLeast(1))
+        }
 
         val column = LayoutElementBuilders.Column.Builder()
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
@@ -105,7 +118,7 @@ object TileRenderer {
 
         // Zeilen-Layout: gleiche Zeilen und Ausrichtungen wie am Handy.
         if (rows.isNotEmpty()) {
-            if (!showsAllRows) {
+            if (truncated) {
                 // Sichtbarer Hinweis: der Rest liegt in der App-Ansicht
                 column.addContent(
                     text(context.getString(R.string.tile_more_rows), ACCENT, 9f)
@@ -113,7 +126,7 @@ object TileRenderer {
             }
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
             // das Display die ersten Zeichen der äußeren Objekte ab.
-            val inset = (screenWidthDp * 0.09f).coerceIn(14f, 24f)
+            val inset = (screenWidthDp * 0.12f).coerceIn(16f, 30f)
             val rowArea = LayoutElementBuilders.Column.Builder()
                 .setWidth(DimensionBuilders.expand())
                 .setModifiers(
@@ -126,7 +139,7 @@ object TileRenderer {
                         )
                         .build()
                 )
-            rows.forEach { row -> rowArea.addContent(rowLine(row)) }
+            shown.forEach { row -> rowArea.addContent(rowLine(row)) }
             column.addContent(rowArea.build())
             return column.build()
         }
@@ -178,20 +191,27 @@ object TileRenderer {
             )
             .build()
 
-    /** Grobe Schätzung, ob alle Zeilen gleichzeitig auf die Anzeige passen. */
-    private fun fitsOnScreen(rows: List<RowDef>, screenHeightDp: Int): Boolean {
-        if (rows.isEmpty()) return true
-        // Titel + Stand bleiben oben stehen
-        var used = 42f
-        rows.forEach { row ->
-            used += row.items.maxOfOrNull { item ->
-                when (item.type) {
-                    "button", "sensor" -> 32f
-                    else -> item.size.coerceIn(8f, 30f) * 1.7f + 8f
-                }
-            } ?: 0f
+    /** Grobe Schätzung der Höhe einer Zeile (Objekt mit der größten Schrift zählt). */
+    private fun rowHeightDp(row: RowDef): Float =
+        row.items.maxOfOrNull { item ->
+            when (item.type) {
+                "button" -> 34f
+                "sensor" -> 30f
+                else -> item.size.coerceIn(8f, 30f) * 1.5f + 8f
+            }
+        } ?: 0f
+
+    /** Wie viele Zeilen passen in die angegebene Höhe? */
+    private fun fittingRows(rows: List<RowDef>, available: Float): Int {
+        var used = 0f
+        var count = 0
+        for (row in rows) {
+            val next = used + rowHeightDp(row)
+            if (next > available) break
+            used = next
+            count++
         }
-        return used <= screenHeightDp
+        return count
     }
 
     /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */
