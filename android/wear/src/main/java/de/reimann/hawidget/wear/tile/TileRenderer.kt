@@ -78,9 +78,10 @@ object TileRenderer {
             )
         )
 
-        // Buttons untereinander und gleich breit (volle Breite)
+        // Buttons untereinander und alle gleich breit
         val buttons = snapshot?.buttons.orEmpty()
-        buttons.take(3).forEach { button -> column.addContent(button(button)) }
+        val buttonWidth = (screenWidthDp - 48f).coerceAtLeast(80f)
+        buttons.take(3).forEach { button -> column.addContent(button(button, buttonWidth)) }
 
         val values = snapshot?.values.orEmpty()
         if (values.isNotEmpty()) {
@@ -170,13 +171,10 @@ object TileRenderer {
         ColorBuilders.ColorProp.Builder(value).build()
 
     /**
-     * Button über die volle Breite.
-     *
-     * Die Breite gibt ein ``Box`` mit ``expand()`` vor – dadurch sind alle Buttons
-     * gleich breit, egal wie lang die Beschriftung ist. Die Beschriftung selbst wird
-     * über eine zentrierte ``Column`` mittig gesetzt.
+     * Button mit fester Breite – dadurch sind alle Buttons gleich breit, egal wie
+     * lang die Beschriftung ist. Die Beschriftung wird darin zentriert.
      */
-    private fun button(state: ButtonState): LayoutElementBuilders.Box {
+    private fun button(state: ButtonState, widthDp: Float): LayoutElementBuilders.Box {
         val clickable = ModifiersBuilders.Clickable.Builder()
             .setId(PRESS_PREFIX + state.key)
             .setOnClick(ActionBuilders.LoadAction.Builder().build())
@@ -208,9 +206,10 @@ object TileRenderer {
             .build()
 
         return LayoutElementBuilders.Box.Builder()
-            .setWidth(DimensionBuilders.expand())
+            .setWidth(DimensionBuilders.dp(widthDp))
             .addContent(
                 LayoutElementBuilders.Column.Builder()
+                    .setWidth(DimensionBuilders.expand())
                     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
                     .addContent(label)
                     .build()
