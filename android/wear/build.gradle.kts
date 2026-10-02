@@ -10,7 +10,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "de.reimann.hawidget.wear"
+        // WICHTIG: identisch mit der Handy-App. Der Wearable Data Layer ordnet
+        // Nachrichten und Daten über den *Paketnamen* zu – bei anderem Namen
+        // scheitert die Zustellung ("Failed to deliver message to AppKey").
+        // Telefon- und Uhren-App werden nie auf demselben Gerät installiert.
+        applicationId = "de.reimann.hawidget"
         // Wear OS 3 = API 30; die Pixel Watch 3 läuft mit API 37
         minSdk = 30
         targetSdk = 35
