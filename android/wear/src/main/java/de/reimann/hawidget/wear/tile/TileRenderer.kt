@@ -83,8 +83,12 @@ object TileRenderer {
     private fun fontStyle(color: Int, sizeSp: Float): LayoutElementBuilders.FontStyle =
         LayoutElementBuilders.FontStyle.Builder()
             .setSize(DimensionBuilders.sp(sizeSp))
-            .setColor(ColorBuilders.color(color))
+            .setColor(argb(color))
             .build()
+
+    /** Farbwert als ``ColorProp`` – die statische Farbe steckt im Konstruktor. */
+    private fun argb(value: Int): ColorBuilders.ColorProp =
+        ColorBuilders.ColorProp.Builder(value).build()
 
     /**
      * Button als klickbarer Text mit Hintergrund.
@@ -100,9 +104,7 @@ object TileRenderer {
 
         val background = ModifiersBuilders.Background.Builder()
             .setColor(
-                ColorBuilders.color(
-                    if (state.active) BUTTON_ACTIVE_BACKGROUND else BUTTON_BACKGROUND
-                )
+                argb(if (state.active) BUTTON_ACTIVE_BACKGROUND else BUTTON_BACKGROUND)
             )
             .build()
 
