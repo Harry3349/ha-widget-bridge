@@ -44,9 +44,9 @@ object TileRenderer {
                 ModifiersBuilders.Modifiers.Builder()
                     .setPadding(
                         ModifiersBuilders.Padding.Builder()
-                            .setTop(DimensionBuilders.dp(14f))
-                            .setStart(DimensionBuilders.dp(10f))
-                            .setEnd(DimensionBuilders.dp(10f))
+                            .setTop(DimensionBuilders.dp(10f))
+                            .setStart(DimensionBuilders.dp(8f))
+                            .setEnd(DimensionBuilders.dp(8f))
                             .build()
                     )
                     .build()
@@ -54,7 +54,7 @@ object TileRenderer {
 
         val name = snapshot?.name?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.tile_not_configured)
-        column.addContent(text(name, Color.WHITE, 13f))
+        column.addContent(text(name, Color.WHITE, 12f))
 
         val noteText = when {
             !note.isNullOrBlank() -> note
@@ -68,18 +68,14 @@ object TileRenderer {
                 // Definition aus Home Assistant.
                 noteText ?: context.getString(R.string.tile_updated, timeOf(fetchedAt)),
                 if (noteText == null) NOTE_COLOR else ACCENT,
-                10f,
+                9f,
                 maxLines = 2,
             )
         )
 
-        // Wie am Handy: erst die Buttons, dann die Werte
+        // Buttons untereinander und groß – auf der Uhr besser zu treffen
         val buttons = snapshot?.buttons.orEmpty()
-        if (buttons.isNotEmpty()) {
-            val row = LayoutElementBuilders.Row.Builder()
-            buttons.take(3).forEach { button -> row.addContent(button(button)) }
-            column.addContent(row.build())
-        }
+        buttons.take(3).forEach { button -> column.addContent(button(button)) }
 
         val values = snapshot?.values.orEmpty()
         if (values.isNotEmpty()) {
@@ -123,9 +119,9 @@ object TileRenderer {
                     .addContent(
                         LayoutElementBuilders.Column.Builder()
                             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
-                            .addContent(text(value.label, LABEL_COLOR, 9f))
+                            .addContent(text(value.label, LABEL_COLOR, 8f))
                             .addContent(
-                                text(value.text, parseColor(value.color, Color.WHITE), 11f)
+                                text(value.text, parseColor(value.color, Color.WHITE), 10f)
                             )
                             .build()
                     )
@@ -188,11 +184,18 @@ object TileRenderer {
 
         return LayoutElementBuilders.Text.Builder()
             .setText(" ${state.label} ")
-            .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 10f))
+            .setMaxLines(1)
+            .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 12f))
             .setModifiers(
                 ModifiersBuilders.Modifiers.Builder()
                     .setClickable(clickable)
                     .setBackground(background)
+                    // Polsterung macht den Button größer und leichter zu treffen
+                    .setPadding(
+                        ModifiersBuilders.Padding.Builder()
+                            .setAll(DimensionBuilders.dp(4f))
+                            .build()
+                    )
                     .build()
             )
             .build()
