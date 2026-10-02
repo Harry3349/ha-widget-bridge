@@ -233,15 +233,19 @@ object TileRenderer {
         val builder = LayoutElementBuilders.Row.Builder()
             .setWidth(DimensionBuilders.expand())
 
-        // Blöcke mit eigener Breite bekommen sie in dp, die übrigen teilen sich
-        // den Rest (expand).
+        // Blöcke mit eigener Breite bekommen sie in dp; die übrigen teilen sich den
+        // Rest. Hat die Zeile eigene Breiten, werden die übrigen nur so breit wie ihr
+        // Inhalt – sonst würde z. B. „188.6 W“ in einer 30-%-Spalte abgeschnitten.
         val items = row.items.take(3)
         val customWidths = items.any { it.width > 0f }
         items.forEach { item ->
-            val width = if (customWidths && item.width > 0f) {
-                DimensionBuilders.dp((rowWidth * item.width / 100f).coerceAtLeast(24f))
-            } else {
-                DimensionBuilders.expand()
+            val width = when {
+                customWidths && item.width > 0f ->
+                    DimensionBuilders.dp((rowWidth * item.width / 100f).coerceAtLeast(24f))
+
+                customWidths -> DimensionBuilders.wrap()
+
+                else -> DimensionBuilders.expand()
             }
             builder.addContent(rowCell(item, scale, width))
         }

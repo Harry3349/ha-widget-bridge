@@ -147,9 +147,10 @@ class WearAppActivity : Activity() {
                 line.addView(cell(item, scale, snapshot?.id, shares[index]))
             }
             // Bleibt Platz übrig (z. B. Button mit 70 % allein in der Zeile), wird er
-            // mit einem leeren Feld aufgefällt – sonst würde das Gewicht die Zeile füllen.
+            // mit einem leeren Feld aufgefüllt – sonst würde das Gewicht die Zeile füllen.
+            // Bei Zeilen ohne eigene Breiten bleibt die Summe bei 100 %.
             val rest = REST_WEIGHT_BASE - shares.sum()
-            if (rest > 1f) {
+            if (rest > 0.5f) {
                 line.addView(
                     View(this).apply {
                         layoutParams = LinearLayout.LayoutParams(0, 1, rest)
@@ -171,21 +172,20 @@ class WearAppActivity : Activity() {
     }
 
     /**
-     * Breiten-Anteile einer Zeile.
-     *
-     * Objekte mit eigener Breite bekommen ihren Prozentsatz, alle übrigen teilen
-     * sich den **Rest** gleichmäßig – genau wie am Handy und auf der Kachel.
+     * Breiten-Anteile einer Zeile: Objekte mit eigener Breite bekommen ihren
+     * Prozentsatz; hat die Zeile eigene Breiten, sind die übrigen nur so breit wie
+     * ihr Inhalt (0 = ohne Gewicht), damit nichts abgeschnitten wird. Ohne eigene
+     * Breiten teilen sich alle Objekte die Zeile gleichmäßig – wie am Handy und auf
+     * der Kachel.
      */
     private fun sharesOf(items: List<RowItem>): List<Float> {
         if (items.isEmpty()) return emptyList()
-        val given = items.sumOf { item -> if (item.width > 0f) item.width.toDouble() else 0.0 }
         val open = items.count { it.width <= 0f }
-        val share = if (open > 0) {
-            ((REST_WEIGHT_BASE - given).coerceAtLeast(1.0) / open).toFloat()
-        } else {
-            0f
+        if (open == items.size) {
+            val share = REST_WEIGHT_BASE / items.size
+            return items.map { share }
         }
-        return items.map { item -> if (item.width > 0f) item.width else share }
+        return items.map { item -> if (item.width > 0f) item.width else 0f }
     }
 
     /**
@@ -205,11 +205,19 @@ class WearAppActivity : Activity() {
             // „An/Aus“ rechts – nur der Titel folgt der Ausrichtung.
             gravity = Gravity.CENTER_VERTICAL or
                 if (item.type == "button") Gravity.START else align
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                weight.coerceAtLeast(0.01f),
-            )
+            // Gewicht 0 = nur so breit wie der Inhalt
+            layoutParams = if (weight > 0f) {
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    weight,
+                )
+            } else {
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                )
+            }
         }
 
         when (item.type) {
