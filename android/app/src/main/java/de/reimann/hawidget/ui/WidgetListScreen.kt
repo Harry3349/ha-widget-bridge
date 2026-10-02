@@ -79,6 +79,7 @@ fun WidgetListScreen(
                     Text(def.name, style = MaterialTheme.typography.titleMedium)
                     Text(
                         "id: ${def.id} · ${def.values.size} Werte · ${def.buttons.size} Buttons · " +
+                            (if (def.rows.isNotEmpty()) "${def.rows.size} Zeilen · " else "") +
                             "Revision ${def.revision}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
