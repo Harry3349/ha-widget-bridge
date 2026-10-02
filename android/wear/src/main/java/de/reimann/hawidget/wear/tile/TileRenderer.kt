@@ -5,7 +5,6 @@ import android.graphics.Color
 import androidx.wear.protolayout.ActionBuilders
 import androidx.wear.protolayout.ColorBuilders
 import androidx.wear.protolayout.DimensionBuilders
-import androidx.wear.protolayout.FontStyleBuilders
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ModifiersBuilders
 import de.reimann.hawidget.wear.R
@@ -74,38 +73,48 @@ object TileRenderer {
 
     // ---------------------------------------------------------------- Bausteine
 
+    /** Text mit Farbe und Größe – die Farbe gehört in den FontStyle. */
     private fun text(value: String, color: Int, sizeSp: Float): LayoutElementBuilders.Text =
         LayoutElementBuilders.Text.Builder()
             .setText(value)
-            .setColor(ColorBuilders.color(color))
-            .setFontStyle(
-                FontStyleBuilders.FontStyle.Builder()
-                    .setSize(DimensionBuilders.sp(sizeSp))
-                    .build()
-            )
+            .setFontStyle(fontStyle(color, sizeSp))
             .build()
 
-    private fun button(state: ButtonState): LayoutElementBuilders.Box {
+    private fun fontStyle(color: Int, sizeSp: Float): LayoutElementBuilders.FontStyle =
+        LayoutElementBuilders.FontStyle.Builder()
+            .setSize(DimensionBuilders.sp(sizeSp))
+            .setColor(ColorBuilders.color(color))
+            .build()
+
+    /**
+     * Button als klickbarer Text mit Hintergrund.
+     *
+     * Bewusst kein ``Box``-Element: Ein Text mit Klick-Modifier und Hintergrund
+     * verhält sich wie ein Button und braucht keine zusätzlichen Größenangaben.
+     */
+    private fun button(state: ButtonState): LayoutElementBuilders.Text {
         val clickable = ModifiersBuilders.Clickable.Builder()
             .setId(PRESS_PREFIX + state.key)
             .setOnClick(ActionBuilders.LoadAction.Builder().build())
             .build()
 
         val background = ModifiersBuilders.Background.Builder()
-            .setColor(ColorBuilders.color(if (state.active) BUTTON_ACTIVE_BACKGROUND else BUTTON_BACKGROUND))
-            .setCornerRadius(DimensionBuilders.dp(15f))
+            .setColor(
+                ColorBuilders.color(
+                    if (state.active) BUTTON_ACTIVE_BACKGROUND else BUTTON_BACKGROUND
+                )
+            )
             .build()
 
-        val modifiers = ModifiersBuilders.Modifiers.Builder()
-            .setClickable(clickable)
-            .setBackground(background)
-            .build()
-
-        return LayoutElementBuilders.Box.Builder()
-            .setWidth(DimensionBuilders.dp(58f))
-            .setHeight(DimensionBuilders.dp(30f))
-            .setModifiers(modifiers)
-            .setContent(text(state.label, if (state.active) ACCENT else Color.WHITE, 12f))
+        return LayoutElementBuilders.Text.Builder()
+            .setText(" ${state.label} ")
+            .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 12f))
+            .setModifiers(
+                ModifiersBuilders.Modifiers.Builder()
+                    .setClickable(clickable)
+                    .setBackground(background)
+                    .build()
+            )
             .build()
     }
 

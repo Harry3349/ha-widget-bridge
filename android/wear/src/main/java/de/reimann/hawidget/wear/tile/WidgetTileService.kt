@@ -1,15 +1,17 @@
 package de.reimann.hawidget.wear.tile
 
 import android.util.Log
+import androidx.wear.protolayout.LayoutElementBuilders
+import androidx.wear.protolayout.ResourceBuilders
+import androidx.wear.protolayout.TimelineBuilders
 import androidx.wear.tiles.RequestBuilders
-import androidx.wear.tiles.ResourceBuilders
 import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
-import androidx.wear.tiles.TimelineBuilders
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import de.reimann.hawidget.wear.data.Settings
 import de.reimann.hawidget.wear.data.WidgetJson
+import de.reimann.hawidget.wear.data.WidgetSnapshot
 import de.reimann.hawidget.wear.work.Workers
 
 /**
@@ -34,10 +36,17 @@ class WidgetTileService : TileService() {
         }
 
         val layout = TileRenderer.render(this, loadSnapshot(), pressed)
+        val timeline = TimelineBuilders.Timeline.Builder()
+            .addTimelineEntry(
+                TimelineBuilders.TimelineEntry.Builder()
+                    .setLayout(LayoutElementBuilders.Layout.Builder().setRoot(layout).build())
+                    .build()
+            )
+            .build()
         val tile = TileBuilders.Tile.Builder()
             .setResourcesVersion(RESOURCES_VERSION)
             .setFreshnessIntervalMillis(FRESHNESS_MILLIS)
-            .setTileTimeline(TimelineBuilders.Timeline.fromLayoutElement(layout))
+            .setTileTimeline(timeline)
             .build()
 
         // Im Hintergrund nachladen (gedrosselt) und danach die Tile neu zeichnen
@@ -52,7 +61,7 @@ class WidgetTileService : TileService() {
             ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION).build()
         )
 
-    private fun loadSnapshot(): de.reimann.hawidget.wear.data.WidgetSnapshot? {
+    private fun loadSnapshot(): WidgetSnapshot? {
         val raw = Settings(this).snapshotJson ?: return null
         return runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
     }
