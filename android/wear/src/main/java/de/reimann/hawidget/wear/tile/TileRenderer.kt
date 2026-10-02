@@ -324,7 +324,15 @@ object TileRenderer {
                             .setHeight(DimensionBuilders.dp(14f))
                             .build()
                     )
-                    .addContent(text(" " + item.label.orEmpty(), Color.WHITE, size))
+                    // Der Titel dehnt sich aus: Symbol bleibt links, „An/Aus“ rechts,
+                    // nur der Titel folgt der eingestellten Ausrichtung.
+                    .addContent(
+                        LayoutElementBuilders.Box.Builder()
+                            .setWidth(DimensionBuilders.expand())
+                            .setHorizontalAlignment(align)
+                            .addContent(text(" " + item.label.orEmpty(), Color.WHITE, size))
+                            .build()
+                    )
                 val state = item.stateLabel.orEmpty()
                 // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
                 if (item.showState && state.isNotBlank()) {

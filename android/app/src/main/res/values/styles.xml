@@ -191,6 +191,19 @@
         <item name="android:textSize">11sp</item>
     </style>
 
+    <!-- Titel eines Buttons. Das Feld dehnt sich aus und schiebt damit das
+         Symbol nach links und „An/Aus“ nach rechts; die Ausrichtung des Textes
+         innerhalb des Feldes setzt die App zur Laufzeit. -->
+    <style name="WidgetRowTitle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
     <style name="WidgetRowState">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>

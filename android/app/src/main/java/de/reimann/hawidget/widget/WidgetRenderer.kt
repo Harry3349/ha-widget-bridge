@@ -149,6 +149,21 @@ object WidgetRenderer {
         R.id.row_8_main_1, R.id.row_8_main_2, R.id.row_8_main_3,
     )
 
+    /**
+     * Nur für Buttons: der Titel füllt den Platz zwischen Symbol (links) und
+     * „An/Aus“ (rechts) – nur seine Ausrichtung ist einstellbar.
+     */
+    private val ROW_TITLE_IDS = intArrayOf(
+        R.id.row_1_title_1, R.id.row_1_title_2, R.id.row_1_title_3,
+        R.id.row_2_title_1, R.id.row_2_title_2, R.id.row_2_title_3,
+        R.id.row_3_title_1, R.id.row_3_title_2, R.id.row_3_title_3,
+        R.id.row_4_title_1, R.id.row_4_title_2, R.id.row_4_title_3,
+        R.id.row_5_title_1, R.id.row_5_title_2, R.id.row_5_title_3,
+        R.id.row_6_title_1, R.id.row_6_title_2, R.id.row_6_title_3,
+        R.id.row_7_title_1, R.id.row_7_title_2, R.id.row_7_title_3,
+        R.id.row_8_title_1, R.id.row_8_title_2, R.id.row_8_title_3,
+    )
+
     private val ROW_AFTER_IDS = intArrayOf(
         R.id.row_1_after_1, R.id.row_1_after_2, R.id.row_1_after_3,
         R.id.row_2_after_1, R.id.row_2_after_2, R.id.row_2_after_3,
@@ -361,13 +376,20 @@ object WidgetRenderer {
         val iconId = ROW_ICON_IDS[slot]
         val beforeId = ROW_BEFORE_IDS[slot]
         val mainId = ROW_MAIN_IDS[slot]
+        val titleId = ROW_TITLE_IDS[slot]
         val afterId = ROW_AFTER_IDS[slot]
 
         val size = item.size.coerceIn(8f, 30f)
         val smallSize = (size - 3f).coerceAtLeast(9f)
 
         views.setViewVisibility(cellId, View.VISIBLE)
-        views.setInt(cellId, "setHorizontalGravity", alignGravity(item.align))
+        // Bei Buttons bestimmt nicht die Zelle die Lage, sondern das dehnbare
+        // Titelfeld (Symbol links, An/Aus rechts).
+        views.setInt(
+            cellId,
+            "setHorizontalGravity",
+            if (item.type == "button") Gravity.START else alignGravity(item.align),
+        )
         // 0 = kein Hintergrund (nur Buttons bekommen gleich eine Fläche)
         views.setInt(cellId, "setBackgroundResource", 0)
         views.setOnClickPendingIntent(cellId, null)
@@ -377,10 +399,11 @@ object WidgetRenderer {
             views.setViewLayoutWidth(cellId, widthDp, TypedValue.COMPLEX_UNIT_DIP)
         }
 
-        // Alle vier Slots erst einmal leeren
+        // Alle Slots erst einmal leeren
         views.setViewVisibility(iconId, View.GONE)
         views.setViewVisibility(beforeId, View.GONE)
         views.setViewVisibility(mainId, View.GONE)
+        views.setViewVisibility(titleId, View.GONE)
         views.setViewVisibility(afterId, View.GONE)
 
         when (item.type) {
@@ -402,10 +425,12 @@ object WidgetRenderer {
                 views.setImageViewResource(iconId, MdiIcons.drawable(item.icon))
                 views.setViewVisibility(iconId, View.VISIBLE)
 
-                views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
-                views.setTextColor(mainId, textColor)
-                views.setTextViewText(mainId, item.label.orEmpty())
-                views.setViewVisibility(mainId, View.VISIBLE)
+                // Symbol bleibt links, „An/Aus“ rechts – nur der Titel wandert
+                views.setTextViewTextSize(titleId, TypedValue.COMPLEX_UNIT_SP, size)
+                views.setTextColor(titleId, textColor)
+                views.setTextViewText(titleId, item.label.orEmpty())
+                views.setInt(titleId, "setGravity", alignGravity(item.align))
+                views.setViewVisibility(titleId, View.VISIBLE)
 
                 val stateLabel = item.stateLabel.orEmpty()
                 // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist

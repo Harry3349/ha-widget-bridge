@@ -414,6 +414,7 @@ private fun AlignSizeFields(
     onSize: (String) -> Unit,
     width: String = "",
     onWidth: (String) -> Unit = {},
+    alignHint: String? = null,
 ) {
     Text("Ausrichtung", style = MaterialTheme.typography.bodyMedium)
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -424,6 +425,13 @@ private fun AlignSizeFields(
                 label = { Text(alignLabel(value)) },
             )
         }
+    }
+    alignHint?.let { hint ->
+        Text(
+            hint,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -688,7 +696,16 @@ private fun RowButtonDialog(
                         },
                         onSelect = { index -> key = buttons[index].key },
                     )
-                    AlignSizeFields(align, { align = it }, size, { size = it }, width, { width = it })
+                    AlignSizeFields(
+                        align,
+                        { align = it },
+                        size,
+                        { size = it },
+                        width,
+                        { width = it },
+                        alignHint = "Das Symbol bleibt links, „An/Aus“ rechts – die " +
+                            "Ausrichtung verschiebt nur den Titel dazwischen.",
+                    )
                     chosen?.let { button ->
                         Text(
                             if (button.showState) {

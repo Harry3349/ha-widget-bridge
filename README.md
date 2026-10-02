@@ -348,7 +348,7 @@ sie über den Data Layer vom Handy).
 | **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
 | **Sensor** | Auswahl aus der Liste **Werte** oben; die Beschriftung von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
 | **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
-| **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt |
+| **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt; beim **Button** gilt sie nur für den Titel (Symbol bleibt links, An/Aus rechts) |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
 | **Breite** | Anteil der Zeilenbreite in Prozent (z. B. 30 / 70); `0` oder leer = die Objekte teilen sich die Zeile gleichmäßig |
 | **An/Aus** | gilt pro Button und wird im Abschnitt *Buttons* ein-/ausgeschaltet |
@@ -357,6 +357,11 @@ Bei Prozentangaben bekommen die übrigen Objekte der Zeile den Rest gleichmäßi
 wirken die eigenen Breiten ab Android 12 (dort kann `RemoteViews` die Breite setzen); auf
 älteren Geräten teilen sich die Blöcke weiterhin die Zeile. Uhr-Kachel und Uhr-App nutzen
 die Breiten unabhängig von der Android-Version.
+
+**In einem Button hat jedes Element seinen festen Platz:** Das Symbol sitzt immer **links**,
+„An/Aus“ immer **rechts** – die Einstellung *Ausrichtung* verschiebt nur den **Titel**
+dazwischen (links, mittig oder rechts). Ist „An/Aus“ abgeschaltet, nutzt der Titel die
+ganze Fläche und folgt der Ausrichtung über die volle Breite.
 
 Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehungsweise
 *Buttons*) – dort werden sie aus Home Assistant ausgewählt und benannt. Im Zeilen-Editor

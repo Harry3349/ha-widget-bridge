@@ -171,7 +171,10 @@ class WearAppActivity : Activity() {
 
         val cell = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL or align
+            // Beim Button bestimmt das dehnbare Titelfeld die Lage: Symbol links,
+            // „An/Aus“ rechts – nur der Titel folgt der Ausrichtung.
+            gravity = Gravity.CENTER_VERTICAL or
+                if (item.type == "button") Gravity.START else align
             // Blöcke mit eigener Breite bekommen ein passendes Gewicht,
             // die übrigen teilen sich den Rest gleichmäßig.
             val weight = if (item.width > 0f) item.width else 0f
@@ -212,6 +215,8 @@ class WearAppActivity : Activity() {
                         item.label.orEmpty(),
                         size,
                         if (item.active) ACCENT else Color.WHITE,
+                        gravity = align,
+                        weight = 1f,
                     )
                 )
                 val state = item.stateLabel.orEmpty()
@@ -265,14 +270,26 @@ class WearAppActivity : Activity() {
         )
     }
 
-    private fun inline(text: String, sizeSp: Float, color: Int): TextView = TextView(this).apply {
+    /**
+     * Ein Textfeld. Mit ``weight`` > 0 dehnt es sich aus (z. B. der Button-Titel,
+     * der das Symbol nach links und „An/Aus“ nach rechts schiebt).
+     */
+    private fun inline(
+        text: String,
+        sizeSp: Float,
+        color: Int,
+        gravity: Int = Gravity.START,
+        weight: Float = 0f,
+    ): TextView = TextView(this).apply {
         this.text = text
         setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
         setTextColor(color)
+        this.gravity = gravity
         maxLines = 2
         layoutParams = LinearLayout.LayoutParams(
+            if (weight > 0f) 0 else LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
+            weight,
         )
     }
 
