@@ -142,7 +142,7 @@ class WearAppActivity : Activity() {
                 ).apply { topMargin = dp(4f) }
             }
             row.items.take(MAX_ROW_ITEMS).forEach { item ->
-                line.addView(cell(item, scale))
+                line.addView(cell(item, scale, snapshot?.id))
             }
             column.addView(line)
         }
@@ -158,8 +158,13 @@ class WearAppActivity : Activity() {
         )
     }
 
-    /** Ein Objekt einer Zeile: Text, Sensor (Name über Wert) oder Button. */
-    private fun cell(item: RowItem, scale: Float): View {
+    /**
+     * Ein Objekt einer Zeile: Text, Sensor (Name über Wert) oder Button.
+     *
+     * ``widgetId`` wird beim Druck mitgeschickt, damit das Handy weiß, welche
+     * Fassung den Knopf enthält (mehrere Uhren können verschiedene zeigen).
+     */
+    private fun cell(item: RowItem, scale: Float, widgetId: String?): View {
         val align = alignGravity(item.align)
         val size = (item.size * scale).coerceIn(8f, 30f)
         val small = (size - 3f).coerceAtLeast(9f)
@@ -227,7 +232,7 @@ class WearAppActivity : Activity() {
                 cell.setOnClickListener {
                     val key = item.key
                     if (key.isNullOrBlank()) return@setOnClickListener
-                    Bridge.press(this, snapshot?.id, key)
+                    Bridge.press(this, widgetId, key)
                     // Das Handy schaltet und schickt den neuen Stand zurück
                     handler.removeCallbacks(rerender)
                     handler.postDelayed(rerender, PRESS_RERENDER_MS)

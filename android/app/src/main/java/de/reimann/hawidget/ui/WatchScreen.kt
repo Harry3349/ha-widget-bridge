@@ -79,6 +79,7 @@ fun WatchScreen(
                 onAssign = { widget -> vm.assignWatchWidget(widget, watch.id) },
                 onClear = { vm.clearWatchAssignment(watch.id) },
                 onCopy = { copyDialog = watch.id },
+                onEdit = onEdit,
             )
         }
 
@@ -150,6 +151,7 @@ private fun WatchCard(
     onAssign: (WidgetDef) -> Unit,
     onClear: () -> Unit,
     onCopy: () -> Unit,
+    onEdit: (WidgetDef) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
     val assigned = widgets.firstOrNull { it.target == "watch" && it.watchNodes.contains(watch.id) }
