@@ -43,12 +43,6 @@ object TileRenderer {
      */
     private const val BOTTOM_SAFE_DP = 30f
 
-    /** Untergrenze der Schriftgröße auf der Kachel (wie im Editor). */
-    private const val WATCH_SCALE_MIN = 0.6f
-
-    /** So weit darf die Kachel verkleinern, damit alle Zeilen sichtbar sind. */
-    private const val AUTO_SHRINK_MIN_FACTOR = 0.55f
-
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
@@ -69,32 +63,19 @@ object TileRenderer {
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst. Welche
         // Zeilen auf die Uhr kommen, entscheidet der Editor am Handy.
         val allWatchRows = snapshot?.watchRowsList.orEmpty()
-        val baseScale = snapshot?.watchScale ?: 1f
+        // Schriftgröße so, wie sie im Editor eingestellt ist – die Kachel
+        // verkleinert nichts von sich aus.
+        val scale = snapshot?.watchScale ?: 1f
         // Feste Zeilenzahl aus dem Editor (0 = so viele, wie hineinpassen)
         val limit = snapshot?.watchRows ?: 0
         val rows = if (limit > 0) allWatchRows.take(limit) else allWatchRows
 
-        // Kacheln können laut Wear OS nicht scrollen. Fehlende Zeilen sahen für den
-        // Nutzer wie ein veraltetes Widget aus, deshalb wird bei „automatisch“ die
-        // Schrift so weit verkleinert, bis **alle** Zeilen Platz haben (bis zur
-        // Untergrenze des Editors). Erst dann bleibt ein Rest für die App-Ansicht.
+        // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt, was
+        // ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
+        // App-Ansicht hin. Die Höhe wird dabei großzügig geschätzt – eine zu große
+        // Reserve hat zuletzt die letzten Zeilen verschluckt.
         val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
-        var scale = baseScale
-        var visible = fittingRows(rows, band, scale)
-        if (limit <= 0 && visible < rows.size) {
-            var factor = 0.95f
-            while (factor >= AUTO_SHRINK_MIN_FACTOR) {
-                val candidate = (baseScale * factor).coerceAtLeast(WATCH_SCALE_MIN)
-                val fits = fittingRows(rows, band, candidate)
-                if (fits > visible) {
-                    scale = candidate
-                    visible = fits
-                }
-                if (fits >= rows.size) break
-                factor -= 0.05f
-            }
-        }
-
+        val visible = fittingRows(rows, band, scale)
         val truncated = allWatchRows.size > visible || rows.size > visible
         val shown = if (!truncated) {
             rows
@@ -232,18 +213,18 @@ object TileRenderer {
             .build()
 
     /**
-     * Grobe Schätzung der Höhe einer Zeile (Objekt mit der größten Schrift zählt).
+     * Höhe einer Zeile in dp – gemessen an der gezeichneten Kachel.
      *
-     * Die Werte sind Erfahrungswerte aus der gezeichneten Kachel – zu großzügige
-     * Werte kosten Zeilen, die eigentlich noch passen würden.
+     * Bewusst knapp gerechnet (früher 34/30 dp): zu große Werte ließen die Kachel
+     * die unteren Zeilen weglassen, obwohl noch Platz war.
      */
     private fun rowHeightDp(row: RowDef, scale: Float): Float =
         row.items.maxOfOrNull { item ->
             when (item.type) {
-                // Button: Symbol 14 dp + Polsterung, Sensor: eine Textzeile
-                "button" -> 26f * scale
-                "sensor" -> 20f * scale
-                else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 6f
+                // Button: Symbol 14 dp + Polsterung; Sensor: eine Textzeile
+                "button" -> 20f * scale
+                "sensor" -> 15f * scale
+                else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 4f
             }
         } ?: 0f
 
