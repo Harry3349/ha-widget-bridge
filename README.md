@@ -353,6 +353,23 @@ Repository öffentlich und in Ordnung ist.
   `ha_widget_bridge` aufgeführt.
 * Nach dem Kopieren **muss** Home Assistant neu gestartet werden (kein YAML-Reload).
 
+### Widget sieht nach einem Home-Assistant-Neustart wieder „alt“ aus
+
+Das Widget zeigt dann wieder eine Spalte und `Name · Wert` in einer Zeile (statt mehrerer
+Spalten und dem Wert unter dem Namen). Ursache ist meist die **Integration**, nicht das Widget:
+
+1. HACS installiert beim Aktualisieren/Neu-Herunterladen den Inhalt des **letzten Release-Tags**.
+   Ist der Code seit dem letzten Release weiterentwickelt worden, überschreibt HACS die neuere
+   Fassung mit der älteren. Prüfen: `manifest.json` der Installation vergleichen mit
+   `manifest.json` des Release-Tags.
+2. Abhilfe: in HACS auf die **neueste Version** aktualisieren und Home Assistant neu starten.
+3. Beim Rücksprung auf eine ältere Integration gehen die Felder `value_columns` und
+   `value_label_above` der gespeicherten Definition verloren (die alte Fassung kennt sie nicht).
+   Nach dem Update im App-Editor die Spaltenzahl und „Wert unter dem Namen“ **erneut** einstellen.
+
+Grundsatz: Wenn HACS das Repository verwaltet, die Integration **ausschließlich über HACS**
+aktualisieren und keine Handkopie parallel pflegen.
+
 ### Widget bleibt leer / zeigt „Fehler“
 
 * In der App **Einrichtung → Testen** ausführen; die Meldung nennt den HTTP-Fehler.
