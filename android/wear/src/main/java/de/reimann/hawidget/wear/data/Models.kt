@@ -18,6 +18,10 @@ data class ButtonState(
     val label: String,
     val active: Boolean,
     val available: Boolean,
+    /** „An“ oder „Aus“ – wie am Handy. */
+    val stateLabel: String = "",
+    /** ``mdi:``-Name des Symbols. */
+    val icon: String? = null,
 )
 
 /** Fertig gerenderter Inhalt eines Widgets (Snapshot der Integration). */

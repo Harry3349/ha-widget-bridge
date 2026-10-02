@@ -11,6 +11,7 @@ import de.reimann.hawidget.wear.R
 import de.reimann.hawidget.wear.data.ButtonState
 import de.reimann.hawidget.wear.data.ValueState
 import de.reimann.hawidget.wear.data.WidgetSnapshot
+import de.reimann.hawidget.wear.icons.TileIcons
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -190,6 +191,28 @@ object TileRenderer {
             .setText(state.label)
             .setMaxLines(1)
             .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 12f))
+            .build()
+
+        val stateText = LayoutElementBuilders.Text.Builder()
+            .setText("  " + state.stateLabel)
+            .setMaxLines(1)
+            .setFontStyle(fontStyle(if (state.active) ACCENT else LABEL_COLOR, 11f))
+            .build()
+
+        val icon = LayoutElementBuilders.Image.Builder()
+            .setResourceId(TileIcons.id(state.icon))
+            .setWidth(DimensionBuilders.dp(16f))
+            .setHeight(DimensionBuilders.dp(16f))
+            .build()
+
+        val content = LayoutElementBuilders.Row.Builder()
+            .addContent(icon)
+            .addContent(label)
+            .addContent(stateText)
+            .build()
+
+        return LayoutElementBuilders.Box.Builder()
+            .setWidth(DimensionBuilders.dp(widthDp))
             .setModifiers(
                 ModifiersBuilders.Modifiers.Builder()
                     .setClickable(clickable)
@@ -199,19 +222,17 @@ object TileRenderer {
                         ModifiersBuilders.Padding.Builder()
                             .setTop(DimensionBuilders.dp(4f))
                             .setBottom(DimensionBuilders.dp(4f))
+                            .setStart(DimensionBuilders.dp(6f))
+                            .setEnd(DimensionBuilders.dp(6f))
                             .build()
                     )
                     .build()
             )
-            .build()
-
-        return LayoutElementBuilders.Box.Builder()
-            .setWidth(DimensionBuilders.dp(widthDp))
             .addContent(
                 LayoutElementBuilders.Column.Builder()
                     .setWidth(DimensionBuilders.expand())
                     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
-                    .addContent(label)
+                    .addContent(content)
                     .build()
             )
             .build()

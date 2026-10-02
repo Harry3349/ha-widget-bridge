@@ -62,6 +62,8 @@ object WidgetJson {
                     label = json.optString("label", key),
                     active = json.optBoolean("active", false),
                     available = json.optBoolean("available", true),
+                    stateLabel = json.optString("state_label"),
+                    icon = json.optString("icon").takeIf { it.isNotBlank() },
                 )
             )
         }

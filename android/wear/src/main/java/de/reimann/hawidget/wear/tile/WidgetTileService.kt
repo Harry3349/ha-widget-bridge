@@ -14,6 +14,7 @@ import de.reimann.hawidget.wear.data.Bridge
 import de.reimann.hawidget.wear.data.Settings
 import de.reimann.hawidget.wear.data.WidgetJson
 import de.reimann.hawidget.wear.data.WidgetSnapshot
+import de.reimann.hawidget.wear.icons.TileIcons
 
 /**
  * Die Tile auf der Uhr.
@@ -75,10 +76,19 @@ class WidgetTileService : TileService() {
 
     override fun onTileResourcesRequest(
         requestParams: RequestBuilders.ResourcesRequest
-    ): ListenableFuture<ResourceBuilders.Resources> =
-        Futures.immediateFuture(
-            ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION).build()
-        )
+    ): ListenableFuture<ResourceBuilders.Resources> {
+        val builder = ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION)
+        // Symbole für die Buttons bereitstellen (wie die Symbole am Handy)
+        TileIcons.all.forEach { (id, drawableRes) ->
+            builder.addIdToImageMapping(
+                id,
+                ResourceBuilders.AndroidImageResourceByResId.Builder()
+                    .setResourceId(drawableRes)
+                    .build()
+            )
+        }
+        return Futures.immediateFuture(builder.build())
+    }
 
     /** Kurze Statuszeile, wenn gerade etwas passiert oder noch Daten fehlen. */
     private fun statusNote(settings: Settings, now: Long, pressed: Boolean): String? {
@@ -97,7 +107,7 @@ class WidgetTileService : TileService() {
 
     companion object {
         private const val TAG = "HAWidgetBridge"
-        private const val RESOURCES_VERSION = "1"
+        private const val RESOURCES_VERSION = "2"
         private const val FRESHNESS_MILLIS = 15 * 60 * 1000L
         /** Beim Anzeigen nachfragen, wenn der Stand älter ist als das hier. */
         private const val DISPLAY_REFRESH_MS = 60_000L
