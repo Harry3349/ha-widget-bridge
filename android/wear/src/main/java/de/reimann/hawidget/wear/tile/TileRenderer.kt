@@ -62,27 +62,16 @@ object TileRenderer {
         // Zeilen-Layout aus dem Handy-Editor hat Vorrang: gleiche Zeilen,
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst. Welche
         // Zeilen auf die Uhr kommen, entscheidet der Editor am Handy.
-        val allWatchRows = snapshot?.watchRowsList.orEmpty()
+        val rows = limitedRows(snapshot)
         // Schriftgröße so, wie sie im Editor eingestellt ist – die Kachel
         // verkleinert nichts von sich aus.
         val scale = snapshot?.watchScale ?: 1f
-        // Feste Zeilenzahl aus dem Editor (0 = so viele, wie hineinpassen)
-        val limit = snapshot?.watchRows ?: 0
-        val rows = if (limit > 0) allWatchRows.take(limit) else allWatchRows
-
         // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt, was
         // ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
-        // App-Ansicht hin. Die Höhe wird dabei großzügig geschätzt – eine zu große
-        // Reserve hat zuletzt die letzten Zeilen verschluckt.
-        val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
-        val visible = fittingRows(rows, band, scale)
-        val truncated = allWatchRows.size > visible || rows.size > visible
-        val shown = if (!truncated) {
-            rows
-        } else {
-            // eine Zeile Platz für den Hinweis lassen
-            rows.take(fittingRows(rows, band - HINT_DP, scale).coerceAtLeast(1))
-        }
+        // App-Ansicht hin.
+        val plan = layoutPlan(snapshot, screenHeightDp)
+        val truncated = plan.truncated
+        val shown = rows.take(plan.shown)
 
         val column = LayoutElementBuilders.Column.Builder()
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
@@ -227,6 +216,50 @@ object TileRenderer {
                 else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 4f
             }
         } ?: 0f
+
+    /**
+     * Was die Kachel aus einem Snapshot zeichnet.
+     *
+     * Auch für das Log im Tile-Dienst: damit lässt sich ohne Rätselraten sehen,
+     * welchen Stand die Kachel bekommen hat und warum sie Zeilen weglässt.
+     */
+    data class TilePlan(
+        /** Zeilen, die laut Editor auf die Uhr gehören. */
+        val total: Int,
+        /** Zeilen nach der Einstellung „Zeilen auf der Kachel“ (0 = alle). */
+        val allowed: Int,
+        /** Wie viele davon ohne Hinweiszeile passen würden. */
+        val visible: Int,
+        /** Wie viele die Kachel tatsächlich zeichnet. */
+        val shown: Int,
+        /** Ob Zeilen wegfallen (dann erscheint der Hinweis). */
+        val truncated: Boolean,
+        val scale: Float,
+    )
+
+    /** Die Zeilen, die laut Editor auf die Uhr gehören (Zeilenzahl beachtet). */
+    private fun limitedRows(snapshot: WidgetSnapshot?): List<RowDef> {
+        val all = snapshot?.watchRowsList.orEmpty()
+        val limit = snapshot?.watchRows ?: 0
+        return if (limit > 0) all.take(limit) else all
+    }
+
+    /** Rechnet aus, wie viele Zeilen die Kachel zeigt (ohne zu zeichnen). */
+    fun layoutPlan(snapshot: WidgetSnapshot?, screenHeightDp: Int): TilePlan {
+        val all = snapshot?.watchRowsList.orEmpty()
+        val rows = limitedRows(snapshot)
+        val scale = snapshot?.watchScale ?: 1f
+        val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
+        val visible = fittingRows(rows, band, scale)
+        val truncated = all.size > visible || rows.size > visible
+        val shown = if (!truncated) {
+            rows.size
+        } else {
+            // eine Zeile Platz für den Hinweis lassen
+            rows.take(fittingRows(rows, band - HINT_DP, scale).coerceAtLeast(1)).size
+        }
+        return TilePlan(all.size, rows.size, visible, shown, truncated, scale)
+    }
 
     /** Wie viele Zeilen passen in die angegebene Höhe? */
     private fun fittingRows(rows: List<RowDef>, available: Float, scale: Float): Int {

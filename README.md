@@ -630,6 +630,28 @@ aktualisieren und keine Handkopie parallel pflegen.
   etwa 15 Sekunden von selbst. Ohne Live-Modus hilft Antippen, ein Button-Druck oder das
   Öffnen der App – oder das nächste Intervall abwarten.
 
+### Die Kachel auf der Uhr zeigt nicht alle Zeilen
+
+Die Kachel kann nicht scrollen und lässt deshalb weg, was nicht ganz auf die runde Anzeige
+passt; sie blendet dann zusätzlich den Hinweis **„Antippen: alle Zeilen“** ein. Fehlen
+Zeilen, obwohl unten Platz frei aussieht, hilft diese Reihenfolge:
+
+1. **Was die Kachel sieht (Log):** Uhr per USB/WLAN verbinden, Kachel anzeigen und
+   `adb logcat -s HAWidgetBridge` mitlesen. Die Zeile
+   `Kachel: Fassung …, x/y Zeilen (gesamt z), sichtbar …, gekuerzt …` nennt den empfangenen
+   Stand (Revision), die Einstellung der Fassung und die Rechnung der Kachel. Passt die
+   Revision nicht zu der im Editor gespeicherten Fassung, hat die Uhr einen alten Stand
+   (siehe 3.).
+2. **Einstellung prüfen:** In der Uhr-Fassung unter *Uhr-Kachel → Zeilen auf der Kachel*
+   bedeutet `0` „so viele, wie hineinpassen“; ein fester Wert schneidet den Rest bewusst
+   ab. Ein Tipp auf die Kachel öffnet die App-Ansicht auf der Uhr – dort sind immer
+   **alle** Zeilen zu sehen (Wischen oder Krone).
+3. **Nach einer App-Aktualisierung (`adb install -r`):** Die Kachel einmal entfernen und
+   neu hinzufügen (im Karussell lange drücken → entfernen, danach wieder hinzufügen),
+   sonst zeigt das System unter Umständen weiter die alte Darstellung.
+4. **Zwei Kacheln im Karussell:** Bleibt nach einem Paketwechsel eine alte Kachel stehen,
+   durch das Karussell wischen und die überzählige entfernen.
+
 ## Bekannte Einschränkungen
 
 * **Symbole:** Die App bringt einen eigenen, kleinen Symbolsatz mit. `mdi:`-Namen werden über

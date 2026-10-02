@@ -40,6 +40,18 @@ class WidgetTileService : TileService() {
         val settings = Settings(this)
         val now = System.currentTimeMillis()
         val snapshot = loadSnapshot(settings)
+        val screenWidthDp = requestParams.deviceParameters?.screenWidthDp ?: 192
+        val screenHeightDp = requestParams.deviceParameters?.screenHeightDp ?: 192
+
+        // Diagnose ohne Rätselraten: welchen Stand bekommt die Kachel und was
+        // zeichnet sie davon? (Zeilen im Log gegen den Snapshot vergleichen)
+        val plan = TileRenderer.layoutPlan(snapshot, screenHeightDp)
+        Log.d(
+            TAG,
+            "Kachel: Fassung ${snapshot?.revision ?: -1}, ${plan.shown}/${plan.allowed} Zeilen" +
+                " (gesamt ${plan.total}), sichtbar ${plan.visible}, gekuerzt ${plan.truncated}," +
+                " Schrift ${plan.scale}, Stand ${settings.lastRefresh}, ${screenWidthDp}x${screenHeightDp} dp",
+        )
 
         if (!pressedKey.isNullOrBlank()) {
             Log.d(TAG, "Button geklickt: $pressedKey")
@@ -55,8 +67,8 @@ class WidgetTileService : TileService() {
             this,
             snapshot,
             settings.lastRefresh,
-            requestParams.deviceParameters?.screenWidthDp ?: 192,
-            requestParams.deviceParameters?.screenHeightDp ?: 192,
+            screenWidthDp,
+            screenHeightDp,
             statusNote(settings, now, pressedKey != null),
         )
 
@@ -113,6 +125,12 @@ class WidgetTileService : TileService() {
 
     companion object {
         private const val TAG = "HAWidgetBridge"
+        /**
+         * Kennung der Tile-Ressourcen (Symbole). Bleibt konstant, weil sich die
+         * Symbole mit der App-Version nicht ändern – muss aber **erhöht** werden,
+         * sobald neue oder geänderte Symbole dazukommen, sonst zeigt die Uhr noch
+         * die zwischengespeicherten alten Bilder.
+         */
         private const val RESOURCES_VERSION = "2"
         private const val FRESHNESS_MILLIS = 15 * 60 * 1000L
         /** Beim Anzeigen nachfragen, wenn der Stand älter ist als das hier. */
