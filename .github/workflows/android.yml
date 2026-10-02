@@ -47,11 +47,18 @@ jobs:
 
       - name: APK bauen
         working-directory: android
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon :app:assembleDebug :wear:assembleDebug
 
-      - name: APK hochladen
+      - name: APK hochladen (Handy)
         uses: actions/upload-artifact@v4
         with:
           name: HAWidgetBridge-debug
           path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: APK hochladen (Uhr)
+        uses: actions/upload-artifact@v4
+        with:
+          name: HAWidgetBridge-wear-debug
+          path: android/wear/build/outputs/apk/debug/*.apk
           if-no-files-found: error

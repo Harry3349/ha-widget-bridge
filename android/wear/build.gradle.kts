@@ -1,23 +1,25 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Wear-OS-Modul: liefert eine Tile mit denselben Widget-Definitionen wie die
+// Handy-App. Bewusst ohne Compose, damit der Bauaufwand klein bleibt.
 android {
-    namespace = "de.reimann.hawidget"
+    namespace = "de.reimann.hawidget.wear"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "de.reimann.hawidget"
-        minSdk = 26
+        applicationId = "de.reimann.hawidget.wear"
+        // Wear OS 3 = API 30; die Pixel Watch 3 läuft mit API 37
+        minSdk = 30
         targetSdk = 35
-        versionCode = 4
+        versionCode = 1
         versionName = "0.1.4"
         resourceConfigurations += listOf("de", "en")
     }
 
-    // Fester Debug-Schlüssel (identisch in CI und lokal, damit Updates installierbar bleiben)
+    // Fester Debug-Schlüssel (wie in der Handy-App), damit Updates installierbar bleiben
     signingConfigs {
         getByName("debug") {
             val keystore = File(System.getProperty("user.home"), ".android/debug.keystore")
@@ -37,10 +39,6 @@ android {
         }
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
         }
     }
 
@@ -52,29 +50,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
-    buildFeatures {
-        compose = true
-    }
-
-    packaging {
-        resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
-    }
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.activity:activity-compose:1.9.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    // Stabile Tile-Bibliothek (Wear OS 3+). Die neuen "Wear Widgets" werden auf
+    // der Pixel Watch 3 (keine Teilhöhen) ohnehin als Tile dargestellt.
+    implementation("androidx.wear.tiles:tiles:1.4.1")
+    implementation("com.google.guava:guava:32.1.3-android")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
-
-    implementation(platform("androidx.compose:compose-bom:2024.09.03"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    debugImplementation("androidx.compose.ui:ui-tooling")
 }

@@ -116,7 +116,11 @@ def check(path: str) -> list[str]:
 
 
 def main() -> int:
-    files = sorted(glob.glob("android/app/src/**/*.kt", recursive=True))
+    files = sorted(
+        path
+        for root in ("android/app/src", "android/wear/src")
+        for path in glob.glob(f"{root}/**/*.kt", recursive=True)
+    )
     if not files:
         print("Keine Kotlin-Dateien gefunden.")
         return 1

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vorschaubild für die Tile-Auswahl auf der Uhr -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="320dp"
+    android:viewportWidth="320"
+    android:viewportHeight="320">
+    <path
+        android:fillColor="#FF101018"
+        android:pathData="M0,0 L320,0 L320,320 L0,320 Z" />
+    <path
+        android:pathData="M160,86 L160,166"
+        android:strokeColor="#FF00E676"
+        android:strokeLineCap="round"
+        android:strokeWidth="16" />
+    <path
+        android:pathData="M108,118 A64,64 0 1 0 212,118"
+        android:strokeColor="#FF00E676"
+        android:strokeLineCap="round"
+        android:strokeWidth="16" />
+</vector>

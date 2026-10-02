@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HA Widget Bridge"
 include(":app")
+include(":wear")

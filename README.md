@@ -84,13 +84,18 @@ ha-widget-bridge/
 │   ├── sensor.py        # sensor.<widget>_inhalt
 │   ├── button.py        # button.<widget>_<key>
 │   └── config_flow.py   # Einrichtungsdialog
-├── android/                              # Android-App (Kotlin + Compose)
-│   └── app/src/main/java/de/reimann/hawidget/
-│       ├── data/        # API-Client, Modelle, Einstellungen
-│       ├── widget/      # AppWidgetProvider, Rendering, Konfigurations-Activity
-│       ├── work/        # WorkManager-Worker + Live-Dienst
-│       └── ui/          # Compose-Oberfläche
-└── .github/workflows/android.yml         # baut die Debug-APK in CI
+├── android/                              # Android-Apps (Kotlin)
+│   ├── app/src/main/java/de/reimann/hawidget/
+│   │   ├── data/        # API-Client, Modelle, Einstellungen
+│   │   ├── widget/      # AppWidgetProvider, Rendering, Konfigurations-Activity
+│   │   ├── work/        # WorkManager-Worker + Live-Dienst
+│   │   └── ui/          # Compose-Oberfläche
+│   └── wear/src/main/java/de/reimann/hawidget/wear/
+│       ├── data/        # derselbe API-Client, nur das Nötige
+│       ├── tile/        # Tile (Werte + Buttons) und Rendering
+│       ├── work/        # Aktualisieren und Button-Druck
+│       └── SetupActivity.kt   # Adresse/Token auf der Uhr eintragen
+└── .github/workflows/android.yml         # baut beide Debug-APKs in CI
 ```
 
 ---
@@ -126,10 +131,10 @@ Die App braucht JDK 17 und das Android SDK (Android Studio installiert beides).
 
 **a) Über GitHub Actions (ohne lokale Installation)**
 
-Bei jedem Push läuft `.github/workflows/android.yml` und erzeugt ein Artefakt
-`HAWidgetBridge-debug` mit der installierbaren Debug-APK.
+Bei jedem Push läuft `.github/workflows/android.yml` und erzeugt zwei Artefakte:
+`HAWidgetBridge-debug` (Handy) und `HAWidgetBridge-wear-debug` (Uhr).
 
-Die fertige APK hängt zusätzlich an jedem
+Die fertigen APKs hängen zusätzlich an jedem
 [Release](https://github.com/Harry3349/ha-widget-bridge/releases/latest) – das ist der
 einfachste Weg, sie direkt auf dem Handy herunterzuladen und zu installieren.
 
@@ -138,8 +143,9 @@ einfachste Weg, sie direkt auf dem Handy herunterzuladen und zu installieren.
 ```bash
 cd android
 gradle wrapper --gradle-version 8.9     # einmalig
-./gradlew assembleDebug
+./gradlew assembleDebug                 # beide Module
 # → app/build/outputs/apk/debug/app-debug.apk
+# → wear/build/outputs/apk/debug/app-debug.apk
 ```
 
 Oder: `android/` in Android Studio öffnen und „Run“ drücken.
@@ -159,6 +165,38 @@ Oder: `android/` in Android Studio öffnen und „Run“ drücken.
 2. **Widget zum Homescreen hinzufügen** (oder am Homescreen lange drücken →
    Widgets → HA Widget Bridge → Widget platzieren).
 3. Beim Platzieren erscheint die Auswahlliste, welches HA-Widget dargestellt wird.
+
+## 5. Wear OS (Uhr)
+
+Das Wear-Modul zeigt dasselbe Widget als **Tile** auf der Uhr – mit Werten **und**
+Buttons in einer Oberfläche.
+
+**Warum Tile und nicht „Wear Widget“?** Die neuen Wear Widgets (Remote Compose) brauchen
+ein Gerät mit Teilhöhen-Unterstützung; auf Geräten **ohne** Teilhöhen – wie der Pixel
+Watch 3 – übersetzt das System sie ohnehin in eine Tile. Deshalb nutzt dieses Modul die
+stabile `androidx.wear.tiles`-Bibliothek. Ein Glance-Wear-Widget kann später als
+zweiter Dienst daneben gestellt werden.
+
+**Einrichten**
+
+1. Wear-APK (`HAWidgetBridge-*-wear-debug.apk`) auf der Uhr installieren
+   (siehe Abschnitt 2; am einfachsten per `adb install -r`).
+2. Die App **HA Widget** auf der Uhr öffnen, Server-URL und Long-Lived-Token eintragen
+   → **Speichern und testen**. Das erste in Home Assistant angelegte Widget wird
+   automatisch übernommen.
+3. Auf der Uhr nach rechts wischen (Tiles-Karussell) → **Tile hinzufügen** → *HA Widget*.
+
+**Aktualisierung**
+
+| Anlass | Verhalten |
+|---|---|
+| Tile wird angezeigt | Snapshot aus dem Zwischenspeicher, im Hintergrund einmal nachladen (höchstens alle 60 s) |
+| Alle 15 Minuten | `RefreshWorker` holt einen neuen Snapshot |
+| Button gedrückt | Service-Aufruf, danach sofortiger Snapshot und Neuzeichnen |
+| System-Frischeintervall | Alle 15 Minuten durch das System angefordert |
+
+Die Tile kann nicht scrollen – es passt deshalb eine begrenzte Zahl von Werten auf den
+Bildschirm. Auf der Uhr werden höchstens drei Buttons nebeneinander dargestellt.
 
 ---
 

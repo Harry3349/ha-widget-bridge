@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HA Widget</string>
+    <string name="tile_label">HA Widget</string>
+    <string name="tile_description">Werte und Schalter aus Home Assistant</string>
+    <string name="tile_not_configured">In der App einrichten</string>
+    <string name="tile_loading">Lade …</string>
+    <string name="tile_pressing">Schalte …</string>
+    <string name="tile_updated">Stand %1$s</string>
+
+    <string name="setup_title">HA Widget Bridge</string>
+    <string name="setup_hint">Adresse der HA-Instanz und Long-Lived-Token eintragen. Das Widget wird aus Home Assistant übernommen.</string>
+    <string name="setup_url">https://homeassistant.local:8123</string>
+    <string name="setup_token">Long-Lived-Token</string>
+    <string name="setup_save">Speichern und testen</string>
+    <string name="setup_open">Bitte Adresse und Token eintragen.</string>
+    <string name="setup_status">Verbunden – Widget „%1$s“</string>
+    <string name="setup_testing">Verbinde …</string>
+    <string name="setup_need_both">Adresse und Token sind nötig.</string>
+    <string name="setup_no_widget">Kein Widget in Home Assistant gefunden.</string>
+    <string name="setup_ok">Fertig – Widget „%1$s“</string>
+    <string name="setup_failed">Fehlgeschlagen.</string>
+</resources>
