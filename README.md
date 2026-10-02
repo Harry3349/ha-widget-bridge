@@ -217,14 +217,21 @@ ein Gerät mit Teilhöhen-Unterstützung; auf Geräten **ohne** Teilhöhen – w
 Watch 3 – übersetzt das System sie ohnehin in eine Tile. Deshalb nutzt dieses Modul die
 stabile `androidx.wear.tiles`-Bibliothek.
 
-**Aktualisierung**
+**Aktualisierung (auf den Akku der Uhr optimiert)**
 
 | Anlass | Verhalten |
 |---|---|
-| Tile wird angezeigt | Zwischenspeicher wird gezeichnet; ist der Stand älter als 60 s, bittet die Tile das Handy um einen frischen Abruf |
-| Handy-Abruf (alle 15 min, Live-Modus, Antippen, Button) | Snapshot wird sofort an die Uhr übertragen, die Tile zeichnet sich neu |
+| Tile wird angezeigt | Zwischenspeicher wird gezeichnet; ist der Stand älter als 60 s, bittet die Tile das Handy um einen frischen Abruf (`/hawidget/refresh`) |
+| Handy-Abruf (Intervall / Live-Modus) | **keine** Übertragung mehr – die Uhr bleibt in Ruhe, ihre Werte holt sie beim Anzeigen |
+| Änderung in der App (Speichern, Duplizieren, Zuordnen, Löschen) | wird **sofort** übertragen, auch wenn der Handy-Bildschirm schon aus ist |
+| Aussehen der Fassung (Revision) geändert – z. B. über die HA-Oberfläche | spätestens nach einer Minute übertragen |
 | Button auf der Tile | Nachricht ans Handy → Schalten in HA → neuer Stand zurück (Rückmeldung in ~1 s) |
 | Fehler beim Schalten | Handy meldet es zurück, die Tile zeigt „Druck fehlgeschlagen“ |
+
+Warum so: Jede Nachricht an die Uhr weckt sie (Funk, Speichern, Kachel neu zeichnen) und
+kostet über den Tag spürbar Akku. Deshalb wird **nur bei echter Änderung** gesendet, und
+jede Uhr holt sich ihren Stand selbst, sobald ihre Kachel (oder die Uhr-App) sichtbar wird.
+Kommt derselbe Stand doppelt an, schreibt die Uhr ihn nicht erneut.
 
 Die Tile kann nicht scrollen – es passt deshalb eine begrenzte Zahl von Werten auf den
 Bildschirm.
