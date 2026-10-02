@@ -137,6 +137,8 @@ object TileRenderer {
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
             // das Display die ersten Zeichen der äußeren Objekte ab.
             val inset = (screenWidthDp * 0.10f).coerceIn(16f, 24f)
+            // Bezug für Prozent-Breiten: die tatsächlich nutzbare Zeilenbreite
+            val rowWidth = (screenWidthDp - 2f * inset).coerceAtLeast(60f)
             val rowArea = LayoutElementBuilders.Column.Builder()
                 .setWidth(DimensionBuilders.expand())
                 .setModifiers(
@@ -150,7 +152,7 @@ object TileRenderer {
                         .build()
                 )
             shown.forEach { row ->
-                rowArea.addContent(rowLine(row, scale, screenWidthDp))
+                rowArea.addContent(rowLine(row, scale, rowWidth))
             }
             column.addContent(rowArea.build())
             return column.build()
@@ -227,7 +229,7 @@ object TileRenderer {
     }
 
     /** Eine Zeile des Zeilen-Layouts: bis zu drei Objekte nebeneinander. */
-    private fun rowLine(row: RowDef, scale: Float, screenWidthDp: Int): LayoutElementBuilders.Row {
+    private fun rowLine(row: RowDef, scale: Float, rowWidth: Float): LayoutElementBuilders.Row {
         val builder = LayoutElementBuilders.Row.Builder()
             .setWidth(DimensionBuilders.expand())
 
@@ -237,7 +239,7 @@ object TileRenderer {
         val customWidths = items.any { it.width > 0f }
         items.forEach { item ->
             val width = if (customWidths && item.width > 0f) {
-                DimensionBuilders.dp((screenWidthDp * item.width / 100f).coerceAtLeast(24f))
+                DimensionBuilders.dp((rowWidth * item.width / 100f).coerceAtLeast(24f))
             } else {
                 DimensionBuilders.expand()
             }
