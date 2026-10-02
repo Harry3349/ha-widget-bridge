@@ -37,7 +37,7 @@ object TileRenderer {
 
         val name = snapshot?.name?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.tile_not_configured)
-        column.addContent(text(name, Color.WHITE, 15f))
+        column.addContent(text(name, Color.WHITE, 14f))
 
         val note = when {
             snapshot == null -> context.getString(R.string.tile_loading)
@@ -49,15 +49,15 @@ object TileRenderer {
             text(
                 note ?: context.getString(R.string.tile_updated, shortTime(snapshot?.updatedAt)),
                 if (note == null) NOTE_COLOR else ACCENT,
-                12f,
+                11f,
             )
         )
 
         snapshot?.values?.forEach { value ->
             val row = LayoutElementBuilders.Row.Builder()
-                .addContent(text(value.label, LABEL_COLOR, 13f))
-                .addContent(text(" ", LABEL_COLOR, 13f))
-                .addContent(text(value.text, parseColor(value.color, Color.WHITE), 13f))
+                .addContent(text(value.label, LABEL_COLOR, 12f))
+                .addContent(text(" ", LABEL_COLOR, 12f))
+                .addContent(text(value.text, parseColor(value.color, Color.WHITE), 12f))
             column.addContent(row.build())
         }
 
@@ -110,7 +110,7 @@ object TileRenderer {
 
         return LayoutElementBuilders.Text.Builder()
             .setText(" ${state.label} ")
-            .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 12f))
+            .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 11f))
             .setModifiers(
                 ModifiersBuilders.Modifiers.Builder()
                     .setClickable(clickable)
