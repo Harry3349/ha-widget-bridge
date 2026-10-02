@@ -141,8 +141,20 @@ class WearAppActivity : Activity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = dp(4f) }
             }
-            row.items.take(MAX_ROW_ITEMS).forEach { item ->
-                line.addView(cell(item, scale, snapshot?.id))
+            val items = row.items.take(MAX_ROW_ITEMS)
+            val shares = sharesOf(items)
+            items.forEachIndexed { index, item ->
+                line.addView(cell(item, scale, snapshot?.id, shares[index]))
+            }
+            // Bleibt Platz übrig (z. B. Button mit 70 % allein in der Zeile), wird er
+            // mit einem leeren Feld aufgefällt – sonst würde das Gewicht die Zeile füllen.
+            val rest = REST_WEIGHT_BASE - shares.sum()
+            if (rest > 1f) {
+                line.addView(
+                    View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, 1, rest)
+                    }
+                )
             }
             column.addView(line)
         }
@@ -159,12 +171,30 @@ class WearAppActivity : Activity() {
     }
 
     /**
+     * Breiten-Anteile einer Zeile.
+     *
+     * Objekte mit eigener Breite bekommen ihren Prozentsatz, alle übrigen teilen
+     * sich den **Rest** gleichmäßig – genau wie am Handy und auf der Kachel.
+     */
+    private fun sharesOf(items: List<RowItem>): List<Float> {
+        if (items.isEmpty()) return emptyList()
+        val given = items.sumOf { item -> if (item.width > 0f) item.width.toDouble() else 0.0 }
+        val open = items.count { it.width <= 0f }
+        val share = if (open > 0) {
+            ((REST_WEIGHT_BASE - given).coerceAtLeast(1.0) / open).toFloat()
+        } else {
+            0f
+        }
+        return items.map { item -> if (item.width > 0f) item.width else share }
+    }
+
+    /**
      * Ein Objekt einer Zeile: Text, Sensor (Name über Wert) oder Button.
      *
      * ``widgetId`` wird beim Druck mitgeschickt, damit das Handy weiß, welche
      * Fassung den Knopf enthält (mehrere Uhren können verschiedene zeigen).
      */
-    private fun cell(item: RowItem, scale: Float, widgetId: String?): View {
+    private fun cell(item: RowItem, scale: Float, widgetId: String?, weight: Float): View {
         val align = alignGravity(item.align)
         val size = (item.size * scale).coerceIn(8f, 30f)
         val small = (size - 3f).coerceAtLeast(9f)
@@ -175,13 +205,10 @@ class WearAppActivity : Activity() {
             // „An/Aus“ rechts – nur der Titel folgt der Ausrichtung.
             gravity = Gravity.CENTER_VERTICAL or
                 if (item.type == "button") Gravity.START else align
-            // Blöcke mit eigener Breite bekommen ein passendes Gewicht,
-            // die übrigen teilen sich den Rest gleichmäßig.
-            val weight = if (item.width > 0f) item.width else 0f
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                if (weight > 0f) weight else 1f,
+                weight.coerceAtLeast(0.01f),
             )
         }
 
@@ -331,6 +358,9 @@ class WearAppActivity : Activity() {
 
     private companion object {
         const val MAX_ROW_ITEMS = 3
+
+        /** Bezugsgröße der Breiten-Anteile in Prozent (wie im Editor). */
+        const val REST_WEIGHT_BASE = 100f
         const val STALE_MS = 10 * 60 * 1000L
         const val PRESS_FAILED_MS = 20 * 1000L
         const val PRESS_RERENDER_MS = 1500L
