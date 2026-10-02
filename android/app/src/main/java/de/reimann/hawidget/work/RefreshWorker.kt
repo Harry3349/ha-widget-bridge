@@ -53,7 +53,7 @@ class RefreshWorker(
             return Result.success()
         }
 
-        Widgets.refreshNow(context, settings.client(), ids)
+        Widgets.refreshNow(context, settings.client(), ids, forceWatch = force)
 
         // Selbstheilung: geht die periodische Planung verloren (kommt nach
         // App-Updates vor), setzt jeder Lauf sie wieder.

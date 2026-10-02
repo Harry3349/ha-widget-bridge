@@ -22,10 +22,7 @@ class SnapshotListener : WearableListenerService() {
 
                 val raw = event.dataItem.data?.toString(Charsets.UTF_8).orEmpty()
                 if (raw.isBlank()) continue
-
-                val settings = Settings(this)
-                settings.snapshotJson = raw
-                settings.lastRefresh = System.currentTimeMillis()
+                if (!applySnapshot(raw)) continue
                 Log.d(TAG, "Snapshot vom Handy erhalten (${raw.length} Zeichen)")
                 Bridge.updateTile(this)
             }
@@ -40,11 +37,8 @@ class SnapshotListener : WearableListenerService() {
             Bridge.PATH_SNAPSHOT -> {
                 val raw = event.data?.toString(Charsets.UTF_8).orEmpty()
                 if (raw.isBlank()) return
-                val settings = Settings(this)
-                settings.snapshotJson = raw
-                settings.lastRefresh = System.currentTimeMillis()
                 // Absender merken – dorthin gehen später „Button gedrückt“ usw.
-                if (event.sourceNodeId.isNotBlank()) settings.phoneNode = event.sourceNodeId
+                if (!applySnapshot(raw, event.sourceNodeId)) return
                 Log.d(TAG, "Snapshot für diese Uhr erhalten (${raw.length} Zeichen)")
                 Bridge.updateTile(this)
             }
@@ -57,6 +51,27 @@ class SnapshotListener : WearableListenerService() {
 
             else -> Unit
         }
+    }
+
+    /**
+     * Stand übernehmen – aber nur, wenn er sich wirklich unterscheidet.
+     *
+     * Jede Nachricht von der Uhr weckt die App und jedes Schreiben in die
+     * Einstellungen kostet Akku. Kommt derselbe Stand erneut an (z. B. weil die
+     * Handy-App mehrfach überträgt), wird deshalb nichts getan.
+     *
+     * @return true, wenn sich etwas geändert hat.
+     */
+    private fun applySnapshot(raw: String, sourceNodeId: String? = null): Boolean {
+        val settings = Settings(this)
+        if (settings.snapshotJson == raw) {
+            if (!sourceNodeId.isNullOrBlank()) settings.phoneNode = sourceNodeId
+            return false
+        }
+        settings.snapshotJson = raw
+        settings.lastRefresh = System.currentTimeMillis()
+        if (!sourceNodeId.isNullOrBlank()) settings.phoneNode = sourceNodeId
+        return true
     }
 
     companion object {

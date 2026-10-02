@@ -62,8 +62,6 @@ class Settings(context: Context) {
 object WidgetPrefs {
 
     private const val PREFS = "ha_widget_instances"
-    private const val PREFIX_INSTANCE = "instance_"
-    private const val PREFIX_SNAPSHOT = "snapshot_"
 
     private fun prefs(context: Context): SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -96,4 +94,30 @@ object WidgetPrefs {
 
     fun loadSnapshot(context: Context, widgetId: String): String? =
         prefs(context).getString(PREFIX_SNAPSHOT + widgetId, null)
+
+    /**
+     * Revision einer Uhr-Fassung, die zuletzt übertragen wurde.
+     *
+     * Nur damit vermeiden wir, im Live-Modus alle paar Sekunden eine Nachricht an
+     * die Uhr zu schicken – jede würde sie wecken und damit ihren Akku belasten.
+     */
+    fun lastPushedDefinition(context: Context, widgetId: String): String? =
+        prefs(context).getString(PREFIX_PUSHED + widgetId, null)
+
+    fun setLastPushedDefinition(context: Context, widgetId: String, revision: String) {
+        prefs(context).edit().putString(PREFIX_PUSHED + widgetId, revision).apply()
+    }
+
+    /** Zeitpunkt der letzten Prüfung, ob eine Uhr etwas Neues braucht. */
+    fun lastPushCheck(context: Context): Long =
+        prefs(context).getLong(KEY_PUSH_CHECK, 0L)
+
+    fun setLastPushCheck(context: Context, at: Long) {
+        prefs(context).edit().putLong(KEY_PUSH_CHECK, at).apply()
+    }
+
+    private const val PREFIX_INSTANCE = "instance_"
+    private const val PREFIX_SNAPSHOT = "snapshot_"
+    private const val PREFIX_PUSHED = "pushed_"
+    private const val KEY_PUSH_CHECK = "push_check_at"
 }

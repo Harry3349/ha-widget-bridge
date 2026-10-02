@@ -26,6 +26,9 @@ import java.util.concurrent.TimeUnit
 /** Zentrale Helfer rund um die Homescreen-Widgets. */
 object Widgets {
 
+    /** Wie oft höchstens geprüft wird, ob eine Uhr einen neuen Stand braucht. */
+    private const val PUSH_CHECK_MS = 60_000L
+
     // ----------------------------------------------------------- Instanzen
 
     fun allIds(context: Context): List<Int> =
@@ -95,7 +98,12 @@ object Widgets {
         refreshAsync(context, allIds(context), "all", force)
 
     /** Alle übergebenen Widgets sofort aktualisieren (im Hintergrund-Thread aufrufen). */
-    suspend fun refreshNow(context: Context, client: HaClient, ids: List<Int>) {
+    suspend fun refreshNow(
+        context: Context,
+        client: HaClient,
+        ids: List<Int>,
+        forceWatch: Boolean = false,
+    ) {
         assignMissingWidgets(context, client, ids)
 
         val cache = HashMap<String, WidgetSnapshot?>()
@@ -131,20 +139,24 @@ object Widgets {
             update(context, appWidgetId, snapshot, status)
         }
 
-        pushToWatches(context, client, raw)
+        pushToWatches(context, client, raw, forceWatch)
     }
 
     /**
-     * Stand an die Uhren schicken.
+     * Stand an die Uhren schicken – **nur wenn sich die Fassung geändert hat**.
      *
-     * Der Data Layer kennt nur „an alle Uhren“ – damit jede Uhr ihre eigene Fassung
-     * zeigen kann, geht der Stand als Nachricht an genau den Knoten der Uhr. Ohne
-     * eigene Fassung zeigt die Uhr das Widget, das auch am Handy hängt.
+     * Der Data Layer kennt nur „an alle Uhren“; damit jede Uhr ihre eigene Fassung
+     * zeigen kann, geht der Stand als Nachricht an genau den Knoten der Uhr. Jede
+     * Nachricht weckt die Uhr (Funk + Schreiben + Kachel neu zeichnen), deshalb wird
+     * im Live-Modus nicht mehr bei jedem Abruf gesendet: aktuelle Werte holt sich die
+     * Uhr selbst, wenn ihre Kachel sichtbar wird. Nur eine geänderte Definition
+     * (Revision) wird sofort übertragen – oder ``force`` nach einer Aktion in der App.
      */
     private suspend fun pushToWatches(
         context: Context,
         client: HaClient,
         known: Map<String, String>,
+        force: Boolean = false,
     ) {
         val raw = HashMap(known)
 
@@ -156,26 +168,61 @@ object Widgets {
             }
         }
 
+        // Der Live-Modus ruft das hier alle paar Sekunden auf. Für die Uhr genügt
+        // eine Prüfung pro Minute – nach einer Änderung in der App (``force``) und
+        // auf Anfrage der Uhr (die ihren Stand selbst anfordert) aber sofort.
+        val now = System.currentTimeMillis()
+        if (!force && now - WidgetPrefs.lastPushCheck(context) < PUSH_CHECK_MS) return
+        WidgetPrefs.setLastPushCheck(context, now)
+
         val widgets = withContext(Dispatchers.IO) {
             runCatching { client.listWidgets() }.getOrNull()
         } ?: return
 
         // Nur Uhr-Fassungen kommen auf die Uhr – das Handy-Widget bleibt am Handy.
         val watchWidgets = widgets.filter { it.isWatchOnly }
+        if (watchWidgets.isEmpty()) return
+
+        // Schon alles übertragen? Dann weder Bluetooth abfragen noch die Uhr wecken.
+        // Genau das spart den Akku: im Live-Modus ändern sich nur die Werte, die
+        // Fassung (Revision) bleibt gleich.
+        val pending = watchWidgets.filter { widget ->
+            force || WidgetPrefs.lastPushedDefinition(context, widget.id) != widget.revision.toString()
+        }
+        if (pending.isEmpty()) return
+
         val forAll = watchWidgets.firstOrNull { it.watchNodes.isEmpty() }
         val nodes = withContext(Dispatchers.IO) { Watches.connected(context) }
 
         if (nodes.isEmpty()) {
-            // Keine Uhr verbunden: an alle schicken, die eine Fassung für alle Uhren haben
-            forAll?.let { rawOf(it.id) }?.let { WearSync.pushSnapshot(context, it) }
+            // Keine Uhr verbunden: die Änderung als „Data Item“ ablegen – eine später
+            // verbundene Uhr bekommt sie damit, ohne dass wir mehrfach senden.
+            pending.firstOrNull { it.watchNodes.isEmpty() }?.let { fallback ->
+                rawOf(fallback.id)?.let { json ->
+                    WearSync.pushSnapshot(context, json)
+                    WidgetPrefs.setLastPushedDefinition(
+                        context,
+                        fallback.id,
+                        fallback.revision.toString(),
+                    )
+                }
+            }
             return
         }
 
         for (node in nodes) {
             val chosen = watchWidgets.firstOrNull { it.watchNodes.contains(node.id) } ?: forAll
                 ?: continue
+            if (chosen !in pending) continue
 
-            rawOf(chosen.id)?.let { WearSync.pushSnapshotToNode(context, node.id, it) }
+            rawOf(chosen.id)?.let { json ->
+                WearSync.pushSnapshotToNode(context, node.id, json)
+                WidgetPrefs.setLastPushedDefinition(
+                    context,
+                    chosen.id,
+                    chosen.revision.toString(),
+                )
+            }
         }
     }
 
