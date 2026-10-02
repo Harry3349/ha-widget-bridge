@@ -317,6 +317,9 @@ object TileRenderer {
                 )
 
                 val content = LayoutElementBuilders.Row.Builder()
+                    // Die Reihe füllt die Zelle – nur so hat der dehnbare Titel
+                    // Platz und schiebt „An/Aus“ an den rechten Rand.
+                    .setWidth(DimensionBuilders.expand())
                     .addContent(
                         LayoutElementBuilders.Image.Builder()
                             .setResourceId(TileIcons.id(item.icon))
