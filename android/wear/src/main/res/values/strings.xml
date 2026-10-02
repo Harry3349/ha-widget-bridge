@@ -8,5 +8,6 @@
     <string name="tile_pressing">Schalte …</string>
     <string name="tile_press_failed">Druck fehlgeschlagen – nochmal tippen</string>
     <string name="tile_waiting">Stand wird vom Handy geholt …</string>
+    <string name="tile_stale">Stand %1$s – Handy nicht erreichbar</string>
     <string name="tile_updated">Stand %1$s</string>
 </resources>

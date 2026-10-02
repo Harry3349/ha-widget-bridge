@@ -25,6 +25,8 @@ object TileRenderer {
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
     private const val BUTTON_ACTIVE_BACKGROUND = 0x6600E676
+    /** Ab wann ein Stand als veraltet gilt (Kommentar in der Zeitzeile). */
+    private const val STALE_MS = 10 * 60 * 1000L
     private const val ACCENT = 0xFF00E676.toInt()
 
     fun render(
@@ -60,6 +62,9 @@ object TileRenderer {
             !note.isNullOrBlank() -> note
             snapshot == null -> context.getString(R.string.tile_loading)
             !snapshot.error.isNullOrBlank() -> snapshot.error
+            // Der Stand kommt vom Handy – wenn lange nichts kam, ist es nicht erreichbar
+            fetchedAt > 0L && System.currentTimeMillis() - fetchedAt > STALE_MS ->
+                context.getString(R.string.tile_stale, timeOf(fetchedAt))
             else -> null
         }
         column.addContent(
@@ -73,7 +78,7 @@ object TileRenderer {
             )
         )
 
-        // Buttons untereinander und groß – auf der Uhr besser zu treffen
+        // Buttons untereinander und gleich breit (volle Breite)
         val buttons = snapshot?.buttons.orEmpty()
         buttons.take(3).forEach { button -> column.addContent(button(button)) }
 
@@ -165,12 +170,13 @@ object TileRenderer {
         ColorBuilders.ColorProp.Builder(value).build()
 
     /**
-     * Button als klickbarer Text mit Hintergrund.
+     * Button über die volle Breite.
      *
-     * Bewusst kein ``Box``-Element: Ein Text mit Klick-Modifier und Hintergrund
-     * verhält sich wie ein Button und braucht keine zusätzlichen Größenangaben.
+     * Die Breite gibt ein ``Box`` mit ``expand()`` vor – dadurch sind alle Buttons
+     * gleich breit, egal wie lang die Beschriftung ist. Die Beschriftung selbst wird
+     * über eine zentrierte ``Column`` mittig gesetzt.
      */
-    private fun button(state: ButtonState): LayoutElementBuilders.Text {
+    private fun button(state: ButtonState): LayoutElementBuilders.Box {
         val clickable = ModifiersBuilders.Clickable.Builder()
             .setId(PRESS_PREFIX + state.key)
             .setOnClick(ActionBuilders.LoadAction.Builder().build())
@@ -182,8 +188,8 @@ object TileRenderer {
             )
             .build()
 
-        return LayoutElementBuilders.Text.Builder()
-            .setText(" ${state.label} ")
+        val label = LayoutElementBuilders.Text.Builder()
+            .setText(state.label)
             .setMaxLines(1)
             .setFontStyle(fontStyle(if (state.active) ACCENT else Color.WHITE, 12f))
             .setModifiers(
@@ -193,9 +199,20 @@ object TileRenderer {
                     // Polsterung macht den Button größer und leichter zu treffen
                     .setPadding(
                         ModifiersBuilders.Padding.Builder()
-                            .setAll(DimensionBuilders.dp(4f))
+                            .setTop(DimensionBuilders.dp(4f))
+                            .setBottom(DimensionBuilders.dp(4f))
                             .build()
                     )
+                    .build()
+            )
+            .build()
+
+        return LayoutElementBuilders.Box.Builder()
+            .setWidth(DimensionBuilders.expand())
+            .addContent(
+                LayoutElementBuilders.Column.Builder()
+                    .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+                    .addContent(label)
                     .build()
             )
             .build()
