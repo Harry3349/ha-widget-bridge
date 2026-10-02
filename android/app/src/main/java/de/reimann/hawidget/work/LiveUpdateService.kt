@@ -200,6 +200,9 @@ class LiveUpdateService : Service() {
         }
     }
 
+    private fun authMessage(token: String): String =
+        JSONObject().put("type", "auth").put("access_token", token).toString()
+
     /**
      * Wächter für die Verbindung.
      *
