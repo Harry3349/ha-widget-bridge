@@ -141,7 +141,10 @@ class WearAppActivity : Activity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = dp(4f) }
             }
-            row.items.take(MAX_ROW_ITEMS).forEach { item -> line.addView(cell(item, scale)) }            column.addView(line)
+            row.items.take(MAX_ROW_ITEMS).forEach { item ->
+                line.addView(cell(item, scale))
+            }
+            column.addView(line)
         }
 
         column.addView(

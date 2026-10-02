@@ -440,7 +440,7 @@ object TileRenderer {
         if (state.showState) {
             content.addContent(stateText)
         }
-            .build()
+        val contentRow = content.build()
 
         return LayoutElementBuilders.Box.Builder()
             .setWidth(DimensionBuilders.dp(widthDp))
@@ -463,7 +463,7 @@ object TileRenderer {
                 LayoutElementBuilders.Column.Builder()
                     .setWidth(DimensionBuilders.expand())
                     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
-                    .addContent(content)
+                    .addContent(contentRow)
                     .build()
             )
             .build()

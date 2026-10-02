@@ -316,6 +316,13 @@ sie über den Data Layer vom Handy).
 | **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
 | **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
+| **Breite** | Anteil der Zeilenbreite in Prozent (z. B. 30 / 70); `0` oder leer = die Objekte teilen sich die Zeile gleichmäßig |
+| **An/Aus** | gilt pro Button und wird im Abschnitt *Buttons* ein-/ausgeschaltet |
+
+Bei Prozentangaben bekommen die übrigen Objekte der Zeile den Rest gleichmäßig. Am Handy
+wirken die eigenen Breiten ab Android 12 (dort kann `RemoteViews` die Breite setzen); auf
+älteren Geräten teilen sich die Blöcke weiterhin die Zeile. Uhr-Kachel und Uhr-App nutzen
+die Breiten unabhängig von der Android-Version.
 
 Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehungsweise
 *Buttons*) – dort werden sie aus Home Assistant ausgewählt und benannt. Im Zeilen-Editor
@@ -392,6 +399,7 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `key` | eindeutiger Schlüssel (wird Button-Entity in HA) |
 | `label` | Beschriftung im Widget |
 | `icon` | `mdi:`-Name (siehe Hinweis unten) |
+| `show_state` | `false` = kein „An/Aus“ neben der Beschriftung (Standard: `true`) |
 | `service` | z. B. `switch.toggle`, `light.toggle`, `script.turn_on` |
 | `entity_id` | Ziel-Entity |
 | `state_entity` | Entity, deren Zustand im Widget angezeigt wird (Standard: `entity_id`) |
@@ -405,6 +413,7 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `watch` | `false` = diese Zeile nur am Handy zeigen (Standard: `true`) |
 | `align` | `left`, `center` (Standard) oder `right` |
 | `size` | Schriftgröße des Objekts (8–30, Standard: `text_size`) |
+| `width` | Breite des Blocks in Prozent der Zeile (0–100, Standard: `0` = gleichmäßig) |
 | `color` | optionale Hex-Farbe (bei `sensor` sonst die automatische Farbe) |
 | `text` | nur `text`: der angezeigte Text |
 | `entity`, `label`, `threshold` | nur `sensor` |

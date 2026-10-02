@@ -451,6 +451,10 @@ private fun AlignSizeFields(
 private fun widthOf(value: String): Float =
     (value.toFloatOrNull() ?: 0f).coerceIn(0f, 100f)
 
+/** Breite als Text für das Eingabefeld (0 = automatisch wird leer angezeigt). */
+private fun widthText(value: Float?): String =
+    if (value == null || value <= 0f) "" else value.toInt().toString()
+
 private fun sizeOf(value: String, fallback: Float): Float =
     (value.toFloatOrNull() ?: fallback).coerceIn(8f, 30f)
 
