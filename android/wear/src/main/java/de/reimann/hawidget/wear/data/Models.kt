@@ -29,46 +29,45 @@ data class WidgetSnapshot(
     val values: List<ValueState>,
     val buttons: List<ButtonState>,
     val error: String?,
+    /** 1–3 Spalten – dieselbe Einstellung wie im Handy-Editor. */
+    val valueColumns: Int = 1,
+    /** true = Name über dem Wert (wie am Handy). */
+    val valueLabelAbove: Boolean = false,
 ) {
     companion object {
         val EMPTY = WidgetSnapshot("", "", 0, "", emptyList(), emptyList(), null)
     }
 }
 
-/** Einstellungen und Zwischenspeicher auf der Uhr. */
+/**
+ * Zwischenspeicher auf der Uhr.
+ *
+ * Die Uhr holt nichts selbst aus Home Assistant (meist kein WLAN): Den Snapshot
+ * legt die Handy-App über den Wearable Data Layer hier ab.
+ */
 class Settings(context: Context) {
 
     private val prefs = context.applicationContext
         .getSharedPreferences("hawidget", Context.MODE_PRIVATE)
 
-    var baseUrl: String
-        get() = prefs.getString(KEY_URL, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_URL, value.trim().trimEnd('/')).apply()
-
-    var token: String
-        get() = prefs.getString(KEY_TOKEN, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_TOKEN, value.trim()).apply()
-
-    var widgetId: String
-        get() = prefs.getString(KEY_WIDGET, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_WIDGET, value.trim()).apply()
-
+    /** Zuletzt empfangener Snapshot (JSON) aus Home Assistant. */
     var snapshotJson: String?
         get() = prefs.getString(KEY_SNAPSHOT, null)
         set(value) = prefs.edit().putString(KEY_SNAPSHOT, value).apply()
 
+    /** Zeitpunkt des letzten empfangenen Snapshots. */
     var lastRefresh: Long
         get() = prefs.getLong(KEY_LAST_REFRESH, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_REFRESH, value).apply()
 
-    val isConfigured: Boolean
-        get() = baseUrl.isNotBlank() && token.isNotBlank()
+    /** Zeitpunkt der letzten Meldung „Tastendruck fehlgeschlagen“. */
+    var pressFailedAt: Long
+        get() = prefs.getLong(KEY_PRESS_FAILED, 0L)
+        set(value) = prefs.edit().putLong(KEY_PRESS_FAILED, value).apply()
 
     companion object {
-        private const val KEY_URL = "base_url"
-        private const val KEY_TOKEN = "token"
-        private const val KEY_WIDGET = "widget_id"
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_LAST_REFRESH = "last_refresh"
+        private const val KEY_PRESS_FAILED = "press_failed_at"
     }
 }

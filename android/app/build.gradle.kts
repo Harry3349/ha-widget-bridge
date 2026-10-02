@@ -76,5 +76,8 @@ dependencies {
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // Wearable Data Layer: Snapshot an die Uhr übertragen und Befehle empfangen
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

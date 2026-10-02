@@ -16,6 +16,8 @@ object WidgetJson {
             values = parseValues(json.optJSONArray("values")),
             buttons = parseButtons(json.optJSONArray("buttons")),
             error = json.optString("error").takeIf { it.isNotBlank() && it != "null" },
+            valueColumns = json.optInt("value_columns", 1).coerceIn(1, 3),
+            valueLabelAbove = json.optBoolean("value_label_above", false),
         )
     }
 

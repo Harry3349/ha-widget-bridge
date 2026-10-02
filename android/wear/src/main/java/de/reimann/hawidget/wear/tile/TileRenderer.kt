@@ -9,6 +9,7 @@ import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ModifiersBuilders
 import de.reimann.hawidget.wear.R
 import de.reimann.hawidget.wear.data.ButtonState
+import de.reimann.hawidget.wear.data.ValueState
 import de.reimann.hawidget.wear.data.WidgetSnapshot
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -29,6 +30,7 @@ object TileRenderer {
         context: Context,
         snapshot: WidgetSnapshot?,
         fetchedAt: Long,
+        screenWidthDp: Int,
         note: String? = null,
     ): LayoutElementBuilders.LayoutElement {
         val column = LayoutElementBuilders.Column.Builder()
@@ -66,17 +68,11 @@ object TileRenderer {
                 noteText ?: context.getString(R.string.tile_updated, timeOf(fetchedAt)),
                 if (noteText == null) NOTE_COLOR else ACCENT,
                 10f,
+                maxLines = 2,
             )
         )
 
-        snapshot?.values?.forEach { value ->
-            val row = LayoutElementBuilders.Row.Builder()
-                .addContent(text(value.label, LABEL_COLOR, 11f))
-                .addContent(text(" ", LABEL_COLOR, 11f))
-                .addContent(text(value.text, parseColor(value.color, Color.WHITE), 11f))
-            column.addContent(row.build())
-        }
-
+        // Wie am Handy: erst die Buttons, dann die Werte
         val buttons = snapshot?.buttons.orEmpty()
         if (buttons.isNotEmpty()) {
             val row = LayoutElementBuilders.Row.Builder()
@@ -84,15 +80,80 @@ object TileRenderer {
             column.addContent(row.build())
         }
 
+        val values = snapshot?.values.orEmpty()
+        if (values.isNotEmpty()) {
+            val columns = snapshot?.valueColumns?.coerceIn(1, 3) ?: 1
+            val stacked = snapshot?.valueLabelAbove == true
+            if (columns > 1 && stacked) {
+                // Raster mit dem Namen über dem Wert – wie das Werte-Raster am Handy
+                val cell = ((screenWidthDp - 24) / columns - 4).coerceAtLeast(36)
+                values.chunked(columns).forEach { chunk ->
+                    column.addContent(gridRow(chunk, columns, cell))
+                }
+            } else {
+                values.forEach { value ->
+                    column.addContent(
+                        LayoutElementBuilders.Row.Builder()
+                            .addContent(text(value.label, LABEL_COLOR, 11f))
+                            .addContent(text(" ", LABEL_COLOR, 11f))
+                            .addContent(
+                                text(value.text, parseColor(value.color, Color.WHITE), 11f)
+                            )
+                            .build()
+                    )
+                }
+            }
+        }
+
         return column.build()
+    }
+
+    /** Eine Rasterzeile: je Wert eine Zelle mit Name über dem Wert. */
+    private fun gridRow(
+        values: List<ValueState>,
+        columns: Int,
+        cellWidthDp: Float,
+    ): LayoutElementBuilders.Row {
+        val row = LayoutElementBuilders.Row.Builder()
+        values.forEach { value ->
+            row.addContent(
+                LayoutElementBuilders.Box.Builder()
+                    .setWidth(DimensionBuilders.dp(cellWidthDp))
+                    .addContent(
+                        LayoutElementBuilders.Column.Builder()
+                            .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+                            .addContent(text(value.label, LABEL_COLOR, 9f))
+                            .addContent(
+                                text(value.text, parseColor(value.color, Color.WHITE), 11f)
+                            )
+                            .build()
+                    )
+                    .build()
+            )
+        }
+        // Leere Zellen auffüllen, damit die Spalten ausgerichtet bleiben
+        repeat(columns - values.size) {
+            row.addContent(
+                LayoutElementBuilders.Box.Builder()
+                    .setWidth(DimensionBuilders.dp(cellWidthDp))
+                    .build()
+            )
+        }
+        return row.build()
     }
 
     // ---------------------------------------------------------------- Bausteine
 
     /** Text mit Farbe und Größe – die Farbe gehört in den FontStyle. */
-    private fun text(value: String, color: Int, sizeSp: Float): LayoutElementBuilders.Text =
+    private fun text(
+        value: String,
+        color: Int,
+        sizeSp: Float,
+        maxLines: Int = 1,
+    ): LayoutElementBuilders.Text =
         LayoutElementBuilders.Text.Builder()
             .setText(value)
+            .setMaxLines(maxLines)
             .setFontStyle(fontStyle(color, sizeSp))
             .build()
 

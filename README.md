@@ -89,12 +89,12 @@ ha-widget-bridge/
 │   │   ├── data/        # API-Client, Modelle, Einstellungen
 │   │   ├── widget/      # AppWidgetProvider, Rendering, Konfigurations-Activity
 │   │   ├── work/        # WorkManager-Worker + Live-Dienst
+│   │   ├── wear/        # Überträgt den Snapshot an die Uhr (Data Layer)
 │   │   └── ui/          # Compose-Oberfläche
 │   └── wear/src/main/java/de/reimann/hawidget/wear/
-│       ├── data/        # derselbe API-Client, nur das Nötige
 │       ├── tile/        # Tile (Werte + Buttons) und Rendering
-│       ├── work/        # Aktualisieren und Button-Druck
-│       └── SetupActivity.kt   # Adresse/Token auf der Uhr eintragen
+│       ├── bridge/      # Empfängt den Snapshot der Handy-App
+│       └── data/        # Snapshot-Modell, Zwischenspeicher, Bridge-Nachrichten
 └── .github/workflows/android.yml         # baut beide Debug-APKs in CI
 ```
 
@@ -169,34 +169,54 @@ Oder: `android/` in Android Studio öffnen und „Run“ drücken.
 ## 5. Wear OS (Uhr)
 
 Das Wear-Modul zeigt dasselbe Widget als **Tile** auf der Uhr – mit Werten **und**
-Buttons in einer Oberfläche.
+Buttons in einer Oberfläche, im selben Aufbau wie am Handy (Titel + Stand, Buttons,
+darunter die Werte als Raster mit dem Namen über dem Wert – Spaltenzahl und
+„Wert unter dem Namen“ kommen aus der Widget-Definition).
+
+**Die Daten kommen über das Handy.** Eine Uhr ist meist nicht im WLAN, deshalb holt
+**nicht** die Uhr selbst die Daten aus Home Assistant, sondern die Handy-App:
+
+```
+Home Assistant ──HTTP──▶ Handy-App ──Wearable Data Layer──▶ Tile auf der Uhr
+        ▲                     │
+        └──── Klick ──────────┘   (Uhr schickt nur „Button gedrückt“)
+```
+
+* Die Handy-App legt nach jedem Abruf (Intervall, Live-Modus, Antippen, Button) den
+  Snapshot für die Uhr ab – auch wenn die Handy-App geschlossen ist, weckt der
+  Data-Layer-Dienst sie.
+* Die Uhr zeigt den zwischengespeicherten Snapshot und schickt nur kurze Nachrichten:
+  „Button gedrückt“ (Handy schaltet und schickt den neuen Stand zurück) und „bitte
+  aktualisieren“ (Handy holt einen frischen Stand).
+* Auf der Uhr sind dafür **kein** Token und **keine** Serveradresse nötig – sie hat
+  keine Netzverbindung zu Home Assistant.
+
+**Einrichten**
+
+1. Handy-App mit Server-URL und Token einrichten (Abschnitt 3) – das ist die einzige
+   Stelle mit Zugangsdaten.
+2. Wear-APK (`HAWidgetBridge-*-wear-debug.apk`) auf der Uhr installieren
+   (Abschnitt 2, am einfachsten per `adb install -r`).
+3. Auf der Uhr nach rechts wischen (Tiles-Karussell) → **Tile hinzufügen** → *HA Widget*.
+   Beim Anzeigen bittet die Tile das Handy selbst um den ersten Stand.
 
 **Warum Tile und nicht „Wear Widget“?** Die neuen Wear Widgets (Remote Compose) brauchen
 ein Gerät mit Teilhöhen-Unterstützung; auf Geräten **ohne** Teilhöhen – wie der Pixel
 Watch 3 – übersetzt das System sie ohnehin in eine Tile. Deshalb nutzt dieses Modul die
-stabile `androidx.wear.tiles`-Bibliothek. Ein Glance-Wear-Widget kann später als
-zweiter Dienst daneben gestellt werden.
-
-**Einrichten**
-
-1. Wear-APK (`HAWidgetBridge-*-wear-debug.apk`) auf der Uhr installieren
-   (siehe Abschnitt 2; am einfachsten per `adb install -r`).
-2. Die App **HA Widget** auf der Uhr öffnen, Server-URL und Long-Lived-Token eintragen
-   → **Speichern und testen**. Das erste in Home Assistant angelegte Widget wird
-   automatisch übernommen.
-3. Auf der Uhr nach rechts wischen (Tiles-Karussell) → **Tile hinzufügen** → *HA Widget*.
+stabile `androidx.wear.tiles`-Bibliothek.
 
 **Aktualisierung**
 
 | Anlass | Verhalten |
 |---|---|
-| Tile wird angezeigt | Snapshot aus dem Zwischenspeicher, im Hintergrund einmal nachladen (höchstens alle 60 s) |
-| Alle 15 Minuten | `RefreshWorker` holt einen neuen Snapshot |
-| Button gedrückt | Service-Aufruf, danach sofortiger Snapshot und Neuzeichnen |
-| System-Frischeintervall | Alle 15 Minuten durch das System angefordert |
+| Tile wird angezeigt | Zwischenspeicher wird gezeichnet; ist der Stand älter als 60 s, bittet die Tile das Handy um einen frischen Abruf |
+| Handy-Abruf (alle 15 min, Live-Modus, Antippen, Button) | Snapshot wird sofort an die Uhr übertragen, die Tile zeichnet sich neu |
+| Button auf der Tile | Nachricht ans Handy → Schalten in HA → neuer Stand zurück (Rückmeldung in ~1 s) |
+| Fehler beim Schalten | Handy meldet es zurück, die Tile zeigt „Druck fehlgeschlagen“ |
 
 Die Tile kann nicht scrollen – es passt deshalb eine begrenzte Zahl von Werten auf den
 Bildschirm. Auf der Uhr werden höchstens drei Buttons nebeneinander dargestellt.
+
 
 ---
 

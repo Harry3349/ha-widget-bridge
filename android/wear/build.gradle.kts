@@ -57,6 +57,6 @@ dependencies {
     // der Pixel Watch 3 (keine Teilhöhen) ohnehin als Tile dargestellt.
     implementation("androidx.wear.tiles:tiles:1.4.1")
     implementation("com.google.guava:guava:32.1.3-android")
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // Daten und Befehle laufen über die Handy-App (Wearable Data Layer)
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
 }

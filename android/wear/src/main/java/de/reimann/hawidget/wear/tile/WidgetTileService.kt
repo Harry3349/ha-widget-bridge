@@ -9,23 +9,22 @@ import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import de.reimann.hawidget.wear.data.HaClient
+import de.reimann.hawidget.wear.R
+import de.reimann.hawidget.wear.data.Bridge
 import de.reimann.hawidget.wear.data.Settings
 import de.reimann.hawidget.wear.data.WidgetJson
 import de.reimann.hawidget.wear.data.WidgetSnapshot
-import de.reimann.hawidget.wear.work.Workers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 
 /**
  * Die Tile auf der Uhr.
  *
- * Ein Button-Klick kommt über ``currentState.lastClickableId`` herein. Der Druck
- * wird **direkt hier** ausgeführt und der Snapshot sofort neu geholt – die Tile,
- * die der Dienst zurückgibt, zeigt damit unmittelbar den neuen Zustand
- * (über WorkManager dauerte die Rückmeldung spürbar lange). Außerdem lädt der
- * Dienst den Snapshot beim Anzeigen selbst nach, wenn er älter als eine Minute
- * ist, damit die Zeitzeile „Stand …“ stimmt.
+ * Die Uhr hat meist **kein WLAN**: Sie zeichnet den Snapshot, den die Handy-App
+ * über den Wearable Data Layer ablegt. Ein Button-Klick wird als kurze Nachricht
+ * an das Handy geschickt; die Handy-App ruft den Dienst in Home Assistant auf und
+ * überträgt den neuen Stand zurück, woraufhin die Tile neu gezeichnet wird.
+ *
+ * Beim Anzeigen bittet die Tile das Handy um einen frischen Stand, wenn der
+ * letzte älter als eine Minute ist – so stimmt die Zeitzeile „Stand …“.
  */
 class WidgetTileService : TileService() {
 
@@ -38,26 +37,26 @@ class WidgetTileService : TileService() {
             ?.removePrefix(TileRenderer.PRESS_PREFIX)
 
         val settings = Settings(this)
-        var snapshot = loadSnapshot()
-        var note: String? = null
+        val now = System.currentTimeMillis()
 
         if (!pressedKey.isNullOrBlank()) {
             Log.d(TAG, "Button geklickt: $pressedKey")
-            // Direkt schalten (kurze Zeitlimits): nur so zeigt die Tile, die wir
-            // jetzt zurückgeben, schon den neuen Zustand. Kein automatischer
-            // zweiter Versuch – der könnte das Gerät wieder zurückschalten.
-            val fresh = runBlocking { pressAndRefresh(settings, pressedKey) }
-            if (fresh != null) {
-                snapshot = fresh
-            } else {
-                note = getString(R.string.tile_press_failed)
-            }
-        } else if (settings.isConfigured && isStale(settings)) {
-            // Beim Anzeigen selbst nachladen, damit „Stand“ wirklich aktuell ist
-            runBlocking { fetchSnapshot(settings) }?.let { snapshot = it }
+            // Alte Fehlermeldung quittieren und das Handy schalten lassen
+            settings.pressFailedAt = 0L
+            Bridge.press(this, pressedKey)
+        } else if (now - settings.lastRefresh > DISPLAY_REFRESH_MS) {
+            // Handy um einen frischen Stand bitten (es überträgt ihn selbst)
+            Bridge.refresh(this)
         }
 
-        val layout = TileRenderer.render(this, snapshot, settings.lastRefresh, note)
+        val layout = TileRenderer.render(
+            this,
+            loadSnapshot(settings),
+            settings.lastRefresh,
+            requestParams.deviceParameters?.screenWidthDp ?: 192,
+            statusNote(settings, now, pressedKey != null),
+        )
+
         val timeline = TimelineBuilders.Timeline.Builder()
             .addTimelineEntry(
                 TimelineBuilders.TimelineEntry.Builder()
@@ -71,70 +70,7 @@ class WidgetTileService : TileService() {
             .setTileTimeline(timeline)
             .build()
 
-        // Nach einem Fehlversuch im Hintergrund nachfassen (nur lesen, nicht schalten)
-        if (note != null) Workers.refresh(this, force = true)
         return Futures.immediateFuture(tile)
-    }
-
-    /** Snapshot ist älter als beim Anzeigen akzeptabel. */
-    private fun isStale(settings: Settings): Boolean =
-        System.currentTimeMillis() - settings.lastRefresh > DISPLAY_REFRESH_MS
-
-    /**
-     * Button drücken und den neuen Zustand holen.
-     *
-     * Blockiert bewusst kurz (kurze Zeitlimits im [HaClient]): der Systemaufruf
-     * für die Tile wartet darauf, und nur so erscheint die Rückmeldung sofort.
-     * Rückgabe ``null`` bedeutet: hat nicht geklappt (dann wird **nicht** erneut
-     * gedrückt, sonst schaltet das Gerät wieder zurück).
-     */
-    private suspend fun pressAndRefresh(settings: Settings, buttonKey: String): WidgetSnapshot? {
-        val client = client(settings) ?: return null
-        val widgetId = resolveWidgetId(settings, client) ?: return null
-
-        val pressed = runCatching { client.press(widgetId, buttonKey) }
-        if (pressed.isFailure) {
-            Log.w(TAG, "Druck fehlgeschlagen: ${pressed.exceptionOrNull()?.message}")
-            return null
-        }
-
-        // Home Assistant meldet den neuen Zustand nicht immer sofort
-        delay(SETTLE_MS)
-        return fetchSnapshot(settings, client, widgetId)
-    }
-
-    private suspend fun fetchSnapshot(settings: Settings): WidgetSnapshot? {
-        val client = client(settings) ?: return null
-        val widgetId = resolveWidgetId(settings, client) ?: return null
-        return fetchSnapshot(settings, client, widgetId)
-    }
-
-    private fun client(settings: Settings): HaClient? {
-        if (!settings.isConfigured) return null
-        return HaClient(settings.baseUrl, settings.token, timeoutSeconds = TILE_TIMEOUT_SECONDS)
-    }
-
-    private suspend fun resolveWidgetId(settings: Settings, client: HaClient): String? {
-        var widgetId = settings.widgetId
-        if (widgetId.isBlank()) {
-            widgetId = runCatching { WidgetJson.firstWidgetId(client.listWidgets()) }
-                .getOrNull()
-                .orEmpty()
-            if (widgetId.isBlank()) return null
-            settings.widgetId = widgetId
-        }
-        return widgetId
-    }
-
-    private suspend fun fetchSnapshot(
-        settings: Settings,
-        client: HaClient,
-        widgetId: String,
-    ): WidgetSnapshot? {
-        val raw = runCatching { client.snapshotRaw(widgetId) }.getOrNull() ?: return null
-        settings.snapshotJson = raw
-        settings.lastRefresh = System.currentTimeMillis()
-        return runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
     }
 
     override fun onTileResourcesRequest(
@@ -144,20 +80,28 @@ class WidgetTileService : TileService() {
             ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION).build()
         )
 
-    private fun loadSnapshot(): WidgetSnapshot? {
-        val raw = Settings(this).snapshotJson ?: return null
+    /** Kurze Statuszeile, wenn gerade etwas passiert oder noch Daten fehlen. */
+    private fun statusNote(settings: Settings, now: Long, pressed: Boolean): String? {
+        if (settings.pressFailedAt > 0L && now - settings.pressFailedAt < FAILED_HINT_MS) {
+            return getString(R.string.tile_press_failed)
+        }
+        if (pressed) return getString(R.string.tile_pressing)
+        if (settings.lastRefresh <= 0L) return getString(R.string.tile_waiting)
+        return null
+    }
+
+    private fun loadSnapshot(settings: Settings): WidgetSnapshot? {
+        val raw = settings.snapshotJson ?: return null
         return runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
     }
 
     companion object {
         private const val TAG = "HAWidgetBridge"
-        /** Kurze Zeitlimits: der Klick soll schnell beantwortet sein. */
-        private const val TILE_TIMEOUT_SECONDS = 3L
-        /** Kurz warten, bis Home Assistant den neuen Zustand meldet. */
-        private const val SETTLE_MS = 350L
-        /** Beim Anzeigen nachladen, wenn der Snapshot älter ist als das hier. */
-        private const val DISPLAY_REFRESH_MS = 60_000L
         private const val RESOURCES_VERSION = "1"
         private const val FRESHNESS_MILLIS = 15 * 60 * 1000L
+        /** Beim Anzeigen nachfragen, wenn der Stand älter ist als das hier. */
+        private const val DISPLAY_REFRESH_MS = 60_000L
+        /** So lange bleibt die Meldung „Druck fehlgeschlagen“ sichtbar. */
+        private const val FAILED_HINT_MS = 20_000L
     }
 }

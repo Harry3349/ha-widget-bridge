@@ -15,6 +15,7 @@ import de.reimann.hawidget.data.Settings
 import de.reimann.hawidget.data.WidgetJson
 import de.reimann.hawidget.data.WidgetPrefs
 import de.reimann.hawidget.data.WidgetSnapshot
+import de.reimann.hawidget.wear.WearSync
 import de.reimann.hawidget.work.PressWorker
 import de.reimann.hawidget.work.RefreshWorker
 import java.util.concurrent.TimeUnit
@@ -91,6 +92,8 @@ object Widgets {
                 val raw = runCatching { client.snapshotRaw(widgetId) }.getOrNull()
                 if (raw != null) {
                     WidgetPrefs.saveSnapshot(context, widgetId, raw)
+                    // Damit die Tile auf der Uhr denselben Stand zeigt
+                    WearSync.pushSnapshot(context, raw)
                     cache[widgetId] = runCatching { WidgetJson.parseSnapshot(raw) }.getOrNull()
                 } else {
                     failed.add(widgetId)
