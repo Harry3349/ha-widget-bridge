@@ -30,13 +30,24 @@ object TileRenderer {
     private const val APP_ACTIVITY = "de.reimann.hawidget.wear.app.WearAppActivity"
 
     /** Höhe von Titel und Zeile „Stand …“ mit Polsterung. */
-    private const val HEADER_DP = 46f
+    private const val HEADER_DP = 34f
 
     /** Platz für die Hinweiszeile („Antippen …“). */
-    private const val HINT_DP = 14f
+    private const val HINT_DP = 12f
 
-    /** Unterer Rand der runden Anzeige – dort ist kein Platz mehr für Text. */
-    private const val BOTTOM_SAFE_DP = 46f
+    /**
+     * Unterer Rand der runden Anzeige – dort ist kein Platz mehr für Text.
+     *
+     * Bewusst knapp: eine zu große Reserve kostet Zeilen, die eigentlich noch
+     * passen würden (z. B. Temperatur und Feuchte unter den Buttons).
+     */
+    private const val BOTTOM_SAFE_DP = 30f
+
+    /** Untergrenze der Schriftgröße auf der Kachel (wie im Editor). */
+    private const val WATCH_SCALE_MIN = 0.6f
+
+    /** So weit darf die Kachel verkleinern, damit alle Zeilen sichtbar sind. */
+    private const val AUTO_SHRINK_MIN_FACTOR = 0.55f
 
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
@@ -58,17 +69,32 @@ object TileRenderer {
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst. Welche
         // Zeilen auf die Uhr kommen, entscheidet der Editor am Handy.
         val allWatchRows = snapshot?.watchRowsList.orEmpty()
-        val scale = snapshot?.watchScale ?: 1f
+        val baseScale = snapshot?.watchScale ?: 1f
         // Feste Zeilenzahl aus dem Editor (0 = so viele, wie hineinpassen)
         val limit = snapshot?.watchRows ?: 0
         val rows = if (limit > 0) allWatchRows.take(limit) else allWatchRows
 
-        // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt,
-        // was ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
-        // App-Ansicht hin (Wischen und Krone). Der untere Rand der runden Anzeige
-        // bleibt dabei frei, dort würde der Text seitlich abgeschnitten.
+        // Kacheln können laut Wear OS nicht scrollen. Fehlende Zeilen sahen für den
+        // Nutzer wie ein veraltetes Widget aus, deshalb wird bei „automatisch“ die
+        // Schrift so weit verkleinert, bis **alle** Zeilen Platz haben (bis zur
+        // Untergrenze des Editors). Erst dann bleibt ein Rest für die App-Ansicht.
         val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
-        val visible = fittingRows(rows, band, scale)
+        var scale = baseScale
+        var visible = fittingRows(rows, band, scale)
+        if (limit <= 0 && visible < rows.size) {
+            var factor = 0.95f
+            while (factor >= AUTO_SHRINK_MIN_FACTOR) {
+                val candidate = (baseScale * factor).coerceAtLeast(WATCH_SCALE_MIN)
+                val fits = fittingRows(rows, band, candidate)
+                if (fits > visible) {
+                    scale = candidate
+                    visible = fits
+                }
+                if (fits >= rows.size) break
+                factor -= 0.05f
+            }
+        }
+
         val truncated = allWatchRows.size > visible || rows.size > visible
         val shown = if (!truncated) {
             rows
@@ -205,13 +231,19 @@ object TileRenderer {
             )
             .build()
 
-    /** Grobe Schätzung der Höhe einer Zeile (Objekt mit der größten Schrift zählt). */
+    /**
+     * Grobe Schätzung der Höhe einer Zeile (Objekt mit der größten Schrift zählt).
+     *
+     * Die Werte sind Erfahrungswerte aus der gezeichneten Kachel – zu großzügige
+     * Werte kosten Zeilen, die eigentlich noch passen würden.
+     */
     private fun rowHeightDp(row: RowDef, scale: Float): Float =
         row.items.maxOfOrNull { item ->
             when (item.type) {
-                "button" -> 34f
-                "sensor" -> 30f
-                else -> (item.size * scale).coerceIn(8f, 30f) * 1.5f + 8f
+                // Button: Symbol 14 dp + Polsterung, Sensor: eine Textzeile
+                "button" -> 26f * scale
+                "sensor" -> 20f * scale
+                else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 6f
             }
         } ?: 0f
 
