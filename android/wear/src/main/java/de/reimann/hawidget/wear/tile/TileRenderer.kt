@@ -85,7 +85,23 @@ object TileRenderer {
         // gleiche Ausrichtung – nur auf die runde Anzeige angepasst.
         val rows = snapshot?.rows.orEmpty().filter { it.items.isNotEmpty() }
         if (rows.isNotEmpty()) {
-            rows.forEach { row -> column.addContent(rowLine(row)) }
+            // Links und rechts bleibt Platz für die Rundung: sonst schneidet
+            // das Display die ersten Zeichen der äußeren Objekte ab.
+            val inset = (screenWidthDp * 0.09f).coerceIn(14f, 24f)
+            val rowArea = LayoutElementBuilders.Column.Builder()
+                .setWidth(DimensionBuilders.expand())
+                .setModifiers(
+                    ModifiersBuilders.Modifiers.Builder()
+                        .setPadding(
+                            ModifiersBuilders.Padding.Builder()
+                                .setStart(DimensionBuilders.dp(inset))
+                                .setEnd(DimensionBuilders.dp(inset))
+                                .build()
+                        )
+                        .build()
+                )
+            rows.forEach { row -> rowArea.addContent(rowLine(row)) }
+            column.addContent(rowArea.build())
             return column.build()
         }
 

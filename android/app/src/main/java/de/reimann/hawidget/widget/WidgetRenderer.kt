@@ -188,7 +188,9 @@ object WidgetRenderer {
         val grid = !hasRows && values.isNotEmpty() &&
             snapshot?.templateUsed != true && columns > 1
 
-        val showContent = !grid && (!hasRows || html.isNotBlank())
+        // Zeilen-Layout: nur ein eigenes Jinja-Template darf zusätzlich stehen
+        val showContent = !grid && html.isNotBlank() &&
+            (!hasRows || snapshot?.templateUsed == true)
         views.setViewVisibility(R.id.widget_content, if (showContent) View.VISIBLE else View.GONE)
         views.setViewVisibility(R.id.value_area, if (grid) View.VISIBLE else View.GONE)
         views.setViewVisibility(R.id.row_area, if (hasRows) View.VISIBLE else View.GONE)

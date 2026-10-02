@@ -283,6 +283,44 @@ feste, ausblendbare Felder, weil `RemoteViews` keine Views zur Laufzeit erzeugen
 Ein gesetztes **Jinja-Template** ersetzt weiterhin die Werteliste und füllt den
 HTML-Bereich.
 
+---
+
+## Zeilen-Layout (Handy und Uhr)
+
+Der Abschnitt **Zeilen (Handy + Uhr)** im Editor ist der freie Aufbau: Du legst Zeilen
+an, und in jede Zeile kommen **bis zu drei Objekte** – Text, Sensor (Entity-Wert) oder
+Button. Die Zeilen gelten **gleichzeitig für das Widget auf dem Handy und die Kachel auf
+der Uhr**, weil beide dieselbe Definition aus Home Assistant zeichnen (die Uhr bekommt
+sie über den Data Layer vom Handy).
+
+| Einstellung pro Objekt | Bedeutung |
+|---|---|
+| **Text** | fester Text (z. B. eine Überschrift) |
+| **Sensor** | Entity + Beschriftung; der Wert kommt aus Home Assistant, Staffelung über `threshold` |
+| **Button** | Service + Entity wie in der Button-Liste, zusätzlich Symbol und Zustandstext („An/Aus“) |
+| **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt |
+| **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
+
+Die Objekte einer Zeile teilen sich die Breite: ein Objekt füllt die ganze Zeile, zwei
+je die Hälfte, drei je ein Drittel. Sobald **mindestens eine Zeile** angelegt ist,
+ersetzt dieses Layout die Werteliste und die Button-Zeilen auf beiden Flächen.
+
+### Hinweise zur Größe
+
+Unter der Zeilenliste stehen zwei Hinweise, die sich aus den eingestellten Zeilen
+ergeben:
+
+* **Handy:** ab welcher Zeile das Widget höher gezogen werden muss
+  (≈ 105 dp ≈ 2 Launcher-Reihen, 180 dp ≈ 3, 255 dp ≈ 4). Reicht selbst das nicht,
+  empfiehlt der Hinweis eine zweite Zeile oder ein zweites Widget.
+* **Uhr:** bis zu welcher Zeile alles gleichzeitig sichtbar ist und ab welcher Zeile
+  gescrollt werden muss (runde Anzeige, ca. 150 dp).
+
+Zwischen den Zeilen markiert der Editor die Grenzen zusätzlich
+(„Ab hier braucht das Handy-Widget mehr Höhe“ / „Ab hier muss auf der Uhr gescrollt
+werden“). Die Werte sind Erfahrungswerte – die tatsächliche Kachelgröße hängt vom
+Launcher bzw. von der Uhr ab.
+
 ## Hintergrund
 
 Der Widget-Hintergrund ist **standardmäßig durchsichtig** (`theme.background` =
@@ -302,6 +340,7 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `template` | Jinja | optional; ersetzt die automatische Werteliste |
 | `values[]` | Liste | `entity`, optional `label`, `threshold` (W), `color` (Hex) |
 | `buttons[]` | Liste (max. 6) | siehe unten |
+| `rows[]` | Liste (max. 8) | Zeilen-Layout für Handy **und** Uhr, siehe unten |
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
 | `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |
 | `value_label_above` | true/false | `true` = Name oben, Wert darunter (Standard: `Name · Wert` in einer Zeile) |
@@ -318,6 +357,30 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `entity_id` | Ziel-Entity |
 | `state_entity` | Entity, deren Zustand im Widget angezeigt wird (Standard: `entity_id`) |
 | `service_data` | optionale zusätzliche Service-Daten |
+
+`rows[]` (jede Zeile `{ "items": [ … ] }` mit maximal drei Objekten):
+
+| Feld | Bedeutung |
+|---|---|
+| `type` | `text`, `sensor` oder `button` |
+| `align` | `left`, `center` (Standard) oder `right` |
+| `size` | Schriftgröße des Objekts (8–30, Standard: `text_size`) |
+| `color` | optionale Hex-Farbe (bei `sensor` sonst die automatische Farbe) |
+| `text` | nur `text`: der angezeigte Text |
+| `entity`, `label`, `threshold` | nur `sensor` |
+| `key`, `label`, `icon`, `service`, `entity_id`, `state_entity` | nur `button` (wie in `buttons[]`; jeder Zeilen-Button ist ebenfalls eine Button-Entity in HA) |
+
+```json
+"rows": [
+  { "items": [ { "type": "text", "text": "Wohnzimmer", "align": "left", "size": 16 } ] },
+  { "items": [
+      { "type": "button", "key": "licht", "label": "Licht", "icon": "mdi:lightbulb",
+        "service": "light.toggle", "entity_id": "light.wohnzimmer", "align": "left", "size": 14 },
+      { "type": "sensor", "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
+        "label": "Außen", "align": "right", "size": 14 }
+  ] }
+]
+```
 
 ---
 
