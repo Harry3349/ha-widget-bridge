@@ -62,19 +62,37 @@ object Widgets {
 
     // ------------------------------------------------------ Aktualisieren
 
-    fun refreshAsync(context: Context, ids: List<Int>, reason: String = "manual") {
+    /**
+     * Aktualisierung anstoßen.
+     *
+     * ``force`` überspringt die Rücksicht auf den Bildschirmzustand – nötig nach
+     * einer Änderung in der App: sonst kann der Job erst laufen, wenn der
+     * Bildschirm schon aus ist, und die Uhr behält den alten Stand.
+     */
+    fun refreshAsync(
+        context: Context,
+        ids: List<Int>,
+        reason: String = "manual",
+        force: Boolean = false,
+    ) {
         val targets = ids.filter { it != AppWidgetManager.INVALID_APPWIDGET_ID }
-        if (targets.isEmpty()) return
+        if (targets.isEmpty() && !force) return
 
         val request = OneTimeWorkRequestBuilder<RefreshWorker>()
-            .setInputData(workDataOf(RefreshWorker.KEY_IDS to targets.toIntArray()))
+            .setInputData(
+                workDataOf(
+                    RefreshWorker.KEY_IDS to targets.toIntArray(),
+                    RefreshWorker.KEY_FORCE to force,
+                )
+            )
             .build()
 
         WorkManager.getInstance(context)
             .enqueueUniqueWork("hawidget-refresh-$reason", ExistingWorkPolicy.REPLACE, request)
     }
 
-    fun refreshAllAsync(context: Context) = refreshAsync(context, allIds(context), "all")
+    fun refreshAllAsync(context: Context, force: Boolean = false) =
+        refreshAsync(context, allIds(context), "all", force)
 
     /** Alle übergebenen Widgets sofort aktualisieren (im Hintergrund-Thread aufrufen). */
     suspend fun refreshNow(context: Context, client: HaClient, ids: List<Int>) {

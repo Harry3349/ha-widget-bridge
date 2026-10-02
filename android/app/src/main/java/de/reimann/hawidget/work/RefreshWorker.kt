@@ -19,10 +19,15 @@ class RefreshWorker(
         val context = applicationContext
         val settings = Settings(context)
 
-        // Nur abrufen, wenn das Widget überhaupt sichtbar sein kann: ohne diese
-        // Prüfung weckt die App alle X Minuten Funkmodul und Server, obwohl der
-        // Bildschirm aus ist und niemand auf den Homescreen schaut.
-        if (!ScreenState.isVisible(context)) {
+        // Nach einer Änderung in der App (Speichern, Zuordnen …) wird immer
+        // gearbeitet – auch wenn der Bildschirm schon aus ist. Sonst behält die
+        // Uhr den alten Stand, bis der Nutzer das nächste Mal hinschaut.
+        val force = inputData.getBoolean(KEY_FORCE, false)
+
+        // Sonst nur abrufen, wenn das Widget überhaupt sichtbar sein kann: ohne
+        // diese Prüfung weckt die App alle X Minuten Funkmodul und Server, obwohl
+        // der Bildschirm aus ist und niemand auf den Homescreen schaut.
+        if (!force && !ScreenState.isVisible(context)) {
             Log.d(TAG, "Bildschirm aus – Aktualisierung übersprungen")
             return Result.success()
         }
@@ -32,7 +37,9 @@ class RefreshWorker(
             ?.takeIf { it.isNotEmpty() }
             ?: Widgets.allIds(context)
 
-        if (ids.isEmpty()) return Result.success()
+        // Ohne Homescreen-Widget gibt es trotzdem etwas zu tun: die Uhren
+        // brauchen ihren Stand (dann läuft die Schleife leer, der Push nicht).
+        if (ids.isEmpty() && !force) return Result.success()
 
         if (!settings.isConfigured) {
             ids.forEach { appWidgetId ->
@@ -56,6 +63,9 @@ class RefreshWorker(
 
     companion object {
         const val KEY_IDS = "ids"
+
+        /** true = auch bei ausgeschaltetem Bildschirm abrufen und übertragen. */
+        const val KEY_FORCE = "force"
 
         private const val TAG = "HAWidgetBridge"
     }

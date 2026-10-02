@@ -133,7 +133,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess {
                 message = "Widget „$widgetId“ gelöscht"
                 loadWidgets()
-                Widgets.refreshAllAsync(getApplication())
+                Widgets.refreshAllAsync(getApplication(), force = true)
             }.onFailure { message = "Löschen fehlgeschlagen: ${it.message}" }
         }
     }
@@ -247,7 +247,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "„${saved.name}“ als Handy-Widget angelegt"
                 }
                 loadWidgets()
-                Widgets.refreshAllAsync(getApplication())
+                Widgets.refreshAllAsync(getApplication(), force = true)
             }.onFailure { message = "Duplizieren fehlgeschlagen: ${it.message}" }
         }
     }
@@ -296,7 +296,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess {
                 message = "„${widget.name}“ ist jetzt auf dieser Uhr"
                 loadWidgets()
-                Widgets.refreshAllAsync(getApplication())
+                Widgets.refreshAllAsync(getApplication(), force = true)
             }.onFailure { message = "Zuordnen fehlgeschlagen: ${it.message}" }
         }
     }
@@ -317,7 +317,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 editorSource = saved
                 message = "Widget „${saved.name}“ gespeichert"
                 loadWidgets()
-                Widgets.refreshAllAsync(getApplication())
+                Widgets.refreshAllAsync(getApplication(), force = true)
             }.onFailure { message = "Speichern fehlgeschlagen: ${it.message}" }
         }
     }

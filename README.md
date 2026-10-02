@@ -192,6 +192,11 @@ Home Assistant ──HTTP──▶ Handy-App ──Wearable Data Layer──▶ 
 * Die Handy-App legt nach jedem Abruf (Intervall, Live-Modus, Antippen, Button) den
   Snapshot **gezielt für die Uhren** ab, die eine Fassung haben – auch wenn die Handy-App
   geschlossen ist, weckt der Data-Layer-Dienst sie.
+* **Nach einer Änderung in der App** (Speichern, Duplizieren, Zuordnen, Löschen) wird
+  sofort übertragen – auch wenn der Handy-Bildschirm inzwischen aus ist. Der
+  Intervall-Modus überspringt Abrufe bei ausgeschaltetem Bildschirm weiterhin
+  (Stromsparen); die Uhr holt sich beim Anzeigen der Kachel trotzdem einen frischen
+  Stand.
 * Die Uhr zeigt den zwischengespeicherten Snapshot und schickt nur kurze Nachrichten:
   „Button gedrückt“ (Handy schaltet und schickt den neuen Stand zurück) und „bitte
   aktualisieren“ (Handy holt einen frischen Stand).
