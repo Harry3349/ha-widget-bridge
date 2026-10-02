@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hintergrund des App-Symbols auf der Uhr: dieselbe dunkle Fläche wie am
+         Handy und im Markensymbol der Integration (#101018). -->
+    <color name="ic_launcher_background">#FF101018</color>
+</resources>
