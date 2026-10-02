@@ -35,6 +35,9 @@ object TileRenderer {
     /** Platz für die Hinweiszeile („Antippen …“). */
     private const val HINT_DP = 14f
 
+    /** Unterer Rand der runden Anzeige – dort ist kein Platz mehr für Text. */
+    private const val BOTTOM_SAFE_DP = 46f
+
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
@@ -57,14 +60,16 @@ object TileRenderer {
 
         // Kacheln können laut Wear OS nicht scrollen. Deshalb wird nur gezeigt,
         // was ganz auf die Anzeige passt; für den Rest weist ein Hinweis auf die
-        // App-Ansicht hin (Wischen und Krone).
-        val visible = fittingRows(rows, screenHeightDp - HEADER_DP)
+        // App-Ansicht hin (Wischen und Krone). Der untere Rand der runden Anzeige
+        // bleibt dabei frei, dort würde der Text seitlich abgeschnitten.
+        val band = screenHeightDp - HEADER_DP - BOTTOM_SAFE_DP
+        val visible = fittingRows(rows, band)
         val truncated = rows.size > visible
         val shown = if (!truncated) {
             rows
         } else {
             // eine Zeile Platz für den Hinweis lassen
-            rows.take(fittingRows(rows, screenHeightDp - HEADER_DP - HINT_DP).coerceAtLeast(1))
+            rows.take(fittingRows(rows, band - HINT_DP).coerceAtLeast(1))
         }
 
         val column = LayoutElementBuilders.Column.Builder()
@@ -126,7 +131,7 @@ object TileRenderer {
             }
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
             // das Display die ersten Zeichen der äußeren Objekte ab.
-            val inset = (screenWidthDp * 0.12f).coerceIn(16f, 30f)
+            val inset = (screenWidthDp * 0.10f).coerceIn(16f, 24f)
             val rowArea = LayoutElementBuilders.Column.Builder()
                 .setWidth(DimensionBuilders.expand())
                 .setModifiers(

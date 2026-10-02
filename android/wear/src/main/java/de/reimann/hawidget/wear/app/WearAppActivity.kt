@@ -49,7 +49,9 @@ class WearAppActivity : Activity() {
 
         column = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14f), dp(12f), dp(14f), dp(16f))
+            // Unten bewusst viel Platz: nur so lässt sich die letzte Zeile bis in
+            // die Mitte scrollen, wo die runde Anzeige breit genug ist.
+            setPadding(dp(SIDE_PADDING_DP), dp(12f), dp(SIDE_PADDING_DP), dp(BOTTOM_PADDING_DP))
         }
         scroll = ScrollView(this).apply {
             isFillViewport = true
@@ -297,6 +299,12 @@ class WearAppActivity : Activity() {
         const val STALE_MS = 10 * 60 * 1000L
         const val PRESS_FAILED_MS = 20 * 1000L
         const val PRESS_RERENDER_MS = 1500L
+
+        /** Seitlicher Abstand: hält den Text aus der Rundung heraus. */
+        const val SIDE_PADDING_DP = 20f
+
+        /** Zusätzlicher Platz unter der letzten Zeile (Scrollbereich). */
+        const val BOTTOM_PADDING_DP = 80f
 
         val ACCENT = 0xFF00E676.toInt()
         val NOTE_COLOR = 0xFF888888.toInt()
