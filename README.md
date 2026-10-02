@@ -268,10 +268,13 @@ Im Bereich **Smartwatch** steht unter jeder Uhr:
 |---|---|
 | **Kopfzeile** | Name der Uhr + „verbunden · \<Knoten-ID\>“ |
 | **Zeigt: …** | aktuelle Zuordnung; ohne Fassung „Noch keine Fassung zugeordnet.“ (die Uhr bleibt dann leer) |
-| **„Fassung wählen“** (Aufklapp-Menü) | welche Uhr-Fassung **diese Uhr** zeigt |
-| **„Kopie anlegen“** | dupliziert ein Widget und ordnet die Kopie **sofort dieser Uhr** zu |
-| **„Fassung bearbeiten“** | springt in den Editor der zugeordneten Fassung |
+| **„Fassung wählen“** (Aufklapp-Menü) | welche Uhr-Fassung **diese Uhr** zeigt – mehr braucht es hier nicht |
 | **„Uhren suchen“** | fragt die per Bluetooth verbundenen Uhren erneut ab |
+
+Darunter stehen die Uhr-Fassungen selbst – dort gibt es **Bearbeiten**, **Duplizieren** und
+**Löschen** wie bei den Handy-Widgets. Eine neue Fassung entsteht über **Duplizieren** an
+einem Widget (Ziel *Smartwatch-Widget*) oder über den Knopf **„Uhr-Fassung aus einem
+Handy-Widget anlegen“**.
 
 Unter der Widget-Liste steht bei jeder Uhr-Fassung, wo sie verwendet wird
 (*„Verwendet auf: Pixel Watch 3“*, *„alle Uhren“* oder *„keiner Uhr zugeordnet“*).
