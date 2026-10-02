@@ -213,8 +213,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Widgets für den Homescreen (auch die, die zusätzlich auf der Uhr liegen). */
     fun phoneWidgets(): List<WidgetDef> = widgets.filter { !it.isWatchOnly }
 
-    /** Widgets, die es (auch) auf der Uhr gibt – als Vorlage für eine Uhr-Fassung. */
-    fun watchWidgets(): List<WidgetDef> = widgets.filter { it.target != "phone" }
+    /** Uhr-Fassungen (alles, was der Uhr zugeordnet werden kann). */
+    fun watchWidgets(): List<WidgetDef> = widgets.filter { it.isWatchOnly }
 
     /** Reine Uhr-Fassungen (Kopien für die Smartwatch). */
     fun watchOnlyWidgets(): List<WidgetDef> = widgets.filter { it.isWatchOnly }
@@ -281,9 +281,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Festlegen, welche Fassung eine Uhr zeigt.
      *
-     * Der Knoten wird aus allen anderen Uhr-Widgets entfernt, damit die
-     * Zuordnung eindeutig bleibt. Ohne Angabe (null) gilt wieder das gemeinsame
-     * Widget („Handy + Uhr“).
+     * Der Knoten wird aus allen anderen Uhr-Fassungen entfernt, damit eine Uhr
+     * immer genau eine zeigt.
      */
     fun assignWatchWidget(widget: WidgetDef, nodeId: String?) {
         val client = clientOrNull() ?: return
@@ -312,32 +311,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 loadWidgets()
                 Widgets.refreshAllAsync(getApplication())
             }.onFailure { message = "Zuordnen fehlgeschlagen: ${it.message}" }
-        }
-    }
-
-    /** Zuordnung einer Uhr aufheben (zurück zum gemeinsamen Widget). */
-    fun clearWatchAssignment(nodeId: String) {
-        val client = clientOrNull() ?: return
-        val assigned = widgets.filter { it.target == "watch" && it.watchNodes.contains(nodeId) }
-        if (assigned.isEmpty()) {
-            message = "Diese Uhr nutzt bereits das gemeinsame Widget"
-            return
-        }
-        busy = true
-        viewModelScope.launch {
-            val result = runCatching {
-                withContext(Dispatchers.IO) {
-                    assigned.forEach { widget ->
-                        client.saveWidget(widget.copy(watchNodes = widget.watchNodes - nodeId))
-                    }
-                }
-            }
-            busy = false
-            result.onSuccess {
-                message = "Diese Uhr zeigt wieder das gemeinsame Widget"
-                loadWidgets()
-                Widgets.refreshAllAsync(getApplication())
-            }.onFailure { message = "Zurücksetzen fehlgeschlagen: ${it.message}" }
         }
     }
 

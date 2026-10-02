@@ -29,12 +29,7 @@ object WidgetJson {
         val result = ArrayList<RowDef>(array.length())
         for (index in 0 until array.length()) {
             val json = array.optJSONObject(index) ?: continue
-            result.add(
-                RowDef(
-                    watch = json.optBoolean("watch", true),
-                    items = parseRowItems(json.optJSONArray("items")),
-                )
-            )
+            result.add(RowDef(items = parseRowItems(json.optJSONArray("items"))))
         }
         return result
     }

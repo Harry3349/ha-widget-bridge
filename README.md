@@ -267,8 +267,8 @@ Im Bereich **Smartwatch** steht unter jeder Uhr:
 | Element | Wirkung |
 |---|---|
 | **Kopfzeile** | Name der Uhr + „verbunden · \<Knoten-ID\>“ |
-| **Zeigt: …** | aktuelle Zuordnung; ohne eigene Fassung „Zeigt das gemeinsame Widget (Handy + Uhr)“ |
-| **„Fassung wählen“** (Aufklapp-Menü) | welche Fassung **diese Uhr** zeigt – das gemeinsame Widget oder eine Uhr-Fassung |
+| **Zeigt: …** | aktuelle Zuordnung; ohne Fassung „Noch keine Fassung zugeordnet.“ (die Uhr bleibt dann leer) |
+| **„Fassung wählen“** (Aufklapp-Menü) | welche Uhr-Fassung **diese Uhr** zeigt |
 | **„Kopie anlegen“** | dupliziert ein Widget und ordnet die Kopie **sofort dieser Uhr** zu |
 | **„Fassung bearbeiten“** | springt in den Editor der zugeordneten Fassung |
 | **„Uhren suchen“** | fragt die per Bluetooth verbundenen Uhren erneut ab |
@@ -277,7 +277,8 @@ Unter der Widget-Liste steht bei jeder Uhr-Fassung, wo sie verwendet wird
 (*„Verwendet auf: Pixel Watch 3“*, *„alle Uhren“* oder *„keiner Uhr zugeordnet“*).
 
 Eine Uhr hat immer genau **eine** Fassung: Ordnest du einer Uhr eine andere zu, wird der
-Knoten automatisch aus der bisherigen Fassung entfernt.
+Knoten automatisch aus der bisherigen Fassung entfernt. Eine Fassung **ohne** Zuordnung
+liegt auf allen Uhren; ohne jede Fassung bleibt die Uhr leer.
 
 Damit die Uhren unterschiedliche Stände bekommen können, schickt die Handy-App den
 Snapshot **gezielt an die jeweilige Uhr** (statt an alle). Ein Button-Druck von der Uhr
@@ -352,13 +353,12 @@ HTML-Bereich.
 
 ---
 
-## Zeilen-Layout (Handy und Uhr)
+## Zeilen-Layout
 
-Der Abschnitt **Zeilen (Handy + Uhr)** im Editor ist der freie Aufbau: Du legst Zeilen
-an, und in jede Zeile kommen **bis zu drei Objekte** – Text, Sensor (Entity-Wert) oder
-Button. Die Zeilen gelten **gleichzeitig für das Widget auf dem Handy und die Kachel auf
-der Uhr**, weil beide dieselbe Definition aus Home Assistant zeichnen (die Uhr bekommt
-sie über den Data Layer vom Handy).
+Der Abschnitt **Zeilen** im Editor ist der freie Aufbau: Du legst
+Zeilen an, und in jede Zeile kommen **bis zu drei Objekte** – Text, Sensor (Entity-Wert) oder
+Button. Ein Widget gehört entweder dem Handy oder der Uhr (siehe *Duplizieren*); die Zeilen
+liegen also auf der Fläche, zu der das Widget gehört.
 
 | Einstellung pro Objekt | Bedeutung |
 |---|---|
@@ -385,41 +385,40 @@ Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehu
 wählst du sie anschließend über ein **Aufklapp-Menü** aus; wird ein Eintrag oben gelöscht,
 markiert der Editor die betroffenen Objekte mit „nicht mehr in der Liste oben“.
 
-### Was die Uhr zeigt (Einstellungen in der Handy-App)
+### Was die Uhr zeigt (Einstellungen in der Uhren-Fassung)
 
-Der Abschnitt **Uhr** im Editor steuert die Uhr – alles andere ergibt sich aus denselben
-Zeilen wie am Handy:
+Der Abschnitt **Uhr-Kachel** im Editor steuert die Kachel:
 
 | Einstellung | Wirkung |
 |---|---|
-| **Auf der Uhr anzeigen** (Schalter je Zeile) | Aus = die Zeile erscheint nur im Widget am Handy |
 | **Zeilen auf der Kachel** | `0` = automatisch (so viele, wie hineinpassen), sonst genau diese Zahl |
 | **Schriftgröße** | 60–180 % – vergrößert/verkleinert alle Texte auf der Uhr |
 
+Diese Einstellungen erscheinen nur bei einer **Uhr-Fassung** – ein Handy-Widget zeigt
+stattdessen den Platz-Hinweis fürs Homescreen-Widget.
+
 Die Kachel zeigt nur, was ganz auf die runde Anzeige passt; für den Rest blendet sie den
 Hinweis **„Antippen: alle Zeilen“** ein (Kacheln können laut Wear OS nicht scrollen). Ein
-Tipp auf die Kachel öffnet die App auf der Uhr mit allen ausgewählten Zeilen – dort lässt
+Tipp auf die Kachel öffnet die App auf der Uhr mit allen Zeilen der Fassung – dort lässt
 sich mit **Wischen** oder mit der **Krone** scrollen.
 
 Die Objekte einer Zeile teilen sich die Breite: ein Objekt füllt die ganze Zeile, zwei
 je die Hälfte, drei je ein Drittel. Sobald **mindestens eine Zeile** angelegt ist,
-ersetzt dieses Layout die Werteliste und die Button-Zeilen auf beiden Flächen.
+ersetzt dieses Layout die Werteliste und die Button-Zeilen.
 
 ### Hinweise zur Größe
 
-Unter der Zeilenliste stehen zwei Hinweise, die sich aus den eingestellten Zeilen
-ergeben:
+Unter der Zeilenliste steht der Hinweis für die Fläche, zu der das Widget gehört:
 
-* **Handy:** ab welcher Zeile das Widget höher gezogen werden muss
+* **Handy-Widget:** ab welcher Zeile das Widget höher gezogen werden muss
   (≈ 105 dp ≈ 2 Launcher-Reihen, 180 dp ≈ 3, 255 dp ≈ 4). Reicht selbst das nicht,
   empfiehlt der Hinweis eine zweite Zeile oder ein zweites Widget.
-* **Uhr:** bis zu welcher Zeile alles gleichzeitig sichtbar ist und ab welcher Zeile
-  gescrollt werden muss (runde Anzeige, ca. 150 dp).
+* **Uhr-Fassung:** bis zu welcher Zeile alles gleichzeitig sichtbar ist und ab welcher
+  Zeile gescrollt werden muss (runde Anzeige, ca. 150 dp).
 
-Zwischen den Zeilen markiert der Editor die Grenzen zusätzlich
-(„Ab hier braucht das Handy-Widget mehr Höhe“ / „Ab hier muss auf der Uhr gescrollt
-werden“). Die Werte sind Erfahrungswerte – die tatsächliche Kachelgröße hängt vom
-Launcher bzw. von der Uhr ab.
+Zwischen den Zeilen markiert der Editor die Grenze zusätzlich („Ab hier braucht das
+Handy-Widget mehr Höhe“ bzw. „Ab hier auf der Uhr nur in der App“). Die Werte sind
+Erfahrungswerte – die tatsächliche Kachelgröße hängt vom Launcher bzw. von der Uhr ab.
 
 ## Hintergrund
 
@@ -440,10 +439,10 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | `template` | Jinja | optional; ersetzt die automatische Werteliste |
 | `values[]` | Liste | `entity`, optional `label`, `threshold` (W), `color` (Hex) |
 | `buttons[]` | Liste (max. 6) | siehe unten |
-| `rows[]` | Liste (max. 8) | Zeilen-Layout für Handy **und** Uhr, siehe unten |
+| `rows[]` | Liste (max. 8) | Zeilen-Layout des Widgets, siehe unten |
 | `watch_rows` | Zahl (0–8) | Zeilen auf der Uhr-Kachel; `0` = automatisch |
 | `watch_scale` | Zahl (0.6–1.8) | Schriftgrößen-Faktor für die Uhr (1.0 = unverändert) |
-| `target` | `both` \| `phone` \| `watch` | wo das Widget erscheint (Standard `both`) |
+| `target` | `phone` \| `watch` | Handy-Widget oder Uhr-Fassung (Standard `phone`; das frühere `both` gilt jetzt als Handy-Widget) |
 | `watch_nodes` | Liste (max. 5) | Kennungen der Uhren, die dieses Widget zeigen (leer = alle Uhren) |
 | `text_size` | Zahl (8–30) | Schriftgröße im Widget |
 | `value_columns` | Zahl (1–3) | 1 = Werte untereinander, 2/3 = nebeneinander |

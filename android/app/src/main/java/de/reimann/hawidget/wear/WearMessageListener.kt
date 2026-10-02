@@ -48,7 +48,7 @@ class WearMessageListener : WearableListenerService() {
 
         runBlocking {
             val client = settings.client()
-            val target = widgetId.takeIf { it.isNotBlank() } ?: resolveWidgetId(client)
+            val target = widgetId.takeIf { it.isNotBlank() } ?: resolveWidgetId(client, sourceNodeId)
             if (target == null) {
                 WearSync.sendToWatch(context, PATH_PRESS_FAILED, nodeId = sourceNodeId)
                 return@runBlocking
@@ -76,7 +76,7 @@ class WearMessageListener : WearableListenerService() {
 
         runBlocking {
             val client = settings.client()
-            val widgetId = resolveWidgetId(client) ?: return@runBlocking
+            val widgetId = resolveWidgetId(client, sourceNodeId) ?: return@runBlocking
             runCatching { client.snapshotRaw(widgetId) }
                 .onSuccess { raw ->
                     WidgetPrefs.saveSnapshot(context, widgetId, raw)
@@ -99,14 +99,18 @@ class WearMessageListener : WearableListenerService() {
     }
 
     /**
-     * Die Uhr ohne eigene Zuordnung zeigt die gemeinsame Fassung: erst ein Widget
-     * für die Uhr („Handy + Uhr“ bzw. „Uhr“), sonst das erste aus Home Assistant.
+     * Fassung, die die Uhr zeigt – sie kommt normalerweise mit dem Tastendruck
+     * (``<widget-id>|<button-key>``); dies ist nur der Rückfall für ältere
+     * Uhr-Apps, die nur den Schlüssel schicken.
      */
-    private suspend fun resolveWidgetId(client: HaClient): String? {
+    private suspend fun resolveWidgetId(client: HaClient, nodeId: String?): String? {
         val widgets = runCatching { client.listWidgets() }.getOrDefault(emptyList())
-        val watchWidget = widgets.firstOrNull { it.target != "phone" }
-        val id = watchWidget?.id ?: widgets.firstOrNull()?.id
-        return id?.takeIf { it.isNotBlank() }
+        val watchWidgets = widgets.filter { it.isWatchOnly }
+        val chosen = watchWidgets.firstOrNull {
+            nodeId != null && it.watchNodes.contains(nodeId)
+        } ?: watchWidgets.firstOrNull { it.watchNodes.isEmpty() }
+            ?: watchWidgets.firstOrNull()
+        return chosen?.id?.takeIf { it.isNotBlank() }
     }
 
     companion object {

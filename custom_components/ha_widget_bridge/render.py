@@ -232,8 +232,7 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                 }
             )
 
-        # "watch" sagt der Uhr, ob die Zeile dort erscheinen soll
-        rows.append({"items": items, "watch": row.get("watch", True)})
+        rows.append({"items": items})
 
     return rows
 

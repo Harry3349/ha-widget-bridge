@@ -21,12 +21,11 @@ internal fun WatchCard(
     watch: WatchNode,
     widgets: List<WidgetDef>,
     onAssign: (WidgetDef) -> Unit,
-    onClear: () -> Unit,
     onCopy: () -> Unit,
     onEdit: (WidgetDef) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
-    val assigned = widgets.firstOrNull { it.target == "watch" && it.watchNodes.contains(watch.id) }
+    val assigned = widgets.firstOrNull { it.watchNodes.contains(watch.id) }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -42,7 +41,7 @@ internal fun WatchCard(
 
             Text(
                 if (assigned == null) {
-                    "Zeigt das gemeinsame Widget (Handy + Uhr)."
+                    "Noch keine Fassung zugeordnet."
                 } else {
                     "Zeigt: ${assigned.name}"
                 },
@@ -57,13 +56,13 @@ internal fun WatchCard(
                         Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
                     }
                     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Gemeinsames Widget (Handy + Uhr)") },
-                            onClick = {
-                                onClear()
-                                open = false
-                            },
-                        )
+                        if (widgets.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("Noch keine Uhr-Fassung angelegt") },
+                                enabled = false,
+                                onClick = { open = false },
+                            )
+                        }
                         widgets.forEach { widget ->
                             DropdownMenuItem(
                                 text = { Text(widget.name) },

@@ -72,8 +72,6 @@ data class RowItem(
 
 /** Eine Zeile mit bis zu drei Objekten (Text, Sensor, Button). */
 data class RowDef(
-    /** false = diese Zeile nur am Handy zeigen, nicht auf der Uhr. */
-    val watch: Boolean = true,
     val items: List<RowItem> = emptyList(),
 )
 
@@ -105,8 +103,8 @@ data class WidgetDef(
     val valueColumns: Int = 1,
     /** true = Name in der ersten Zeile, Wert darunter */
     val valueLabelAbove: Boolean = false,
-    /** both = Handy + Uhr, phone = nur Handy, watch = eigene Fassung für die Uhr. */
-    val target: String = "both",
+    /** phone = Widget fürs Handy, watch = eigene Fassung für die Uhr. */
+    val target: String = "phone",
     /** Wear-Knoten (Uhren), auf denen dieses Widget erscheinen soll (leer = alle). */
     val watchNodes: List<String> = emptyList(),
     val revision: Int = 0,

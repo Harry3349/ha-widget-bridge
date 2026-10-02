@@ -391,7 +391,8 @@ check(zeilen[0]["items"][2]["state_label"] == "An", "Button-Objekt zeigt den Zus
 check(zeilen[1]["items"][0]["label"] == "", "ohne Namen wird kein Name geliefert")
 check(zeilen[1]["items"][0]["color"] == "#4DD0E1", "eigene Sensor-Farbe übernommen")
 check(zeilen[0]["items"][1]["label"] == "PC", "eingetragener Name wird geliefert")
-check(all(row["watch"] for row in zeilen), "Zeilen sind standardmäßig auch auf der Uhr")
+check(all("watch" not in row for row in zeilen),
+      "Zeilen tragen keine Uhr-Kennzeichnung mehr")
 
 # Uhr-Einstellungen: Zeilen-Auswahl, Anzahl auf der Kachel, Schriftgröße
 uhr_widget = store.normalize_widget(
@@ -400,20 +401,18 @@ uhr_widget = store.normalize_widget(
         "name": "Uhr",
         "rows": [
             {"items": [{"type": "text", "text": "A"}]},
-            {"items": [{"type": "text", "text": "B"}], "watch": False},
+            {"items": [{"type": "text", "text": "B"}]},
         ],
         "watch_rows": 99,
         "watch_scale": 9.0,
     },
 )
-check(uhr_widget["rows"][1]["watch"] is False, "Zeile kann für die Uhr abgewählt werden")
 check(uhr_widget["watch_rows"] == 8, "watch_rows wird begrenzt")
 check(uhr_widget["watch_scale"] == 1.8, "watch_scale wird begrenzt")
-check(uhr_widget["rows"][0]["watch"] is True, "Standard: Zeile erscheint auf der Uhr")
+check(len(uhr_widget["rows"]) == 2, "beide Zeilen bleiben erhalten")
 
 uhr_render = render.row_view(hass, uhr_widget)
-check(uhr_render[1]["watch"] is False, "Uhr-Kennzeichnung kommt im Snapshot an")
-check(uhr_render[0]["watch"] is True, "Standardkennzeichnung kommt im Snapshot an")
+check(len(uhr_render) == 2, "Snapshot liefert beide Zeilen – die Uhr zeigt sie alle")
 check(
     store.normalize_widget(hass, {"name": "Klein", "watch_scale": 0.1})["watch_scale"] == 0.6,
     "zu kleine Uhr-Schriftgröße wird angehoben",
@@ -475,8 +474,10 @@ ziel_widget = store.normalize_widget(
 )
 check(ziel_widget["target"] == "watch", "Ziel 'watch' wird gespeichert")
 check(ziel_widget["watch_nodes"] == ["abc123", "def456"], "Uhren werden entdoppelt")
-check(store.normalize_widget(hass, {"name": "Standard"})["target"] == "both",
-      "Standardziel ist Handy + Uhr")
+check(store.normalize_widget(hass, {"name": "Standard"})["target"] == "phone",
+      "Standardziel ist das Handy-Widget")
+check(store.normalize_widget(hass, {"name": "Alt", "target": "both"})["target"] == "phone",
+      "früheres 'both' gilt jetzt als Handy-Widget")
 check(store.normalize_widget(hass, {"name": "Standard"})["watch_nodes"] == [],
       "ohne Angabe sind alle Uhren gemeint")
 check(store.normalize_widget(hass, {"name": "Text", "watch_nodes": "abc, def"})["watch_nodes"]

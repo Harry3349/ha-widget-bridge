@@ -72,30 +72,20 @@ object RowCapacity {
     }
 
     /**
-     * Index (0-basiert) der ersten Zeile, die auf der Uhr nicht mehr erscheint.
+     * Index (0-basiert) der ersten Zeile, die auf der Kachel nicht mehr erscheint.
      *
-     * Berücksichtigt, welche Zeilen für die Uhr abgewählt sind und – falls
-     * gesetzt – die feste Zahl an Zeilen auf der Kachel.
+     * Berücksichtigt – falls gesetzt – die feste Zahl an Zeilen auf der Kachel.
      */
     fun watchCutIndex(rows: List<RowDef>, fixedRows: Int): Int? {
-        val watchRows = rows.filter { it.watch }
-        if (watchRows.isEmpty()) return null
-        val items = watchRows.map { it.items }
+        if (rows.isEmpty()) return null
+        val items = rows.map { it.items }
         val fitting = if (fixedRows > 0) fixedRows else fittingRows(items, WATCH_DP)
-        if (fitting >= watchRows.size) return null
-
-        var seen = 0
-        rows.forEachIndexed { index, row ->
-            if (!row.watch) return@forEachIndexed
-            if (seen == fitting) return index
-            seen++
-        }
-        return null
+        return if (fitting >= rows.size) null else fitting
     }
 
     /** Wie viele Zeilen zeigt die Kachel? */
     fun watchVisibleRows(rows: List<RowDef>, fixedRows: Int): Int {
-        val items = rows.filter { it.watch }.map { it.items }
+        val items = rows.map { it.items }
         if (items.isEmpty()) return 0
         return if (fixedRows > 0) minOf(fixedRows, items.size) else fittingRows(items, WATCH_DP)
     }
@@ -128,10 +118,8 @@ object RowCapacity {
 
     /** Hinweistext für die Uhr. */
     fun watchHint(rows: List<RowDef>, fixedRows: Int): String {
-        val watchRows = rows.count { it.watch }
-        if (watchRows == 0) {
-            return "Uhr: keine Zeile ausgewählt – auf der Uhr erscheint nichts " +
-                "(Häkchen „Auf der Uhr anzeigen“)."
+        if (rows.isEmpty()) {
+            return "Uhr: noch keine Zeile angelegt – auf der Uhr erscheint nichts."
         }
         val visible = watchVisibleRows(rows, fixedRows)
         val fixed = if (fixedRows > 0) {
@@ -139,10 +127,10 @@ object RowCapacity {
         } else {
             "Einstellung „automatisch“: die Kachel zeigt so viele Zeilen, wie hineinpassen."
         }
-        return if (visible >= watchRows) {
-            "Uhr: alle $watchRows ausgewählten Zeilen passen auf die Kachel. $fixed"
+        return if (visible >= rows.size) {
+            "Uhr: alle ${rows.size} Zeilen passen auf die Kachel. $fixed"
         } else {
-            "Uhr: $watchRows Zeilen ausgewählt, sichtbar sind $visible. Die übrigen zeigt " +
+            "Uhr: ${rows.size} Zeilen angelegt, sichtbar sind $visible. Die übrigen zeigt " +
                 "die App auf der Uhr (Kachel antippen) – dort lässt sich mit Wischen oder " +
                 "Krone scrollen. $fixed"
         }

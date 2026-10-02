@@ -142,22 +142,20 @@ object Widgets {
             runCatching { client.listWidgets() }.getOrNull()
         } ?: return
 
-        // Das Widget, das am Handy hängt (die reine Uhr-Fassungen ausschließen)
-        val home = widgets.firstOrNull { !it.isWatchOnly } ?: widgets.firstOrNull()
+        // Nur Uhr-Fassungen kommen auf die Uhr – das Handy-Widget bleibt am Handy.
+        val watchWidgets = widgets.filter { it.isWatchOnly }
+        val forAll = watchWidgets.firstOrNull { it.watchNodes.isEmpty() }
         val nodes = withContext(Dispatchers.IO) { Watches.connected(context) }
 
         if (nodes.isEmpty()) {
-            // Keine Uhr verbunden: wie bisher an alle schicken, die Uhr holt sich
-            // den Stand später auch selbst über ihre Nachricht.
-            home?.let { rawOf(it.id) }?.let { WearSync.pushSnapshot(context, it) }
+            // Keine Uhr verbunden: an alle schicken, die eine Fassung für alle Uhren haben
+            forAll?.let { rawOf(it.id) }?.let { WearSync.pushSnapshot(context, it) }
             return
         }
 
         for (node in nodes) {
-            val chosen = widgets.firstOrNull {
-                it.target == "watch" && it.watchNodes.contains(node.id)
-            } ?: widgets.firstOrNull { it.isWatchOnly && it.watchNodes.isEmpty() }
-                ?: home ?: continue
+            val chosen = watchWidgets.firstOrNull { it.watchNodes.contains(node.id) } ?: forAll
+                ?: continue
 
             rawOf(chosen.id)?.let { WearSync.pushSnapshotToNode(context, node.id, it) }
         }

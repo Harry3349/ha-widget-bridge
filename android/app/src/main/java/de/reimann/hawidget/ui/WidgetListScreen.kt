@@ -53,9 +53,9 @@ fun WidgetListScreen(
     ) {
         Text("Widgets", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Handy und Smartwatch sind getrennte Bereiche: Ein Handy-Widget liegt auf dem " +
-                "Homescreen, ein Smartwatch-Widget nur auf der Uhr. Mit „Duplizieren“ machst " +
-                "du aus einem Widget eine Kopie für die andere Seite.",
+            "Handy und Smartwatch sind getrennte Bereiche: Ein Widget gehört entweder auf " +
+                "den Homescreen oder auf die Uhr. Mit „Duplizieren“ machst du aus einem " +
+                "Widget eine Kopie für die andere Seite.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -129,8 +129,8 @@ fun WidgetListScreen(
         // -------------------------------------------------------- Smartwatch
         SectionTitle("Smartwatch (Uhr)")
         Text(
-            "Die Uhr zeigt das gemeinsame Widget oder eine eigene Fassung. Eine Uhr hat " +
-                "immer genau eine Fassung.",
+            "Jede Uhr zeigt eine eigene Fassung. Eine Uhr hat immer genau eine Fassung – " +
+                "ohne Zuordnung bleibt die Uhr leer.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -149,7 +149,6 @@ fun WidgetListScreen(
                 watch = watch,
                 widgets = vm.watchWidgets(),
                 onAssign = { widget -> vm.assignWatchWidget(widget, watch.id) },
-                onClear = { vm.clearWatchAssignment(watch.id) },
                 onCopy = { duplicate = DuplicateRequest(null, "watch", watch.id) },
                 onEdit = { widget ->
                     vm.startEdit(widget)
@@ -358,12 +357,8 @@ private fun watchesLabel(vm: MainViewModel, def: WidgetDef, format: (String) -> 
 internal fun watchName(vm: MainViewModel, nodeId: String): String =
     vm.watches.firstOrNull { it.id == nodeId }?.name ?: nodeId
 
-/** Kurztext, wo ein Widget erscheint. */
-internal fun targetLabel(widget: WidgetDef): String = when (widget.target) {
-    "watch" -> "nur Uhr"
-    "phone" -> "nur Handy"
-    else -> "Handy + Uhr"
-}
+/** Kurztext, wo ein Widget liegt. */
+internal fun targetLabel(widget: WidgetDef): String = if (widget.isWatchOnly) "nur Uhr" else "nur Handy"
 
 /**
  * Die jeweils andere Seite – die Kopie soll in der Regel dorthin wandern, wo das

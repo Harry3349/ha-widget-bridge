@@ -35,6 +35,7 @@ from .const import (
     MAX_VALUES,
     MAX_WIDGETS,
     MAX_WATCH_NODES,
+    LEGACY_TARGETS,
     ROW_ALIGNMENTS,
     ROW_ITEM_TYPES,
     SIGNAL_WIDGETS_UPDATED,
@@ -255,9 +256,7 @@ def _normalize_rows(hass: HomeAssistant, raw: Any) -> list[dict[str, Any]]:
             raise WidgetValidationError(f"Zeile {number}: maximal {MAX_ROW_ITEMS} Objekte")
 
         items = [_normalize_row_item(hass, item, number, seen_keys) for item in raw_items]
-        # "watch" = diese Zeile auch auf der Uhr zeigen (Standard: ja)
-        keep = _as_bool(row.get("watch", True), f"Zeile {number}.watch")
-        rows.append({"items": items, "watch": keep})
+        rows.append({"items": items})
 
     return rows
 
@@ -417,8 +416,10 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         raise WidgetValidationError("watch_scale muss eine Zahl sein") from err
     watch_scale = min(max(watch_scale, WATCH_SCALE_MIN), WATCH_SCALE_MAX)
 
-    # Ziel: nur am Handy, nur auf der Uhr oder beides (Standard)
+    # Ziel: Widget für den Homescreen ("phone") oder Fassung für die Uhr ("watch")
     target = str(payload.get("target") or DEFAULT_TARGET).strip().lower()
+    # "both" war die frühere gemeinsame Fassung – sie zählt jetzt als Handy-Widget
+    target = LEGACY_TARGETS.get(target, target)
     if target not in WIDGET_TARGETS:
         raise WidgetValidationError(f"target muss {'/'.join(WIDGET_TARGETS)} sein")
 

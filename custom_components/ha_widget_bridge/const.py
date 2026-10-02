@@ -77,10 +77,13 @@ WATCH_SCALE_MIN = 0.6
 WATCH_SCALE_MAX = 1.8
 DEFAULT_WATCH_SCALE = 1.0
 
-# Ziel eines Widgets: "both" = Handy + Uhr (Standard), "phone" = nur Handy,
-# "watch" = eigene Fassung für die Uhr (in der App vom Handy-Widget kopiert).
-WIDGET_TARGETS = ("both", "phone", "watch")
-DEFAULT_TARGET = "both"
+# Ziel eines Widgets: "phone" = Widget für den Homescreen (Standard),
+# "watch" = Fassung für die Uhr (in der App aus einem Handy-Widget kopiert).
+# Ein Widget gehört immer genau einer Seite – es gibt keine gemeinsame Fassung mehr.
+WIDGET_TARGETS = ("phone", "watch")
+DEFAULT_TARGET = "phone"
+# "both" war die frühere gemeinsame Fassung; sie zählt jetzt als Handy-Widget.
+LEGACY_TARGETS = {"both": "phone"}
 
 # Auf welchen Uhren (Wear-Knoten) dieses Widget erscheinen soll (leer = alle).
 MAX_WATCH_NODES = 5

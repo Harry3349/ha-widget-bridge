@@ -161,7 +161,7 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
 
         HorizontalDivider()
 
-        // ------------------------------------------- Zeilen (Handy + Uhr)
+        // ------------------------------------------- Zeilen (Handy oder Uhr)
         // Sensoren und Buttons in den Zeilen kommen aus den Listen oben.
         RowEditorSection(
             rows = def.rows,
@@ -173,6 +173,8 @@ fun WidgetEditorScreen(vm: MainViewModel, onBack: () -> Unit) {
             onWatchChange = { rows, scale ->
                 vm.updateEditor { current -> current.copy(watchRows = rows, watchScale = scale) }
             },
+            // Reine Uhr-Fassungen zeigen die Kachel-Einstellungen, Handy-Widgets nicht
+            watchWidget = def.isWatchOnly,
         )
 
         HorizontalDivider()

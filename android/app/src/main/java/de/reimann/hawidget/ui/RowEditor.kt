@@ -28,10 +28,8 @@ internal const val MAX_ROW_OBJECTS = 3
 /**
  * Editor für das Zeilen-Layout.
  *
- * Die Zeilen gelten gleichzeitig für das Handy-Widget und die Uhr-Kachel, weil
- * beide dieselbe Definition aus Home Assistant zeichnen. Deshalb stehen unter
- * der Liste auch die Hinweise für beide Flächen (ab wann das Handy-Widget höher
- * gezogen werden muss bzw. ab wann die Uhr scrollt).
+ * Ein Widget gehört entweder dem Handy oder der Uhr – deshalb zeigt der Editor
+ * nur die Hinweise für die jeweilige Fläche (``watchWidget`` steuert das).
  */
 @Composable
 fun RowEditorSection(
@@ -42,26 +40,24 @@ fun RowEditorSection(
     watchScale: Float,
     onRowsChange: (List<RowDef>) -> Unit,
     onWatchChange: (Int, Float) -> Unit,
+    watchWidget: Boolean = false,
 ) {
     var dialog by remember { mutableStateOf<RowDialog?>(null) }
 
-    Text("Zeilen (Handy + Uhr)", style = MaterialTheme.typography.titleMedium)
+    Text("Zeilen", style = MaterialTheme.typography.titleMedium)
     Text(
-        "Gilt für das Widget auf dem Handy und die Kachel auf der Uhr gleichzeitig. " +
-            "Pro Zeile bis zu drei Objekte – Text, Sensor oder Button. Sensoren und " +
-            "Buttons kommen aus den Listen oben („Werte“ und „Buttons“), dort bekommen " +
-            "sie ihren Namen; hier stellst du nur Ausrichtung und Schriftgröße ein. " +
-            "Sobald eine Zeile angelegt ist, ersetzt dieses Layout die Werte- und " +
-            "Button-Liste oben. Auf der Uhr passen nur so viele Zeilen auf die Kachel, " +
-            "wie ohne Scrollen hineingehen; ein Tipp auf die Kachel öffnet die volle " +
-            "Liste, die sich mit Wischen oder Krone scrollen lässt.",
+        "Der freie Aufbau dieses Widgets: pro Zeile bis zu drei Objekte – Text, Sensor " +
+            "oder Button. Sensoren und Buttons kommen aus den Listen oben („Werte“ und " +
+            "„Buttons“), dort bekommen sie ihren Namen; hier stellst du Ausrichtung und " +
+            "Schriftgröße ein. Sobald eine Zeile angelegt ist, ersetzt dieses Layout die " +
+            "Werte- und Button-Liste oben.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     val itemsPerRow = rows.map { it.items }
     val phoneGrow = RowCapacity.phoneGrowFrom(itemsPerRow)
-    // Erste Zeile, die auf der Uhr nicht mehr auftaucht (berücksichtigt die Uhr-Auswahl)
+    // Erste Zeile, die auf der Uhr nicht mehr auf die Kachel passt
     val watchCut = RowCapacity.watchCutIndex(rows, watchRows)
 
     if (rows.isEmpty()) {
@@ -73,10 +69,10 @@ fun RowEditorSection(
     }
 
     rows.forEachIndexed { rowIndex, row ->
-        if (phoneGrow != null && rowIndex == phoneGrow - 1) {
+        if (!watchWidget && phoneGrow != null && rowIndex == phoneGrow - 1) {
             CapacityDivider("Ab hier braucht das Handy-Widget mehr Höhe")
         }
-        if (watchCut != null && rowIndex == watchCut) {
+        if (watchWidget && watchCut != null && rowIndex == watchCut) {
             CapacityDivider("Ab hier auf der Uhr nur in der App (Kachel antippen)")
         }
 
@@ -84,14 +80,6 @@ fun RowEditorSection(
             Column(modifier = Modifier.padding(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Zeile ${rowIndex + 1}", style = MaterialTheme.typography.titleSmall)
-                    if (!row.watch) {
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "nur am Handy",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
                     Spacer(Modifier.weight(1f))
                     IconButton(
                         onClick = { onRowsChange(rows.moveItem(rowIndex, -1)) },
@@ -155,29 +143,6 @@ fun RowEditorSection(
                         modifier = Modifier.padding(top = 4.dp),
                     ) { Text("Objekt hinzufügen") }
                 }
-
-                // Uhr: einzelne Zeilen abwählen
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Switch(
-                        checked = row.watch,
-                        onCheckedChange = { checked ->
-                            onRowsChange(
-                                rows.mapIndexed { index, current ->
-                                    if (index == rowIndex) current.copy(watch = checked) else current
-                                }
-                            )
-                        },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text("Auf der Uhr anzeigen", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "Aus: die Zeile erscheint nur im Widget am Handy.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
             }
         }
     }
@@ -196,63 +161,60 @@ fun RowEditorSection(
     }
 
     // ------------------------------------------------------- Einstellungen Uhr
-    Text("Uhr", style = MaterialTheme.typography.titleMedium)
-    Text(
-        "Die Kachel auf der Uhr ist klein. Hier stellst du ein, was sie zeigt: die " +
-            "Häkchen „Auf der Uhr anzeigen“ oben je Zeile, die Zahl der Zeilen auf der " +
-            "Kachel und die Schriftgröße. Alles Weitere zeigt die App auf der Uhr – die " +
-            "Kachel öffnet sie per Tipp.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    if (watchWidget) {
+        Text("Uhr-Kachel", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Die Kachel auf der Uhr ist klein. Hier stellst du ein, wie viele Zeilen sie " +
+                "zeigt und wie groß die Schrift ist. Alles Weitere zeigt die App auf der " +
+                "Uhr – die Kachel öffnet sie per Tipp.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = watchRows.toString(),
-            onValueChange = { text ->
-                val parsed = text.filter(Char::isDigit).take(1).toIntOrNull() ?: 0
-                onWatchChange(parsed.coerceIn(0, MAX_ROW_LINES), watchScale)
-            },
-            label = { Text("Zeilen auf der Kachel") },
-            supportingText = { Text("0 = automatisch (so viele, wie hineinpassen)") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(Modifier.width(12.dp))
-        OutlinedTextField(
-            value = (watchScale * 100f).toInt().toString(),
-            onValueChange = { text ->
-                val parsed = text.filter(Char::isDigit).take(3).toIntOrNull() ?: 100
-                onWatchChange(watchRows, (parsed.coerceIn(60, 180) / 100f))
-            },
-            label = { Text("Schriftgröße") },
-            suffix = { Text("%") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = watchRows.toString(),
+                onValueChange = { text ->
+                    val parsed = text.filter(Char::isDigit).take(1).toIntOrNull() ?: 0
+                    onWatchChange(parsed.coerceIn(0, MAX_ROW_LINES), watchScale)
+                },
+                label = { Text("Zeilen auf der Kachel") },
+                supportingText = { Text("0 = automatisch (so viele, wie hineinpassen)") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(12.dp))
+            OutlinedTextField(
+                value = (watchScale * 100f).toInt().toString(),
+                onValueChange = { text ->
+                    val parsed = text.filter(Char::isDigit).take(3).toIntOrNull() ?: 100
+                    onWatchChange(watchRows, (parsed.coerceIn(60, 180) / 100f))
+                },
+                label = { Text("Schriftgröße") },
+                suffix = { Text("%") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 
     // ------------------------------------------------------------ Hinweise
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("Wie viel Platz ist da?", style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.height(4.dp))
-            Text(RowCapacity.phoneHint(itemsPerRow), style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(4.dp))
-            Text(
-                RowCapacity.watchHint(rows, watchRows),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Schätzung: ca. ${RowCapacity.heightDp(itemsPerRow).toInt()} dp Inhaltshöhe. " +
-                    "Genaue Werte hängen von der Kachelgröße im Launcher (Handy) und der " +
-                    "Anzeigegröße (Uhr) ab.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (watchWidget) {
+                Text("Wie viel Platz ist auf der Uhr?", style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    RowCapacity.watchHint(rows, watchRows),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            } else {
+                Text("Wie viel Platz ist am Handy?", style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.height(4.dp))
+                Text(RowCapacity.phoneHint(itemsPerRow), style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 

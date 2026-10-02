@@ -31,7 +31,7 @@ object WidgetJson {
         valueLabelAbove = json.optBoolean("value_label_above", false),
         watchRows = json.optInt("watch_rows", 0).coerceIn(0, 8),
         watchScale = json.optDouble("watch_scale", 1.0).toFloat().coerceIn(0.6f, 1.8f),
-        target = json.optString("target", "both").ifBlank { "both" },
+        target = json.optString("target", "phone").ifBlank { "phone" },
         watchNodes = parseWatchNodes(json.optJSONArray("watch_nodes")),
         revision = json.optInt("revision", 0),
     )
@@ -142,7 +142,7 @@ object WidgetJson {
         val result = ArrayList<RowDef>(array.length())
         for (index in 0 until array.length()) {
             val json = array.optJSONObject(index) ?: continue
-            result.add(RowDef(watch = json.optBoolean("watch", true), items = parseRowItems(json.optJSONArray("items"))))
+            result.add(RowDef(items = parseRowItems(json.optJSONArray("items"))))
         }
         return result
     }
@@ -310,8 +310,6 @@ object WidgetJson {
             }
             val rowJson = JSONObject()
             rowJson.put("items", matrix)
-            // false = nur am Handy zeigen
-            rowJson.put("watch", row.watch)
             rows.put(rowJson)
         }
         json.put("rows", rows)
