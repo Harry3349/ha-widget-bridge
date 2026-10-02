@@ -15,13 +15,14 @@ class HaApiException(message: String) : Exception(message)
  *
  * Alle Aufrufe sind blockierend und gehören in einen Hintergrund-Thread.
  */
-class HaClient(baseUrl: String, private val token: String) {
+class HaClient(baseUrl: String, private val token: String, timeoutSeconds: Long = 10) {
 
     val baseUrl: String = baseUrl.trim().trimEnd('/')
 
     private val http: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
+        .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+        .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+        .writeTimeout(timeoutSeconds, TimeUnit.SECONDS)
         .build()
 
     private val jsonType = "application/json; charset=utf-8".toMediaType()

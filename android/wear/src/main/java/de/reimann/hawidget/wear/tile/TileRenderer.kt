@@ -28,7 +28,8 @@ object TileRenderer {
     fun render(
         context: Context,
         snapshot: WidgetSnapshot?,
-        pressed: Boolean = false,
+        fetchedAt: Long,
+        note: String? = null,
     ): LayoutElementBuilders.LayoutElement {
         val column = LayoutElementBuilders.Column.Builder()
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
@@ -52,16 +53,18 @@ object TileRenderer {
             ?: context.getString(R.string.tile_not_configured)
         column.addContent(text(name, Color.WHITE, 13f))
 
-        val note = when {
+        val noteText = when {
+            !note.isNullOrBlank() -> note
             snapshot == null -> context.getString(R.string.tile_loading)
             !snapshot.error.isNullOrBlank() -> snapshot.error
-            pressed -> context.getString(R.string.tile_pressing)
             else -> null
         }
         column.addContent(
             text(
-                note ?: context.getString(R.string.tile_updated, shortTime(snapshot?.updatedAt)),
-                if (note == null) NOTE_COLOR else ACCENT,
+                // Zeitpunkt des letzten Abrufs – nicht der Änderungszeitpunkt der
+                // Definition aus Home Assistant.
+                noteText ?: context.getString(R.string.tile_updated, timeOf(fetchedAt)),
+                if (noteText == null) NOTE_COLOR else ACCENT,
                 10f,
             )
         )
@@ -149,12 +152,12 @@ object TileRenderer {
         }.getOrDefault(fallback)
     }
 
-    /** ISO-Zeitstempel als ``HH:mm`` (lokale Uhrzeit), sonst ein Strich. */
-    private fun shortTime(value: String?): String {
-        if (value.isNullOrBlank()) return "–"
+    /** Zeitpunkt des letzten Abrufs als ``HH:mm`` (lokale Uhrzeit). */
+    private fun timeOf(millis: Long): String {
+        if (millis <= 0L) return "–"
         return runCatching {
-            OffsetDateTime.parse(value)
-                .atZoneSameInstant(java.time.ZoneId.systemDefault())
+            Instant.ofEpochMilli(millis)
+                .atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern("HH:mm"))
         }.getOrDefault("–")
     }
