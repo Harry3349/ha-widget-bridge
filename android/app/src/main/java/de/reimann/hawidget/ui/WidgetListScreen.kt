@@ -114,7 +114,7 @@ fun WidgetListScreen(
             WidgetCard(
                 title = def.name,
                 subtitle = summary(def),
-                note = watchesLabel(vm, def) { "Auch auf der Uhr: $it" },
+                note = null,
                 onEdit = {
                     vm.startEdit(def)
                     onEdit()
@@ -184,8 +184,7 @@ fun WidgetListScreen(
             WidgetCard(
                 title = def.name,
                 subtitle = summary(def),
-                note = watchesLabel(vm, def) { "Verwendet auf: $it" }
-                    ?: "Verwendet auf: keiner Uhr zugeordnet",
+                note = "Verwendet auf: " + watchesLabel(vm, def),
                 onEdit = {
                     vm.startEdit(def)
                     onEdit()
@@ -340,17 +339,12 @@ private fun summary(def: WidgetDef): String = buildString {
 }
 
 /**
- * Namen der Uhren, die dieses Widget zeigen. Ohne Zuordnung gehört ein Widget für
- * die Uhr allen Uhren – dann liefert ``format`` den Text für „alle“.
+ * Auf welchen Uhren diese Fassung liegt: Namen der zugeordneten Uhren oder
+ * „alle Uhren“, wenn die Fassung keinem Knoten fest zugeordnet ist.
  */
-private fun watchesLabel(vm: MainViewModel, def: WidgetDef, format: (String) -> String): String? {
-    if (!def.isWatchOnly) return null
-    val names = if (def.watchNodes.isEmpty()) {
-        listOf("alle Uhren")
-    } else {
-        def.watchNodes.map { node -> watchName(vm, node) }
-    }
-    return format(names.joinToString(", "))
+private fun watchesLabel(vm: MainViewModel, def: WidgetDef): String {
+    if (def.watchNodes.isEmpty()) return "alle Uhren"
+    return def.watchNodes.joinToString(", ") { node -> watchName(vm, node) }
 }
 
 /** Name der Uhr zur Knoten-ID – die ID selbst, wenn sie (noch) nicht gefunden wurde. */
