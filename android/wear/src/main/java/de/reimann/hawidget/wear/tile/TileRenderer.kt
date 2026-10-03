@@ -47,8 +47,6 @@ object TileRenderer {
     private const val NOTE_COLOR = 0xFF888888.toInt()
     private const val BUTTON_BACKGROUND = 0x26FFFFFF
     private const val BUTTON_ACTIVE_BACKGROUND = 0x6600E676
-    /** Eckenradius der Button-Flächen (die App-Ansicht nutzt denselben Wert). */
-    private const val BUTTON_CORNER_DP = 10f
     /** Ab wann ein Stand als veraltet gilt (Kommentar in der Zeitzeile). */
     private const val STALE_MS = 10 * 60 * 1000L
     private const val ACCENT = 0xFF00E676.toInt()
@@ -351,12 +349,6 @@ object TileRenderer {
                             else BUTTON_BACKGROUND
                         )
                     )
-                    // Abgerundete Fläche – wie die Buttons der App-Ansicht
-                    .setCorner(
-                        ModifiersBuilders.Corner.Builder()
-                            .setRadius(DimensionBuilders.dp(BUTTON_CORNER_DP))
-                            .build()
-                    )
                     .build()
 
                 box.setModifiers(
@@ -391,15 +383,7 @@ object TileRenderer {
                         LayoutElementBuilders.Box.Builder()
                             .setWidth(DimensionBuilders.expand())
                             .setHorizontalAlignment(align)
-                            // Eingeschaltete Buttons haben wie in der App-Ansicht
-                            // einen grünen Titel
-                            .addContent(
-                                text(
-                                    " " + item.label.orEmpty(),
-                                    if (item.active) ACCENT else Color.WHITE,
-                                    size,
-                                )
-                            )
+                            .addContent(text(" " + item.label.orEmpty(), Color.WHITE, size))
                             .build()
                     )
                 val state = item.stateLabel.orEmpty()

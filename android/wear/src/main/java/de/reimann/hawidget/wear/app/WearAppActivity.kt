@@ -134,6 +134,8 @@ class WearAppActivity : Activity() {
 
         // Schriftgröße aus dem Editor, angepasst an die Einstellung „Uhr“
         val scale = snapshot?.watchScale ?: 1f
+        // Bezug für Prozent-Breiten: die Zeile ohne die seitlichen Polster
+        val rowWidthPx = resources.displayMetrics.widthPixels - 2 * dp(SIDE_PADDING_DP)
 
         rows.forEach { row ->
             val line = LinearLayout(this).apply {
@@ -145,20 +147,12 @@ class WearAppActivity : Activity() {
                 )
             }
             val items = row.items.take(MAX_ROW_ITEMS)
-            val shares = sharesOf(items)
+            // Echte Breiten statt Gewichten: Gewichte können keine Prozente
+            // ausdrücken und verteilen nur den Rest – damit waren die Buttons
+            // schmaler als auf der Kachel.
+            val widths = widthsOf(items, rowWidthPx)
             items.forEachIndexed { index, item ->
-                line.addView(cell(item, scale, snapshot?.id, shares[index]))
-            }
-            // Bleibt Platz übrig (z. B. Button mit 70 % allein in der Zeile), wird er
-            // mit einem leeren Feld aufgefüllt – sonst würde das Gewicht die Zeile füllen.
-            // Bei Zeilen ohne eigene Breiten bleibt die Summe bei 100 %.
-            val rest = REST_WEIGHT_BASE - shares.sum()
-            if (rest > 0.5f) {
-                line.addView(
-                    View(this).apply {
-                        layoutParams = LinearLayout.LayoutParams(0, 1, rest)
-                    }
-                )
+                line.addView(cell(item, scale, snapshot?.id, widths[index]))
             }
             column.addView(line)
         }
@@ -175,20 +169,21 @@ class WearAppActivity : Activity() {
     }
 
     /**
-     * Breiten-Anteile einer Zeile: Objekte mit eigener Breite bekommen ihren
-     * Prozentsatz; hat die Zeile eigene Breiten, sind die übrigen nur so breit wie
-     * ihr Inhalt (0 = ohne Gewicht), damit nichts abgeschnitten wird. Ohne eigene
-     * Breiten teilen sich alle Objekte die Zeile gleichmäßig – wie am Handy und auf
-     * der Kachel.
+     * Breiten einer Zeile in Pixeln – wie auf der Kachel: Objekte mit eigener
+     * Breite bekommen ihren Prozentsatz der Zeilenbreite, die übrigen nur so viel
+     * wie ihr Inhalt (`WRAP_CONTENT`). Ohne eigene Breiten teilen sich alle Objekte
+     * die Zeile gleichmäßig.
      */
-    private fun sharesOf(items: List<RowItem>): List<Float> {
+    private fun widthsOf(items: List<RowItem>, rowWidthPx: Int): List<Int> {
         if (items.isEmpty()) return emptyList()
-        val open = items.count { it.width <= 0f }
-        if (open == items.size) {
-            val share = REST_WEIGHT_BASE / items.size
-            return items.map { share }
+        val mitBreite = items.any { it.width > 0f }
+        return items.map { item ->
+            when {
+                mitBreite && item.width > 0f -> (rowWidthPx * item.width / 100f).toInt()
+                mitBreite -> LinearLayout.LayoutParams.WRAP_CONTENT
+                else -> rowWidthPx / items.size
+            }
         }
-        return items.map { item -> if (item.width > 0f) item.width else 0f }
     }
 
     /**
@@ -197,7 +192,7 @@ class WearAppActivity : Activity() {
      * ``widgetId`` wird beim Druck mitgeschickt, damit das Handy weiß, welche
      * Fassung den Knopf enthält (mehrere Uhren können verschiedene zeigen).
      */
-    private fun cell(item: RowItem, scale: Float, widgetId: String?, weight: Float): View {
+    private fun cell(item: RowItem, scale: Float, widgetId: String?, widthPx: Int): View {
         val align = alignGravity(item.align)
         val size = (item.size * scale).coerceIn(8f, 30f)
         val small = (size - 3f).coerceAtLeast(9f)
@@ -208,19 +203,10 @@ class WearAppActivity : Activity() {
             // „An/Aus“ rechts – nur der Titel folgt der Ausrichtung.
             gravity = Gravity.CENTER_VERTICAL or
                 if (item.type == "button") Gravity.START else align
-            // Gewicht 0 = nur so breit wie der Inhalt
-            layoutParams = if (weight > 0f) {
-                LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    weight,
-                )
-            } else {
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                )
-            }
+            layoutParams = LinearLayout.LayoutParams(
+                widthPx,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         }
 
         when (item.type) {
@@ -257,6 +243,8 @@ class WearAppActivity : Activity() {
                         Color.WHITE,
                         gravity = align,
                         weight = 1f,
+                        // Die Kachel zeigt den Titel immer einzeilig
+                        maxLines = 1,
                     )
                 )
                 val state = item.stateLabel.orEmpty()
@@ -321,12 +309,13 @@ class WearAppActivity : Activity() {
         color: Int,
         gravity: Int = Gravity.START,
         weight: Float = 0f,
+        maxLines: Int = 2,
     ): TextView = TextView(this).apply {
         this.text = text
         setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
         setTextColor(color)
         this.gravity = gravity
-        maxLines = 2
+        this.maxLines = maxLines
         layoutParams = LinearLayout.LayoutParams(
             if (weight > 0f) 0 else LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -373,8 +362,6 @@ class WearAppActivity : Activity() {
     private companion object {
         const val MAX_ROW_ITEMS = 3
 
-        /** Bezugsgröße der Breiten-Anteile in Prozent (wie im Editor). */
-        const val REST_WEIGHT_BASE = 100f
         const val STALE_MS = 10 * 60 * 1000L
         const val PRESS_FAILED_MS = 20 * 1000L
         const val PRESS_RERENDER_MS = 1500L
