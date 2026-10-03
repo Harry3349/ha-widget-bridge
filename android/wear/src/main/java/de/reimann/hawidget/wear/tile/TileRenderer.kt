@@ -29,31 +29,8 @@ object TileRenderer {
 
     private const val APP_ACTIVITY = "de.reimann.hawidget.wear.app.WearAppActivity"
 
-    /** Höhe von Titel und Zeile „Stand …“ mit Polsterung (Schriftgröße wie in der App). */
-    private const val HEADER_DP = 40f
-
-    /** Titel-Schriftgröße – genau wie in der App-Ansicht (dort fett). */
-    private const val TITLE_SP = 15f
-
-    /** Schriftgröße der Zeile „Stand …“ – genau wie in der App-Ansicht. */
-    private const val NOTE_SP = 11f
-
-    /** Abstand zwischen zwei Zeilen – genau wie in der App-Ansicht. */
-    private const val ROW_GAP_DP = 4f
-
-    /** Innenabstand der Button-Flächen – genau wie in der App-Ansicht. */
-    private const val BUTTON_PADDING_DP = 6f
-
-    /** Symbolgröße in den Buttons – genau wie in der App-Ansicht. */
-    private const val BUTTON_ICON_DP = 16f
-
-    /**
-     * Faktor von Schriftgröße (sp) auf die gezeichnete Zeilenhöhe (dp).
-     *
-     * Die Kachel kann ihre eigenen Höhen nicht messen – sie rechnet deshalb mit
-     * diesem Faktor und dem Platz, den sie zur Verfügung hat.
-     */
-    private const val TEXT_LINE = 1.05f
+    /** Höhe von Titel und Zeile „Stand …“ mit Polsterung. */
+    private const val HEADER_DP = 34f
 
     /** Platz für die Hinweiszeile („Antippen …“). */
     private const val HINT_DP = 12f
@@ -64,7 +41,7 @@ object TileRenderer {
      * Bewusst knapp: eine zu große Reserve kostet Zeilen, die eigentlich noch
      * passen würden (z. B. Temperatur und Feuchte unter den Buttons).
      */
-    private const val BOTTOM_SAFE_DP = 24f
+    private const val BOTTOM_SAFE_DP = 30f
 
     private const val LABEL_COLOR = 0xFF999999.toInt()
     private const val NOTE_COLOR = 0xFF888888.toInt()
@@ -125,7 +102,7 @@ object TileRenderer {
 
         val name = snapshot?.name?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.tile_not_configured)
-        column.addContent(text(name, Color.WHITE, TITLE_SP, bold = true))
+        column.addContent(text(name, Color.WHITE, 12f))
 
         val noteText = when {
             !note.isNullOrBlank() -> note
@@ -142,7 +119,7 @@ object TileRenderer {
                 // Definition aus Home Assistant.
                 noteText ?: context.getString(R.string.tile_updated, timeOf(fetchedAt)),
                 if (noteText == null) NOTE_COLOR else ACCENT,
-                NOTE_SP,
+                9f,
                 maxLines = 2,
             )
         )
@@ -152,7 +129,7 @@ object TileRenderer {
             if (truncated) {
                 // Sichtbarer Hinweis: der Rest liegt in der App-Ansicht
                 column.addContent(
-                    text(context.getString(R.string.tile_more_rows), ACCENT, NOTE_SP)
+                    text(context.getString(R.string.tile_more_rows), ACCENT, 9f)
                 )
             }
             // Links und rechts bleibt Platz für die Rundung: sonst schneidet
@@ -172,15 +149,7 @@ object TileRenderer {
                         )
                         .build()
                 )
-            shown.forEachIndexed { index, row ->
-                // Abstand wie in der App-Ansicht (die erste Zeile schließt direkt an)
-                if (index > 0) {
-                    rowArea.addContent(
-                        LayoutElementBuilders.Spacer.Builder()
-                            .setHeight(DimensionBuilders.dp(ROW_GAP_DP))
-                            .build()
-                    )
-                }
+            shown.forEach { row ->
                 rowArea.addContent(rowLine(row, scale, rowWidth))
             }
             column.addContent(rowArea.build())
@@ -242,15 +211,11 @@ object TileRenderer {
      */
     private fun rowHeightDp(row: RowDef, scale: Float): Float =
         row.items.maxOfOrNull { item ->
-            // Schriftgröße wie im Editor, aber nicht über die Grenzen hinaus
-            val size = (item.size * scale).coerceIn(8f, 30f)
             when (item.type) {
-                // Button: Polsterung oben/unten + Inhalt (Symbol oder Textzeile)
-                "button" -> 2f * BUTTON_PADDING_DP + maxOf(BUTTON_ICON_DP, size * TEXT_LINE)
-
-                // Sensor: Name über dem Wert (Name ist 3 sp kleiner)
-                "sensor" -> (size + (size - 3f).coerceAtLeast(9f)) * TEXT_LINE
-                else -> size * TEXT_LINE
+                // Button: Symbol 14 dp + Polsterung; Sensor: eine Textzeile
+                "button" -> 20f * scale
+                "sensor" -> 15f * scale
+                else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 4f
             }
         } ?: 0f
 
@@ -303,9 +268,7 @@ object TileRenderer {
         var used = 0f
         var count = 0
         for (row in rows) {
-            // Abstand zwischen den Zeilen mitrechnen (vor jeder Zeile außer der ersten)
-            val gap = if (count > 0) ROW_GAP_DP else 0f
-            val next = used + gap + rowHeightDp(row, scale)
+            val next = used + rowHeightDp(row, scale)
             if (next > available) break
             used = next
             count++
@@ -402,10 +365,10 @@ object TileRenderer {
                         .setBackground(background)
                         .setPadding(
                             ModifiersBuilders.Padding.Builder()
-                                .setTop(DimensionBuilders.dp(BUTTON_PADDING_DP))
-                                .setBottom(DimensionBuilders.dp(BUTTON_PADDING_DP))
-                                .setStart(DimensionBuilders.dp(BUTTON_PADDING_DP))
-                                .setEnd(DimensionBuilders.dp(BUTTON_PADDING_DP))
+                                .setTop(DimensionBuilders.dp(4f))
+                                .setBottom(DimensionBuilders.dp(4f))
+                                .setStart(DimensionBuilders.dp(4f))
+                                .setEnd(DimensionBuilders.dp(4f))
                                 .build()
                         )
                         .build()
@@ -418,8 +381,8 @@ object TileRenderer {
                     .addContent(
                         LayoutElementBuilders.Image.Builder()
                             .setResourceId(TileIcons.id(item.icon))
-                            .setWidth(DimensionBuilders.dp(BUTTON_ICON_DP))
-                            .setHeight(DimensionBuilders.dp(BUTTON_ICON_DP))
+                            .setWidth(DimensionBuilders.dp(14f))
+                            .setHeight(DimensionBuilders.dp(14f))
                             .build()
                     )
                     // Der Titel dehnt sich aus: Symbol bleibt links, „An/Aus“ rechts,
@@ -499,24 +462,17 @@ object TileRenderer {
         color: Int,
         sizeSp: Float,
         maxLines: Int = 1,
-        bold: Boolean = false,
     ): LayoutElementBuilders.Text =
         LayoutElementBuilders.Text.Builder()
             .setText(value)
             .setMaxLines(maxLines)
-            .setFontStyle(fontStyle(color, sizeSp, bold))
+            .setFontStyle(fontStyle(color, sizeSp))
             .build()
 
-    private fun fontStyle(
-        color: Int,
-        sizeSp: Float,
-        bold: Boolean = false,
-    ): LayoutElementBuilders.FontStyle =
+    private fun fontStyle(color: Int, sizeSp: Float): LayoutElementBuilders.FontStyle =
         LayoutElementBuilders.FontStyle.Builder()
             .setSize(DimensionBuilders.sp(sizeSp))
             .setColor(argb(color))
-            // Fett wie in der App-Ansicht (dort: Typeface.DEFAULT + BOLD)
-            .setWeight(if (bold) 700 else 400)
             .build()
 
     /** Farbwert als ``ColorProp`` – die statische Farbe steckt im Konstruktor. */
