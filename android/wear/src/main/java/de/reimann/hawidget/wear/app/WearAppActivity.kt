@@ -100,7 +100,8 @@ class WearAppActivity : Activity() {
 
         val title = snapshot?.name?.takeIf { it.isNotBlank() }
             ?: getString(R.string.tile_not_configured)
-        column.addView(block(title, 15f, Color.WHITE, Typeface.BOLD, Gravity.CENTER_HORIZONTAL))
+        // Schriftgröße wie auf der Kachel (dort 12 sp, nicht fett)
+        column.addView(block(title, 12f, Color.WHITE, Typeface.NORMAL, Gravity.CENTER_HORIZONTAL))
 
         val stale = settings.lastRefresh > 0L &&
             System.currentTimeMillis() - settings.lastRefresh > STALE_MS
@@ -114,7 +115,8 @@ class WearAppActivity : Activity() {
 
             else -> getString(R.string.tile_updated, timeOf(settings.lastRefresh)) to NOTE_COLOR
         }
-        column.addView(block(note.first, 11f, note.second, Typeface.NORMAL, Gravity.CENTER_HORIZONTAL))
+        // Schriftgröße wie auf der Kachel
+        column.addView(block(note.first, 9f, note.second, Typeface.NORMAL, Gravity.CENTER_HORIZONTAL))
 
         val rows = snapshot?.watchRowsList.orEmpty()
         if (rows.isEmpty()) {
@@ -136,10 +138,11 @@ class WearAppActivity : Activity() {
         rows.forEach { row ->
             val line = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
+                // Die Kachel setzt die Zeilen ohne Abstand untereinander
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                ).apply { topMargin = dp(4f) }
+                )
             }
             val items = row.items.take(MAX_ROW_ITEMS)
             val shares = sharesOf(items)
@@ -163,7 +166,7 @@ class WearAppActivity : Activity() {
         column.addView(
             block(
                 getString(R.string.wear_list_hint),
-                10f,
+                9f,
                 HINT_COLOR,
                 Typeface.NORMAL,
                 Gravity.CENTER_HORIZONTAL,
@@ -236,12 +239,12 @@ class WearAppActivity : Activity() {
             }
 
             "button" -> {
-                val iconSize = dp(16f)
+                val iconSize = dp(14f)
                 cell.addView(
                     ImageView(this).apply {
                         setImageResource(TileIcons.drawable(item.icon))
                         layoutParams = LinearLayout.LayoutParams(iconSize, iconSize).apply {
-                            rightMargin = dp(6f)
+                            rightMargin = dp(4f)
                         }
                     }
                 )
@@ -249,7 +252,9 @@ class WearAppActivity : Activity() {
                     inline(
                         item.label.orEmpty(),
                         size,
-                        if (item.active) ACCENT else Color.WHITE,
+                        // Wie auf der Kachel: der Titel bleibt weiß, den Zustand
+                        // zeigt die Fläche und das „An/Aus“ rechts
+                        Color.WHITE,
                         gravity = align,
                         weight = 1f,
                     )
@@ -262,8 +267,9 @@ class WearAppActivity : Activity() {
                     )
                 }
 
-                cell.setPadding(dp(6f), dp(6f), dp(6f), dp(6f))
-                cell.background = rounded(
+                // Innenabstand und eckige Fläche wie auf der Kachel
+                cell.setPadding(dp(4f), dp(4f), dp(4f), dp(4f))
+                cell.background = buttonBackground(
                     if (!item.available) FAILED_BACKGROUND
                     else if (item.active) ACTIVE_BACKGROUND
                     else BUTTON_BACKGROUND
@@ -328,9 +334,9 @@ class WearAppActivity : Activity() {
         )
     }
 
-    private fun rounded(color: Int): GradientDrawable = GradientDrawable().apply {
+    /** Button-Fläche – eckig wie auf der Kachel. */
+    private fun buttonBackground(color: Int): GradientDrawable = GradientDrawable().apply {
         setColor(color)
-        cornerRadius = dp(10f).toFloat()
     }
 
     private fun alignGravity(align: String): Int = when (align.lowercase()) {
