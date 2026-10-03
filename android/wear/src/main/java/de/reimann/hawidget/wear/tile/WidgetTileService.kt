@@ -132,9 +132,23 @@ class WidgetTileService : TileService() {
          * die zwischengespeicherten alten Bilder.
          */
         private const val RESOURCES_VERSION = "2"
-        private const val FRESHNESS_MILLIS = 15 * 60 * 1000L
+
+        /**
+         * Wie lange die Kachel als „frisch“ gilt.
+         *
+         * Wear OS fragt die Kachel erst **nach** dieser Zeit wieder an – vorher
+         * liefert es die zwischengespeicherte Darstellung aus. Mit den früheren
+         * 15 Minuten wurde die Kachel beim Öffnen also gar nicht gefragt und
+         * konnte deshalb auch nicht beim Handy nachfragen: Nur die App-Ansicht
+         * (die beim Öffnen selbst anfragt) bekam neue Werte.
+         *
+         * Google empfiehlt, dafür höchstens einmal pro Minute zu aktualisieren.
+         */
+        private const val FRESHNESS_MILLIS = 60_000L
+
         /** Beim Anzeigen nachfragen, wenn der Stand älter ist als das hier. */
         private const val DISPLAY_REFRESH_MS = 60_000L
+
         /** So lange bleibt die Meldung „Druck fehlgeschlagen“ sichtbar. */
         private const val FAILED_HINT_MS = 20_000L
     }
