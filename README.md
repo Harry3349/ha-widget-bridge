@@ -351,18 +351,17 @@ Statt der automatischen Werteliste kann ein **Jinja-Template** genutzt werden
 
 ---
 
-## Werte anordnen
+## Werte
 
-Im Abschnitt **Werte** des Editors stellst du die Anordnung ein:
+Der Abschnitt **Werte** legt fest, *welche* Entities im Widget vorkommen – die
+Reihenfolge in der Liste ist die Reihenfolge im Widget. Die **Anordnung** (nebeneinander,
+Wert unter dem Namen) stellst du im **Zeilen-Layout** ein: eine Spalte entspricht dort einer
+Zeile mit mehreren Objekten. Ohne Zeilen erscheint jeder Wert in einer eigenen Zeile als
+`Name · Wert`.
 
-| Einstellung | Wirkung |
-|---|---|
-| **Nebeneinander: 1 Spalte** | Ein Wert pro Zeile (Standard) |
-| **Nebeneinander: 2 / 3 Spalten** | Die Werte stehen nebeneinander, gefüllt von links nach rechts |
-| **Wert unter dem Namen** | Im Feld steht der Name in der ersten Zeile, der Wert darunter |
+> Eine frühere Spalten-Einstellung (`value_columns` / `value_label_above`) existiert in der
+> App nicht mehr; ältere Definitionen mit diesem Feld werden weiterhin korrekt dargestellt.
 
-Bei mehreren Spalten ordnet die **App** die Werte an – das Widget-Layout enthält dafür
-feste, ausblendbare Felder, weil `RemoteViews` keine Views zur Laufzeit erzeugen kann.
 Ein gesetztes **Jinja-Template** ersetzt weiterhin die Werteliste und füllt den
 HTML-Bereich.
 
@@ -379,7 +378,7 @@ liegen also auf der Fläche, zu der das Widget gehört.
 |---|---|
 | **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
 | **Sensor** | Auswahl aus der Liste **Werte** oben; der Name von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
-| **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
+| **Button** | Auswahl aus der Liste **Buttons** oben – Beschriftung, Symbol, Service und Ziel kommen von dort und werden in allen Zeilen mitgeführt (umbenannt = überall neu) |
 | **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt; beim **Button** gilt sie nur für die Beschriftung (Symbol bleibt links, An/Aus rechts) |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
 | **Breite** | Anteil der Zeilenbreite in Prozent (z. B. 30 / 70); `0` oder leer = die Objekte teilen sich die Zeile gleichmäßig |

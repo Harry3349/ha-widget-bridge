@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import de.reimann.hawidget.data.HaClient
 import de.reimann.hawidget.data.HaEntity
+import de.reimann.hawidget.data.RowDef
 import de.reimann.hawidget.data.Settings
 import de.reimann.hawidget.data.WidgetDef
 import de.reimann.hawidget.data.WidgetJson
@@ -146,8 +147,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startEdit(def: WidgetDef) {
-        editor = def
-        editorSource = def
+        // Zeilen-Buttons auf den Stand der Button-Liste bringen (umbenannte
+        // Buttons zeigten in den Zeilen sonst ihren alten Namen)
+        editor = def.syncRowButtons()
+        editorSource = editor
         previewText = null
     }
 
@@ -303,7 +306,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveEditor() {
         val client = clientOrNull() ?: return
-        val def = editor ?: return
+        // Vor dem Speichern die Kopien in den Zeilen auffrischen
+        val def = editor?.syncRowButtons() ?: return
         if (def.name.isBlank()) {
             message = "Bitte einen Namen vergeben"
             return
@@ -324,7 +328,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun renderPreview() {
         val client = clientOrNull() ?: return
-        val def = editor ?: return
+        val def = editor?.syncRowButtons() ?: return
         busy = true
         viewModelScope.launch {
             val safe = if (def.name.isBlank()) def.copy(name = "Vorschau") else def
@@ -372,4 +376,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val PRESET_ASSET = "preset_shelly.json"
     }
+}
+
+/**
+ * Zeilen-Buttons auf den Stand der Button-Liste bringen.
+ *
+ * Eine Zeile speichert Beschriftung, Symbol, Service und Ziel ihres Buttons als
+ * Kopie. Wird der Button oben umbenannt, bliebe die Kopie veraltet – im Widget
+ * stünde weiter der alte Name. Vor dem Laden und Speichern wird deshalb
+ * aufgefrischt. `show_state` bleibt unangetastet: es ist eine eigene Einstellung
+ * der Zeile (`null` = vom Button erben).
+ */
+private fun WidgetDef.syncRowButtons(): WidgetDef {
+    if (rows.isEmpty()) return this
+    val byKey = buttons.associateBy { it.key }
+    return copy(
+        rows = rows.map { row ->
+            RowDef(
+                items = row.items.map { item ->
+                    val button = if (item.type == "button") byKey[item.key] else null
+                    if (button == null) {
+                        item
+                    } else {
+                        item.copy(
+                            label = button.label,
+                            icon = button.icon,
+                            service = button.service,
+                            entityId = button.entityId,
+                            stateEntity = button.stateEntity,
+                        )
+                    }
+                }
+            )
+        }
+    )
 }

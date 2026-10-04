@@ -205,14 +205,18 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
 
             if kind == "button":
                 state = states.get(item["key"], {})
+                definition = definitions.get(item["key"], {})
                 own_show = item.get("show_state")
-                fallback = definitions.get(item["key"], {}).get("show_state", True)
+                fallback = definition.get("show_state", True)
                 items.append(
                     {
                         "type": "button",
                         "key": item["key"],
-                        "label": item["label"],
-                        "icon": item.get("icon"),
+                        # Beschriftung und Symbol kommen aus dem Abschnitt "Buttons":
+                        # die Zeile hält nur eine Kopie, die nach dem Umbenennen
+                        # veraltet wäre (im Widget stand sonst der alte Name).
+                        "label": definition.get("label") or item["label"],
+                        "icon": definition.get("icon") or item.get("icon"),
                         "state_label": state.get("state_label", ""),
                         "show_state": bool(own_show if own_show is not None else fallback),
                         "active": state.get("active", False),

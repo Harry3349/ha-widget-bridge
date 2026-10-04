@@ -577,6 +577,38 @@ check(
     is None,
     "explizites null bedeutet ebenfalls erben",
 )
+
+# Umbenannter Button: die Zeile liefert den neuen Namen aus der Button-Liste
+umbenannt = store.normalize_widget(
+    hass,
+    {
+        "name": "Umbenannt",
+        "buttons": [
+            {
+                "key": "pc",
+                "label": "PC neu",
+                "service": "switch.toggle",
+                "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+            }
+        ],
+        "rows": [
+            {
+                "items": [
+                    {
+                        "type": "button",
+                        "key": "pc",
+                        "label": "PC alt",
+                        "service": "switch.toggle",
+                        "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                    }
+                ]
+            }
+        ],
+    },
+)
+umbenannt_render = render.row_view(hass, umbenannt)
+check(umbenannt_render[0]["items"][0]["label"] == "PC neu",
+      "Zeilen-Button übernimmt den neuen Namen aus der Button-Liste")
 expect_error(
     {"name": "Falsch", "rows": [{"items": [{"type": "sensor", "entity": "sensor.a", "label_above": "vielleicht"}]}]},
     "true oder false",
