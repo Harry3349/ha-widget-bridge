@@ -150,8 +150,8 @@ object WidgetRenderer {
     )
 
     /**
-     * Nur für Buttons: der Titel füllt den Platz zwischen Symbol (links) und
-     * „An/Aus“ (rechts) – nur seine Ausrichtung ist einstellbar.
+     * Nur für Buttons: die Beschriftung füllt den Platz zwischen Symbol (links)
+     * und „An/Aus“ (rechts) – nur ihre Ausrichtung ist einstellbar.
      */
     private val ROW_TITLE_IDS = intArrayOf(
         R.id.row_1_title_1, R.id.row_1_title_2, R.id.row_1_title_3,
@@ -384,7 +384,7 @@ object WidgetRenderer {
 
         views.setViewVisibility(cellId, View.VISIBLE)
         // Bei Buttons bestimmt nicht die Zelle die Lage, sondern das dehnbare
-        // Titelfeld (Symbol links, An/Aus rechts).
+        // Beschriftungsfeld (Symbol links, An/Aus rechts).
         views.setInt(
             cellId,
             "setHorizontalGravity",
@@ -438,7 +438,7 @@ object WidgetRenderer {
                 views.setImageViewResource(iconId, MdiIcons.drawable(item.icon))
                 views.setViewVisibility(iconId, View.VISIBLE)
 
-                // Symbol bleibt links, „An/Aus“ rechts – nur der Titel wandert
+                // Symbol bleibt links, „An/Aus“ rechts – nur die Beschriftung wandert
                 views.setTextViewTextSize(titleId, TypedValue.COMPLEX_UNIT_SP, size)
                 views.setTextColor(titleId, textColor)
                 views.setTextViewText(titleId, item.label.orEmpty())

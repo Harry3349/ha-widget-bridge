@@ -191,9 +191,9 @@
         <item name="android:textSize">11sp</item>
     </style>
 
-    <!-- Titel eines Buttons. Das Feld dehnt sich aus und schiebt damit das
-         Symbol nach links und „An/Aus“ nach rechts; die Ausrichtung des Textes
-         innerhalb des Feldes setzt die App zur Laufzeit. -->
+    <!-- Beschriftung eines Buttons. Das Feld dehnt sich aus und schiebt damit
+         das Symbol nach links und „An/Aus“ nach rechts; die Ausrichtung des
+         Textes innerhalb des Feldes setzt die App zur Laufzeit. -->
     <style name="WidgetRowTitle">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>

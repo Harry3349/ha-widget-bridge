@@ -702,7 +702,7 @@ private fun RowButtonDialog(
                     }
                     Text(
                         if (effectiveShow) {
-                            "„An/Aus“ erscheint rechts neben dem Titel."
+                            "„An/Aus“ erscheint rechts neben der Beschriftung."
                         } else {
                             "„An/Aus“ wird in dieser Zeile nicht angezeigt."
                         },
@@ -717,7 +717,7 @@ private fun RowButtonDialog(
                         width,
                         { width = it },
                         alignHint = "Das Symbol bleibt links, „An/Aus“ rechts – die " +
-                            "Ausrichtung verschiebt nur den Titel dazwischen.",
+                            "Ausrichtung verschiebt nur die Beschriftung dazwischen.",
                     )
                 }
             }

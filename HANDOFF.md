@@ -165,7 +165,10 @@ Regeln:
 * `rows` ersetzt – sobald **eine** Zeile existiert – Werte-Raster und Button-Zeilen.
 * `width` = Prozent der Zeilenbreite; `0` = teilt sich den **Rest** gleichmäßig.
 * In einem **Button** sitzt das Symbol immer links, „An/Aus“ immer rechts; die
-  Ausrichtung verschiebt nur den **Titel**.
+  Ausrichtung verschiebt nur die **Beschriftung**.
+* In einem **Sensor** steht der Wert neben dem Namen oder (mit `label_above`) darunter.
+* „An/Aus“ lässt sich pro Zeilen-Button setzen (`show_state`; Feld fehlt = es gilt die
+  Einstellung aus dem Abschnitt *Buttons*).
 * Ein Widget gehört **genau einer** Seite (`phone` oder `watch`). Uhr-Fassungen entstehen
   per **Duplizieren** (Ziel „Smartwatch-Widget“) – es gibt kein „gemeinsames“ Widget mehr.
 * Eine Uhr hat höchstens **eine** Fassung (Zuordnung löst den Knoten aus allen anderen).

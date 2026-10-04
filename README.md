@@ -380,7 +380,7 @@ liegen also auf der Fläche, zu der das Widget gehört.
 | **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
 | **Sensor** | Auswahl aus der Liste **Werte** oben; der Name von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
 | **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
-| **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt; beim **Button** gilt sie nur für den Titel (Symbol bleibt links, An/Aus rechts) |
+| **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt; beim **Button** gilt sie nur für die Beschriftung (Symbol bleibt links, An/Aus rechts) |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
 | **Breite** | Anteil der Zeilenbreite in Prozent (z. B. 30 / 70); `0` oder leer = die Objekte teilen sich die Zeile gleichmäßig |
 | **Wert unter dem Namen** | nur **Sensor**: Name in der ersten Zeile, Wert darunter (gilt auch auf der Uhr); aus = der Wert steht daneben |
@@ -392,9 +392,9 @@ wirken die eigenen Breiten ab Android 12 (dort kann `RemoteViews` die Breite set
 die Breiten unabhängig von der Android-Version.
 
 **In einem Button hat jedes Element seinen festen Platz:** Das Symbol sitzt immer **links**,
-„An/Aus“ immer **rechts** – die Einstellung *Ausrichtung* verschiebt nur den **Titel**
-dazwischen (links, mittig oder rechts). Ist „An/Aus“ abgeschaltet, nutzt der Titel die
-ganze Fläche und folgt der Ausrichtung über die volle Breite.
+„An/Aus“ immer **rechts** – die Einstellung *Ausrichtung* verschiebt nur die
+**Beschriftung** dazwischen (links, mittig oder rechts). Ist „An/Aus“ abgeschaltet, nutzt
+die Beschriftung die ganze Breite und folgt der Ausrichtung
 
 Sensoren und Buttons werden also **oben** angelegt (im Abschnitt *Werte* beziehungsweise
 *Buttons*) – dort werden sie aus Home Assistant ausgewählt und benannt. Im Zeilen-Editor

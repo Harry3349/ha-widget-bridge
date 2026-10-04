@@ -199,8 +199,9 @@ class WearAppActivity : Activity() {
 
         val cell = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            // Beim Button bestimmt das dehnbare Titelfeld die Lage: Symbol links,
-            // „An/Aus“ rechts – nur der Titel folgt der Ausrichtung.
+            // Beim Button bestimmt das dehnbare Beschriftungsfeld die Lage:
+            // Symbol links, „An/Aus“ rechts – nur die Beschriftung folgt der
+            // Ausrichtung.
             gravity = Gravity.CENTER_VERTICAL or
                 if (item.type == "button") Gravity.START else align
             layoutParams = LinearLayout.LayoutParams(
@@ -244,12 +245,12 @@ class WearAppActivity : Activity() {
                     inline(
                         item.label.orEmpty(),
                         size,
-                        // Wie auf der Kachel: der Titel bleibt weiß, den Zustand
-                        // zeigt die Fläche und das „An/Aus“ rechts
+                        // Wie auf der Kachel: die Beschriftung bleibt weiß, den
+                        // Zustand zeigt die Fläche und das „An/Aus“ rechts
                         Color.WHITE,
                         gravity = align,
                         weight = 1f,
-                        // Die Kachel zeigt den Titel immer einzeilig
+                        // Die Kachel zeigt die Beschriftung immer einzeilig
                         maxLines = 1,
                     )
                 )
@@ -306,8 +307,9 @@ class WearAppActivity : Activity() {
     }
 
     /**
-     * Ein Textfeld. Mit ``weight`` > 0 dehnt es sich aus (z. B. der Button-Titel,
-     * der das Symbol nach links und „An/Aus“ nach rechts schiebt).
+     * Ein Textfeld. Mit ``weight`` > 0 dehnt es sich aus (z. B. die
+     * Button-Beschriftung, die das Symbol nach links und „An/Aus“ nach rechts
+     * schiebt).
      */
     private fun inline(
         text: String,

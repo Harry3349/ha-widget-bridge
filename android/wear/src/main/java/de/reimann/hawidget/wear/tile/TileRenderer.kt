@@ -384,8 +384,8 @@ object TileRenderer {
                 )
 
                 val content = LayoutElementBuilders.Row.Builder()
-                    // Die Reihe füllt die Zelle – nur so hat der dehnbare Titel
-                    // Platz und schiebt „An/Aus“ an den rechten Rand.
+                    // Die Reihe füllt die Zelle – nur so hat die dehnbare
+                    // Beschriftung Platz und schiebt „An/Aus“ an den rechten Rand.
                     .setWidth(DimensionBuilders.expand())
                     .addContent(
                         LayoutElementBuilders.Image.Builder()
@@ -394,8 +394,8 @@ object TileRenderer {
                             .setHeight(DimensionBuilders.dp(14f))
                             .build()
                     )
-                    // Der Titel dehnt sich aus: Symbol bleibt links, „An/Aus“ rechts,
-                    // nur der Titel folgt der eingestellten Ausrichtung.
+                    // Die Beschriftung dehnt sich aus: Symbol bleibt links, „An/Aus“
+                    // rechts, nur die Beschriftung folgt der eingestellten Ausrichtung.
                     .addContent(
                         LayoutElementBuilders.Box.Builder()
                             .setWidth(DimensionBuilders.expand())
