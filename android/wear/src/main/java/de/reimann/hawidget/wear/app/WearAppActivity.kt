@@ -51,10 +51,12 @@ class WearAppActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             // Unten bewusst viel Platz: nur so lässt sich die letzte Zeile bis in
             // die Mitte scrollen, wo die runde Anzeige breit genug ist.
-            setPadding(dp(SIDE_PADDING_DP), dp(12f), dp(SIDE_PADDING_DP), dp(BOTTOM_PADDING_DP))
+            setPadding(sidePadding(), dp(TOP_PADDING_DP), sidePadding(), dp(BOTTOM_PADDING_DP))
         }
         scroll = ScrollView(this).apply {
             isFillViewport = true
+            // Die Kachel hat keinen Scrollbalken – der gehört hier auch nicht hin
+            isVerticalScrollBarEnabled = false
             addView(column)
         }
         setContentView(scroll)
@@ -135,7 +137,7 @@ class WearAppActivity : Activity() {
         // Schriftgröße aus dem Editor, angepasst an die Einstellung „Uhr“
         val scale = snapshot?.watchScale ?: 1f
         // Bezug für Prozent-Breiten: die Zeile ohne die seitlichen Polster
-        val rowWidthPx = resources.displayMetrics.widthPixels - 2 * dp(SIDE_PADDING_DP)
+        val rowWidthPx = resources.displayMetrics.widthPixels - 2 * sidePadding()
 
         rows.forEach { row ->
             val line = LinearLayout(this).apply {
@@ -300,6 +302,8 @@ class WearAppActivity : Activity() {
         setTextColor(color)
         typeface = Typeface.create(Typeface.DEFAULT, style)
         this.gravity = gravity
+        // Wie die Kachel: keine zusätzliche Schrift-Polsterung
+        includeFontPadding = false
         layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -317,13 +321,15 @@ class WearAppActivity : Activity() {
         color: Int,
         gravity: Int = Gravity.START,
         weight: Float = 0f,
-        maxLines: Int = 2,
+        maxLines: Int = 1,
     ): TextView = TextView(this).apply {
         this.text = text
         setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp)
         setTextColor(color)
         this.gravity = gravity
+        // Wie die Kachel: eine Zeile pro Textfeld, keine Schrift-Polsterung
         this.maxLines = maxLines
+        includeFontPadding = false
         layoutParams = LinearLayout.LayoutParams(
             if (weight > 0f) 0 else LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -367,6 +373,18 @@ class WearAppActivity : Activity() {
     private fun dp(value: Float): Int =
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, resources.displayMetrics).toInt()
 
+    /**
+     * Seitlicher Abstand **genau wie auf der Kachel**: 8 dp Polsterung der
+     * gesamten Kachel plus 10 % der Bildschirmbreite (16–24 dp) für die Rundung.
+     * Nur so sind die Zellen gleich breit und Texte brechen an derselben Stelle.
+     */
+    private fun sidePadding(): Int {
+        val metrics = resources.displayMetrics
+        val widthDp = metrics.widthPixels / metrics.density
+        val inset = (widthDp * 0.10f).coerceIn(16f, 24f)
+        return dp(8f + inset)
+    }
+
     private companion object {
         const val MAX_ROW_ITEMS = 3
 
@@ -374,8 +392,8 @@ class WearAppActivity : Activity() {
         const val PRESS_FAILED_MS = 20 * 1000L
         const val PRESS_RERENDER_MS = 1500L
 
-        /** Seitlicher Abstand: hält den Text aus der Rundung heraus. */
-        const val SIDE_PADDING_DP = 20f
+        /** Oben wie auf der Kachel (dort 10 dp Padding). */
+        const val TOP_PADDING_DP = 10f
 
         /** Zusätzlicher Platz unter der letzten Zeile (Scrollbereich). */
         const val BOTTOM_PADDING_DP = 80f
