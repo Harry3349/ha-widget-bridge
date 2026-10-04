@@ -482,13 +482,14 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
 | Feld | Bedeutung |
 |---|---|
 | `type` | `text`, `sensor` oder `button` |
-| `watch` | `false` = diese Zeile nur am Handy zeigen (Standard: `true`) |
 | `align` | `left`, `center` (Standard) oder `right` |
 | `size` | Schriftgröße des Objekts (8–30, Standard: `text_size`) |
 | `width` | Breite des Blocks in Prozent der Zeile (0–100, Standard: `0` = gleichmäßig) |
 | `color` | optionale Hex-Farbe (bei `sensor` sonst die automatische Farbe) |
 | `text` | nur `text`: der angezeigte Text |
 | `entity`, `label`, `threshold` | nur `sensor` |
+| `label_above` | nur `sensor`: `true` = Wert **unter** dem Namen, `false` (Standard) = daneben |
+| `show_state` | nur `button`: `false` = kein „An/Aus“ in dieser Zeile; fehlt das Feld, gilt die Einstellung aus `buttons[]` |
 | `key`, `label`, `icon`, `service`, `entity_id`, `state_entity` | nur `button` (wie in `buttons[]`; jeder Zeilen-Button ist ebenfalls eine Button-Entity in HA) |
 
 ```json
@@ -496,9 +497,10 @@ Alpha-Wert: `00` durchsichtig … `FF` deckend).
   { "items": [ { "type": "text", "text": "Wohnzimmer", "align": "left", "size": 16 } ] },
   { "items": [
       { "type": "button", "key": "licht", "label": "Licht", "icon": "mdi:lightbulb",
-        "service": "light.toggle", "entity_id": "light.wohnzimmer", "align": "left", "size": 14 },
+        "service": "light.toggle", "entity_id": "light.wohnzimmer", "align": "left", "size": 14,
+        "show_state": false },
       { "type": "sensor", "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
-        "label": "Außen", "align": "right", "size": 14 }
+        "label": "Außen", "align": "right", "size": 14, "label_above": true }
   ] }
 ]
 ```

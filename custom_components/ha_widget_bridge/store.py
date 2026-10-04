@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DEFAULT_ROW_ALIGN,
+    DEFAULT_ROW_LABEL_ABOVE,
     DEFAULT_THEME,
     DEFAULT_TEXT_SIZE,
     DEFAULT_THRESHOLD,
@@ -323,6 +324,11 @@ def _normalize_row_item(
             "width": width,
             "color": color,
             "threshold": threshold,
+            # Wert unter dem Namen (true) oder daneben (false, Standard)
+            "label_above": _as_bool(
+                item.get("label_above", DEFAULT_ROW_LABEL_ABOVE),
+                f"Zeile {row}.label_above",
+            ),
         }
 
     button = _normalize_button(hass, item, f"Zeile {row}")
@@ -331,6 +337,10 @@ def _normalize_row_item(
             f"Zeile {row}: Schlüssel '{button['key']}' kommt doppelt vor"
         )
     seen_keys.add(button["key"])
+    if "show_state" not in item:
+        # Keine eigene Einstellung in der Zeile: „An/Aus“ wird vom Button aus
+        # dem Abschnitt „Buttons“ geerbt (None wird in row_view aufgelöst).
+        button["show_state"] = None
     button.update({
         "type": "button",
         "align": align,
@@ -444,7 +454,11 @@ def normalize_widget(hass: HomeAssistant, payload: Any) -> dict[str, Any]:
         for item in row["items"]:
             if item["type"] == "button" and item["key"] not in known:
                 known.add(item["key"])
-                buttons.append(item)
+                merged = dict(item)
+                if merged.get("show_state") is None:
+                    # In der Button-Liste gilt ein fester Wert (None = erben)
+                    merged["show_state"] = True
+                buttons.append(merged)
     if len(buttons) > MAX_BUTTONS:
         raise WidgetValidationError(f"Maximal {MAX_BUTTONS} Buttons pro Widget")
 

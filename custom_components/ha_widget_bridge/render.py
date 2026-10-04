@@ -163,8 +163,8 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
     default_threshold = float(widget.get("threshold", DEFAULT_THRESHOLD))
     default_size = float(widget.get("text_size", DEFAULT_TEXT_SIZE))
     states = {button["key"]: button for button in button_view(hass, widget)}
-    # "An/Aus" ist eine Eigenschaft des Buttons (oben im Editor), nicht der Zeile:
-    # so wirkt eine nderung dort sofort in allen Zeilen.
+    # „An/Aus“ ist je Zeilen-Button abschaltbar; fehlt die eigene Einstellung,
+    # gilt der Wert aus dem Button-Abschnitt (oben im Editor).
     definitions = {b["key"]: b for b in widget.get("buttons") or []}
 
     rows: list[dict[str, Any]] = []
@@ -198,12 +198,15 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                         "align": align,
                         "size": size,
                         "width": float(item.get("width") or 0),
+                        "label_above": bool(item.get("label_above")),
                     }
                 )
                 continue
 
             if kind == "button":
                 state = states.get(item["key"], {})
+                own_show = item.get("show_state")
+                fallback = definitions.get(item["key"], {}).get("show_state", True)
                 items.append(
                     {
                         "type": "button",
@@ -211,7 +214,7 @@ def row_view(hass: HomeAssistant, widget: dict[str, Any]) -> list[dict[str, Any]
                         "label": item["label"],
                         "icon": item.get("icon"),
                         "state_label": state.get("state_label", ""),
-                        "show_state": definitions.get(item["key"], item).get("show_state", True),
+                        "show_state": bool(own_show if own_show is not None else fallback),
                         "active": state.get("active", False),
                         "available": state.get("available", False),
                         "align": align,

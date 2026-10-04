@@ -211,17 +211,23 @@ class WearAppActivity : Activity() {
 
         when (item.type) {
             "sensor" -> {
-                val box = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = align
-                }
-                // Ohne eingetragenen Namen steht nur der Wert
                 val label = item.label.orEmpty()
-                if (label.isNotBlank()) {
+                if (item.labelAbove && label.isNotBlank()) {
+                    // Wert unter dem Namen – wie auf der Kachel
+                    val box = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        gravity = align
+                    }
                     box.addView(inline(label, small, LABEL_COLOR))
+                    box.addView(inline(item.text.orEmpty(), size, parseColor(item.color, Color.WHITE)))
+                    cell.addView(box)
+                } else {
+                    // Wert neben dem Namen (Standard) – ohne Namen nur der Wert
+                    if (label.isNotBlank()) {
+                        cell.addView(inline(label + " ", small, LABEL_COLOR))
+                    }
+                    cell.addView(inline(item.text.orEmpty(), size, parseColor(item.color, Color.WHITE)))
                 }
-                box.addView(inline(item.text.orEmpty(), size, parseColor(item.color, Color.WHITE)))
-                cell.addView(box)
             }
 
             "button" -> {

@@ -67,6 +67,8 @@ MAX_ROW_ITEMS = 3
 ROW_ITEM_TYPES = ("text", "sensor", "button")
 ROW_ALIGNMENTS = ("left", "center", "right")
 DEFAULT_ROW_ALIGN = "center"
+# Sensor in einer Zeile: Wert neben dem Namen (false, Standard) oder darunter
+DEFAULT_ROW_LABEL_ABOVE = False
 
 # Einstellungen für die Uhr (die Kachel ist klein – der Nutzer entscheidet in der
 # Handy-App, welche Zeilen dorthin kommen und wie groß sie sind).

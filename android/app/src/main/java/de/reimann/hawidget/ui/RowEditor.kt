@@ -110,10 +110,16 @@ fun RowEditorSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(item.summary, style = MaterialTheme.typography.bodyMedium)
                             val missing = isMissing(item, values, buttons)
+                            val extras = buildList {
+                                add("Ausrichtung ${alignLabel(item.align)}")
+                                add("${item.size.toInt()} sp")
+                                add(item.widthLabel)
+                                if (item.type == "sensor" && item.labelAbove) add("Wert unten")
+                                if (item.type == "button" && item.showState == false) add("ohne An/Aus")
+                                if (missing) add("nicht mehr in der Liste oben")
+                            }
                             Text(
-                                "Ausrichtung ${alignLabel(item.align)} · ${item.size.toInt()} sp · " +
-                                    item.widthLabel +
-                                    if (missing) " · nicht mehr in der Liste oben" else "",
+                                extras.joinToString(" · "),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (missing) {
                                     MaterialTheme.colorScheme.error
@@ -495,6 +501,7 @@ private fun RowSensorDialog(
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
     var width by remember { mutableStateOf(widthText(initial?.width)) }
+    var labelAbove by remember { mutableStateOf(initial?.labelAbove ?: false) }
 
     val chosen = values.firstOrNull { it.entity == entity }
 
@@ -540,6 +547,18 @@ private fun RowSensorDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Switch(checked = labelAbove, onCheckedChange = { labelAbove = it })
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text("Wert unter dem Titel", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Aus = der Wert steht neben dem Namen.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     AlignSizeFields(align, { align = it }, size, { size = it }, width, { width = it })
                 }
             }
@@ -557,6 +576,7 @@ private fun RowSensorDialog(
                             align = align,
                             size = sizeOf(size, 14f),
                             width = widthOf(width),
+                            labelAbove = labelAbove,
                             threshold = chosen?.threshold ?: initial?.threshold,
                         )
                     )
@@ -633,8 +653,12 @@ private fun RowButtonDialog(
     var align by remember { mutableStateOf(initial?.align ?: "center") }
     var size by remember { mutableStateOf((initial?.size ?: 14f).toInt().toString()) }
     var width by remember { mutableStateOf(widthText(initial?.width)) }
+    // null = wie im Abschnitt „Buttons“ eingestellt
+    var showState by remember { mutableStateOf(initial?.showState) }
 
     val chosen = buttons.firstOrNull { it.key == key }
+    // Wirksame Einstellung für die Hinweistexte
+    val effectiveShow = showState ?: chosen?.showState ?: true
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -658,6 +682,33 @@ private fun RowButtonDialog(
                         },
                         onSelect = { index -> key = buttons[index].key },
                     )
+                    Text("„An/Aus“ anzeigen", style = MaterialTheme.typography.bodyMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilterChip(
+                            selected = showState == null,
+                            onClick = { showState = null },
+                            label = { Text("wie oben") },
+                        )
+                        FilterChip(
+                            selected = showState == true,
+                            onClick = { showState = true },
+                            label = { Text("anzeigen") },
+                        )
+                        FilterChip(
+                            selected = showState == false,
+                            onClick = { showState = false },
+                            label = { Text("ausblenden") },
+                        )
+                    }
+                    Text(
+                        if (effectiveShow) {
+                            "„An/Aus“ erscheint rechts neben dem Titel."
+                        } else {
+                            "„An/Aus“ wird in dieser Zeile nicht angezeigt."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     AlignSizeFields(
                         align,
                         { align = it },
@@ -668,17 +719,6 @@ private fun RowButtonDialog(
                         alignHint = "Das Symbol bleibt links, „An/Aus“ rechts – die " +
                             "Ausrichtung verschiebt nur den Titel dazwischen.",
                     )
-                    chosen?.let { button ->
-                        Text(
-                            if (button.showState) {
-                                "„An/Aus“ wird angezeigt – abschaltbar oben im Abschnitt „Buttons“."
-                            } else {
-                                "„An/Aus“ ist oben im Abschnitt „Buttons“ abgeschaltet."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
             }
         },
@@ -696,7 +736,7 @@ private fun RowButtonDialog(
                             service = button.service,
                             entityId = button.entityId,
                             stateEntity = button.stateEntity,
-                            showState = button.showState,
+                            showState = showState,
                             stateLabelOn = button.stateLabelOn,
                             stateLabelOff = button.stateLabelOff,
                             align = align,

@@ -41,8 +41,13 @@ data class RowItem(
     val size: Float = 14f,
     /** Breite des Blocks in der Zeile in Prozent (0 = gleiche Anteile). */
     val width: Float = 0f,
-    /** „An/Aus“ anzeigen (nur Buttons). */
-    val showState: Boolean = true,
+    /**
+     * „An/Aus“ anzeigen (nur Buttons). ``null`` = nicht selbst eingestellt,
+     * dann gilt die Einstellung aus dem Abschnitt „Buttons“.
+     */
+    val showState: Boolean? = null,
+    /** Wert unter dem Namen statt daneben (nur Sensoren). */
+    val labelAbove: Boolean = false,
     val threshold: Double? = null,
     // Button
     val key: String? = null,
@@ -162,7 +167,12 @@ data class WidgetSnapshot(
             return rows.filter { it.items.isNotEmpty() }.map { row ->
                 row.items.joinToString("    ") { item ->
                     val text = when (item.type) {
-                        "sensor" -> listOfNotNull(item.label, item.text).joinToString(" ")
+                        "sensor" ->
+                            if (item.labelAbove) {
+                                listOfNotNull(item.label, item.text).joinToString("\n")
+                            } else {
+                                listOfNotNull(item.label, item.text).joinToString(" ")
+                            }
                         "button" -> listOfNotNull(item.label, item.stateLabel).joinToString(" ")
                         else -> item.text.orEmpty()
                     }

@@ -463,6 +463,102 @@ check(breiten_render[0]["items"][1]["show_state"] is False,
 check(store.normalize_widget(hass, {"name": "Ohne"})["buttons"] == [],
       "ohne Buttons bleibt die Liste leer")
 
+# Sensor in der Zeile: Wert unter dem Titel oder daneben; „An/Aus“ je Zeile
+anordnung_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Anordnung",
+        "buttons": [
+            {
+                "key": "licht",
+                "label": "Licht",
+                "service": "switch.toggle",
+                "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+            }
+        ],
+        "rows": [
+            {
+                "items": [
+                    {
+                        "type": "sensor",
+                        "entity": "sensor.wohnzimmer_shelly_erik_pc_leistung",
+                        "label": "PC",
+                        "label_above": True,
+                    },
+                    {
+                        "type": "sensor",
+                        "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
+                    },
+                ]
+            },
+            {
+                "items": [
+                    {
+                        "type": "button",
+                        "key": "licht",
+                        "label": "Licht",
+                        "service": "switch.toggle",
+                        "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                        "show_state": False,
+                    }
+                ]
+            },
+        ],
+    },
+)
+check(anordnung_widget["rows"][0]["items"][0]["label_above"] is True,
+      "Sensor: Wert unter dem Titel wird gespeichert")
+check(anordnung_widget["rows"][0]["items"][1]["label_above"] is False,
+      "Sensor: Standard ist Wert neben dem Titel")
+check(anordnung_widget["rows"][1]["items"][0]["show_state"] is False,
+      "Zeilen-Button: An/Aus lässt sich je Zeile abschalten")
+anordnung_render = render.row_view(hass, anordnung_widget)
+check(anordnung_render[0]["items"][0]["label_above"] is True,
+      "Wert-unten-Einstellung kommt im Snapshot an")
+check(anordnung_render[1]["items"][0]["show_state"] is False,
+      "eigene An/Aus-Einstellung der Zeile gewinnt")
+check(anordnung_widget["buttons"][0]["show_state"] is True,
+      "der Button in der Liste oben behält sein eigenes An/Aus")
+
+# Ohne eigene Einstellung erbt der Zeilen-Button „An/Aus“ aus der Button-Liste
+erbe_widget = store.normalize_widget(
+    hass,
+    {
+        "name": "Erbe",
+        "buttons": [
+            {
+                "key": "licht",
+                "label": "Licht",
+                "service": "switch.toggle",
+                "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                "show_state": False,
+            }
+        ],
+        "rows": [
+            {
+                "items": [
+                    {
+                        "type": "button",
+                        "key": "licht",
+                        "label": "Licht",
+                        "service": "switch.toggle",
+                        "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                    }
+                ]
+            }
+        ],
+    },
+)
+check(erbe_widget["rows"][0]["items"][0]["show_state"] is None,
+      "Zeilen-Button ohne eigene Einstellung erbt (None)")
+check(render.row_view(hass, erbe_widget)[0]["items"][0]["show_state"] is False,
+      "Snapshot löst das Erbe auf: An/Aus aus der Button-Liste gilt")
+expect_error(
+    {"name": "Falsch", "rows": [{"items": [{"type": "sensor", "entity": "sensor.a", "label_above": "vielleicht"}]}]},
+    "true oder false",
+    "label_above muss wahr/falsch sein",
+)
+
 # Ziel (Handy/Uhr) und Zuordnung zu konkreten Uhren
 ziel_widget = store.normalize_widget(
     hass,

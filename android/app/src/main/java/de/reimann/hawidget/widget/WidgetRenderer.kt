@@ -408,16 +408,29 @@ object WidgetRenderer {
 
         when (item.type) {
             "sensor" -> {
-                views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
-                views.setTextColor(mainId, color(item.color, textColor))
-                views.setTextViewText(mainId, item.text.orEmpty())
-                views.setViewVisibility(mainId, View.VISIBLE)
-
                 val label = item.label.orEmpty()
-                if (label.isNotBlank()) {
-                    views.setTextViewTextSize(beforeId, TypedValue.COMPLEX_UNIT_SP, smallSize)
-                    views.setTextViewText(beforeId, label)
-                    views.setViewVisibility(beforeId, View.VISIBLE)
+                if (item.labelAbove && label.isNotBlank()) {
+                    // Wert unter dem Namen: beide Zeilen in einem Feld – die
+                    // Zelle ist horizontal (RemoteViews kann die Ausrichtung
+                    // nicht ändern), also per Zeilenumbruch im Text.
+                    views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
+                    views.setTextViewText(
+                        mainId,
+                        Html.fromHtml(stackedHtml(label, item), Html.FROM_HTML_MODE_LEGACY),
+                    )
+                    views.setInt(mainId, "setGravity", alignGravity(item.align))
+                    views.setViewVisibility(mainId, View.VISIBLE)
+                } else {
+                    views.setTextViewTextSize(mainId, TypedValue.COMPLEX_UNIT_SP, size)
+                    views.setTextColor(mainId, color(item.color, textColor))
+                    views.setTextViewText(mainId, item.text.orEmpty())
+                    views.setViewVisibility(mainId, View.VISIBLE)
+
+                    if (label.isNotBlank()) {
+                        views.setTextViewTextSize(beforeId, TypedValue.COMPLEX_UNIT_SP, smallSize)
+                        views.setTextViewText(beforeId, label)
+                        views.setViewVisibility(beforeId, View.VISIBLE)
+                    }
                 }
             }
 
@@ -433,8 +446,10 @@ object WidgetRenderer {
                 views.setViewVisibility(titleId, View.VISIBLE)
 
                 val stateLabel = item.stateLabel.orEmpty()
-                // „An/Aus“ nur zeigen, wenn es im Editor eingeschaltet ist
-                if (item.showState && stateLabel.isNotBlank()) {
+                // „An/Aus“ nur zeigen, wenn es eingeschaltet ist (null = vom
+                // Button im Abschnitt „Buttons“ geerbt, dort Standard: an)
+                val showState = item.showState != false
+                if (showState && stateLabel.isNotBlank()) {
                     views.setTextViewTextSize(afterId, TypedValue.COMPLEX_UNIT_SP, smallSize)
                     views.setTextViewText(afterId, stateLabel)
                     views.setViewVisibility(afterId, View.VISIBLE)
@@ -537,6 +552,11 @@ object WidgetRenderer {
     private fun inlineHtml(value: ValueState): String =
         "<b>${escape(value.label)}</b> · " +
             "<font color='${escape(value.color)}'>${escape(value.text)}</font>"
+
+    /** Name in der ersten, Wert in der zweiten Zeile (Sensor mit „Wert unten“). */
+    private fun stackedHtml(label: String, item: RowItem): String =
+        "<font color='#B3FFFFFF'><small>${escape(label)}</small></font><br>" +
+            "<font color='${escape(item.color ?: "#FFFFFF")}'>${escape(item.text.orEmpty())}</font>"
 
     /** Texte aus Home Assistant vor der HTML-Ausgabe entschärfen. */
     private fun escape(text: String): String = text

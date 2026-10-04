@@ -162,7 +162,12 @@ object WidgetJson {
                     align = json.optString("align", "center"),
                     size = json.optDouble("size", 14.0).toFloat(),
                     width = json.optDouble("width", 0.0).toFloat().coerceIn(0f, 100f),
-                    showState = json.optBoolean("show_state", true),
+                    showState = if (json.has("show_state") && !json.isNull("show_state")) {
+                        json.optBoolean("show_state", true)
+                    } else {
+                        null
+                    },
+                    labelAbove = json.optBoolean("label_above", false),
                     threshold = if (json.has("threshold") && !json.isNull("threshold")) {
                         json.optDouble("threshold")
                     } else {
@@ -288,14 +293,17 @@ object WidgetJson {
                         entry.put("entity", item.entity.orEmpty())
                         item.label?.takeIf { it.isNotBlank() }?.let { entry.put("label", it) }
                         item.threshold?.let { entry.put("threshold", it) }
+                        // Wert unter dem Namen statt daneben
+                        entry.put("label_above", item.labelAbove)
                     }
 
                     "button" -> {
                         item.key?.takeIf { it.isNotBlank() }?.let { entry.put("key", it) }
                         entry.put("label", item.label.orEmpty())
                         entry.put("service", item.service)
-                        // "show_state" wird bewusst NICHT mitgeschrieben: es gehört zum
-                        // Button im Abschnitt "Buttons" und wirkt für alle Zeilen.
+                        // Eigene „An/Aus“-Einstellung dieser Zeile; null = es gilt
+                        // die Einstellung aus dem Abschnitt "Buttons".
+                        item.showState?.let { entry.put("show_state", it) }
                         item.icon?.takeIf { it.isNotBlank() }?.let { entry.put("icon", it) }
                         item.entityId?.takeIf { it.isNotBlank() }
                             ?.let { entry.put("entity_id", it) }

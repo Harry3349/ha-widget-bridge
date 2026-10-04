@@ -210,9 +210,15 @@ object TileRenderer {
     private fun rowHeightDp(row: RowDef, scale: Float): Float =
         row.items.maxOfOrNull { item ->
             when (item.type) {
-                // Button: Symbol 14 dp + Polsterung; Sensor: eine Textzeile
+                // Button: Symbol 14 dp + Polsterung; Sensor: eine Textzeile,
+                // mit „Wert unten“ zwei Zeilen
                 "button" -> 20f * scale
-                "sensor" -> 15f * scale
+                "sensor" ->
+                    if (item.labelAbove && !item.label.isNullOrBlank()) {
+                        15f * scale + (item.size * scale - 3f).coerceAtLeast(9f) * 1.3f
+                    } else {
+                        15f * scale
+                    }
                 else -> (item.size * scale).coerceIn(8f, 30f) * 1.3f + 4f
             }
         } ?: 0f
@@ -323,17 +329,28 @@ object TileRenderer {
 
         when (item.type) {
             "sensor" -> {
-                // Ohne eingetragenen Namen steht nur der Wert (kein leerer Platz)
-                val sensor = LayoutElementBuilders.Column.Builder()
-                    .setHorizontalAlignment(align)
                 val label = item.label.orEmpty()
-                if (label.isNotBlank()) {
-                    sensor.addContent(text(label, LABEL_COLOR, small))
+                if (item.labelAbove && label.isNotBlank()) {
+                    // Wert unter dem Namen – zwei Zeilen übereinander
+                    val sensor = LayoutElementBuilders.Column.Builder()
+                        .setHorizontalAlignment(align)
+                        .addContent(text(label, LABEL_COLOR, small))
+                        .addContent(
+                            text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
+                        )
+                    box.addContent(sensor.build())
+                } else {
+                    // Wert neben dem Namen (Standard)
+                    val sensor = LayoutElementBuilders.Row.Builder()
+                        .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
+                    if (label.isNotBlank()) {
+                        sensor.addContent(text(label + " ", LABEL_COLOR, small))
+                    }
+                    sensor.addContent(
+                        text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
+                    )
+                    box.addContent(sensor.build())
                 }
-                sensor.addContent(
-                    text(item.text.orEmpty(), parseColor(item.color, Color.WHITE), size)
-                )
-                box.addContent(sensor.build())
             }
 
             "button" -> {

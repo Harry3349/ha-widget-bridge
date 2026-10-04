@@ -39,8 +39,10 @@ data class RowItem(
     val size: Float = 14f,
     /** Breite des Blocks in der Zeile in Prozent (0 = gleiche Anteile). */
     val width: Float = 0f,
-    /** „An/Aus“ anzeigen (nur Buttons). */
+    /** „An/Aus“ anzeigen (nur Buttons; im Snapshot bereits aufgelöst). */
     val showState: Boolean = true,
+    /** Wert unter dem Namen statt daneben (nur Sensoren). */
+    val labelAbove: Boolean = false,
     // Button
     val key: String? = null,
     val icon: String? = null,
