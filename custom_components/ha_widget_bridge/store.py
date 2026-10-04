@@ -337,9 +337,10 @@ def _normalize_row_item(
             f"Zeile {row}: Schlüssel '{button['key']}' kommt doppelt vor"
         )
     seen_keys.add(button["key"])
-    if "show_state" not in item:
-        # Keine eigene Einstellung in der Zeile: „An/Aus“ wird vom Button aus
-        # dem Abschnitt „Buttons“ geerbt (None wird in row_view aufgelöst).
+    if item.get("show_state") is None:
+        # Keine eigene Einstellung in der Zeile (Feld fehlt oder ist null):
+        # „An/Aus“ wird vom Button aus dem Abschnitt „Buttons“ geerbt
+        # (None wird in row_view aufgelöst).
         button["show_state"] = None
     button.update({
         "type": "button",

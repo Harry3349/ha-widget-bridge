@@ -378,12 +378,13 @@ liegen also auf der Fläche, zu der das Widget gehört.
 | Einstellung pro Objekt | Bedeutung |
 |---|---|
 | **Text** | fester Text (z. B. eine Überschrift) – frei eintippbar |
-| **Sensor** | Auswahl aus der Liste **Werte** oben; die Beschriftung von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
+| **Sensor** | Auswahl aus der Liste **Werte** oben; der Name von dort wird übernommen und kann pro Zeile überschrieben werden – bleibt das Namensfeld leer, wird **nur der Wert** angezeigt |
 | **Button** | Auswahl aus der Liste **Buttons** oben (Beschriftung, Service, Symbol kommen von dort) |
 | **Ausrichtung** | links, mittig oder rechts – innerhalb des Platzes, den das Objekt in der Zeile bekommt; beim **Button** gilt sie nur für den Titel (Symbol bleibt links, An/Aus rechts) |
 | **Schriftgröße** | 8–30 sp, unabhängig pro Objekt |
 | **Breite** | Anteil der Zeilenbreite in Prozent (z. B. 30 / 70); `0` oder leer = die Objekte teilen sich die Zeile gleichmäßig |
-| **An/Aus** | gilt pro Button und wird im Abschnitt *Buttons* ein-/ausgeschaltet |
+| **Wert unter dem Namen** | nur **Sensor**: Name in der ersten Zeile, Wert darunter (gilt auch auf der Uhr); aus = der Wert steht daneben |
+| **An/Aus** | nur **Button**: `wie oben` übernimmt die Einstellung aus dem Abschnitt *Buttons*, sonst lässt sich „An/Aus“ **pro Zeile** an- oder abschalten |
 
 Bei Prozentangaben bekommen die übrigen Objekte der Zeile den Rest gleichmäßig. Am Handy
 wirken die eigenen Breiten ab Android 12 (dort kann `RemoteViews` die Breite setzen); auf

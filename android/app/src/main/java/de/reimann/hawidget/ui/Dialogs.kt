@@ -123,7 +123,7 @@ fun ValueEditorDialog(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Beschriftung (optional)") },
+                    label = { Text("Name (optional)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -243,7 +243,7 @@ fun ButtonEditorDialog(
                 )
                 OutlinedButton(onClick = { pickerTarget = "state" }) { Text("Zustands-Entity wählen" ) }
 
-                // „An/Aus“ neben dem Namen anzeigen oder nicht
+                // „An/Aus“ neben der Beschriftung anzeigen oder nicht
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(checked = showState, onCheckedChange = { showState = it })
                     Spacer(Modifier.width(8.dp))

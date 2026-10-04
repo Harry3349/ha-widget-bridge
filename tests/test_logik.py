@@ -463,7 +463,7 @@ check(breiten_render[0]["items"][1]["show_state"] is False,
 check(store.normalize_widget(hass, {"name": "Ohne"})["buttons"] == [],
       "ohne Buttons bleibt die Liste leer")
 
-# Sensor in der Zeile: Wert unter dem Titel oder daneben; „An/Aus“ je Zeile
+# Sensor in der Zeile: Wert unter dem Namen oder daneben; „An/Aus“ je Zeile
 anordnung_widget = store.normalize_widget(
     hass,
     {
@@ -507,9 +507,9 @@ anordnung_widget = store.normalize_widget(
     },
 )
 check(anordnung_widget["rows"][0]["items"][0]["label_above"] is True,
-      "Sensor: Wert unter dem Titel wird gespeichert")
+      "Sensor: Wert unter dem Namen wird gespeichert")
 check(anordnung_widget["rows"][0]["items"][1]["label_above"] is False,
-      "Sensor: Standard ist Wert neben dem Titel")
+      "Sensor: Standard ist Wert neben dem Namen")
 check(anordnung_widget["rows"][1]["items"][0]["show_state"] is False,
       "Zeilen-Button: An/Aus lässt sich je Zeile abschalten")
 anordnung_render = render.row_view(hass, anordnung_widget)
@@ -553,6 +553,30 @@ check(erbe_widget["rows"][0]["items"][0]["show_state"] is None,
       "Zeilen-Button ohne eigene Einstellung erbt (None)")
 check(render.row_view(hass, erbe_widget)[0]["items"][0]["show_state"] is False,
       "Snapshot löst das Erbe auf: An/Aus aus der Button-Liste gilt")
+check(
+    store.normalize_widget(
+        hass,
+        {
+            "name": "Null",
+            "rows": [
+                {
+                    "items": [
+                        {
+                            "type": "button",
+                            "key": "licht",
+                            "label": "Licht",
+                            "service": "switch.toggle",
+                            "entity_id": "switch.wohnzimmer_shelly_erik_pc",
+                            "show_state": None,
+                        }
+                    ]
+                }
+            ],
+        },
+    )["rows"][0]["items"][0]["show_state"]
+    is None,
+    "explizites null bedeutet ebenfalls erben",
+)
 expect_error(
     {"name": "Falsch", "rows": [{"items": [{"type": "sensor", "entity": "sensor.a", "label_above": "vielleicht"}]}]},
     "true oder false",

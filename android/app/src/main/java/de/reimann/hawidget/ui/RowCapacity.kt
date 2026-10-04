@@ -33,7 +33,7 @@ object RowCapacity {
             val size = item.size.coerceIn(8f, 30f)
             val own = when (item.type) {
                 "button" -> 26f
-                // „Wert unter dem Titel“ = eine zweite (kleinere) Zeile
+                // „Wert unter dem Namen“ = eine zweite (kleinere) Zeile
                 "sensor" ->
                     if (item.labelAbove && !item.label.isNullOrBlank()) {
                         size * 1.45f + (size - 3f).coerceAtLeast(9f) * 1.45f + 2f

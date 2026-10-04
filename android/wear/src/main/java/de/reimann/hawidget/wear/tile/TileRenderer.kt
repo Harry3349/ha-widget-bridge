@@ -211,7 +211,7 @@ object TileRenderer {
         row.items.maxOfOrNull { item ->
             when (item.type) {
                 // Button: Symbol 14 dp + Polsterung; Sensor: eine Textzeile,
-                // mit „Wert unten“ zwei Zeilen
+                // mit „Wert unter dem Namen“ zwei Zeilen
                 "button" -> 20f * scale
                 "sensor" ->
                     if (item.labelAbove && !item.label.isNullOrBlank()) {

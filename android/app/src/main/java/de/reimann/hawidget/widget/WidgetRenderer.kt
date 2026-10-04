@@ -553,7 +553,7 @@ object WidgetRenderer {
         "<b>${escape(value.label)}</b> · " +
             "<font color='${escape(value.color)}'>${escape(value.text)}</font>"
 
-    /** Name in der ersten, Wert in der zweiten Zeile (Sensor mit „Wert unten“). */
+    /** Name in der ersten, Wert in der zweiten Zeile (Sensor mit „Wert unter dem Namen“). */
     private fun stackedHtml(label: String, item: RowItem): String =
         "<font color='#B3FFFFFF'><small>${escape(label)}</small></font><br>" +
             "<font color='${escape(item.color ?: "#FFFFFF")}'>${escape(item.text.orEmpty())}</font>"

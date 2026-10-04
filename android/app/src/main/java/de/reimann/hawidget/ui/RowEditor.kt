@@ -48,9 +48,9 @@ fun RowEditorSection(
     Text(
         "Der freie Aufbau dieses Widgets: pro Zeile bis zu drei Objekte – Text, Sensor " +
             "oder Button. Sensoren und Buttons kommen aus den Listen oben („Werte“ und " +
-            "„Buttons“), dort bekommen sie ihren Namen; hier stellst du Ausrichtung und " +
-            "Schriftgröße ein. Sobald eine Zeile angelegt ist, ersetzt dieses Layout die " +
-            "Werte- und Button-Liste oben.",
+            "„Buttons“) – dort bekommen sie ihren Namen (Sensoren) bzw. ihre Beschriftung " +
+            "(Buttons); hier stellst du Ausrichtung und Schriftgröße ein. Sobald eine Zeile " +
+            "angelegt ist, ersetzt dieses Layout die Werte- und Button-Liste oben.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -114,7 +114,7 @@ fun RowEditorSection(
                                 add("Ausrichtung ${alignLabel(item.align)}")
                                 add("${item.size.toInt()} sp")
                                 add(item.widthLabel)
-                                if (item.type == "sensor" && item.labelAbove) add("Wert unten")
+                                if (item.type == "sensor" && item.labelAbove) add("Wert unter dem Namen")
                                 if (item.type == "button" && item.showState == false) add("ohne An/Aus")
                                 if (missing) add("nicht mehr in der Liste oben")
                             }
@@ -551,9 +551,9 @@ private fun RowSensorDialog(
                         Switch(checked = labelAbove, onCheckedChange = { labelAbove = it })
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            Text("Wert unter dem Titel", style = MaterialTheme.typography.bodyMedium)
+                            Text("Wert unter dem Namen", style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                "Aus = der Wert steht neben dem Namen.",
+                                "Aus = der Wert steht daneben.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
