@@ -198,6 +198,18 @@ Regeln:
 * Kachel: `TileRenderer` zeichnet **den auf der Uhr gespeicherten Snapshot**.
 * Uhr-App: `WearAppActivity` zeichnet denselben Snapshot, scrollbar.
 
+**Wann aktualisiert wird (seit 0.1.17)**
+* `PeriodicWorkRequest` (≥ 15 min) nur bei eingeschaltetem Bildschirm – Xiaomi/HyperOS
+  schiebt den Job gern auf ~1 h.
+* `LiveUpdateService` (Live-Modus): WebSocket `state_changed`, gebündelt; trennt bei
+  Bildschirm aus, verbindet bei Bildschirm an neu und aktualisiert sofort. Neu: alle
+  5 min eine Sicherheitsaktualisierung, auch ohne Ereignis.
+* `WidgetApp` registriert `SCREEN_ON`/`USER_PRESENT` prozessweit und stößt eine
+  Aktualisierung an – greift auch, wenn der Live-Dienst beendet wurde.
+* `BootReceiver` (`BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`, `USER_UNLOCKED`): Planung
+  neu setzen, einmal aktualisieren (force), Live-Dienst starten.
+* Tippen auf das Widget löst `ACTION_REFRESH` aus (einmalig).
+
 **Übertragung an die Uhr (nach Akku-Optimierung, v0.1.11)**
 * Das Handy sendet **nur**, wenn sich die Fassung geändert hat (`revision`) oder nach einer
   Aktion in der App (`force = true`); sonst passiert nichts – auch keine Bluetooth-Abfrage

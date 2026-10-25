@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import de.reimann.hawidget.R
 import de.reimann.hawidget.data.Settings
 import de.reimann.hawidget.widget.ScreenState
@@ -26,6 +27,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -73,12 +75,14 @@ class LiveUpdateService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        registerReceiver(
+        ContextCompat.registerReceiver(
+            this,
             screenReceiver,
             IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_ON)
                 addAction(Intent.ACTION_SCREEN_OFF)
             },
+            ContextCompat.RECEIVER_NOT_EXPORTED,
         )
         screenReceiverRegistered = true
     }
@@ -222,11 +226,16 @@ class LiveUpdateService : Service() {
 
     private suspend fun refreshLoop() {
         while (true) {
-            // Warten, bis Home Assistant eine Zustandsänderung meldet
-            changes.receive()
-            delay(DEBOUNCE_MS)
-            while (changes.tryReceive().isSuccess) {
-                // Weitere Ereignisse im selben Zeitfenster verwerfen
+            // Auf eine Zustandänderung warten – spätestens nach
+            // SAFETY_REFRESH_MS aber einmal nachfassen. Gehen Events verloren
+            // (Funkloch, still verlorene Verbindung), bleibt das Widget sonst
+            // dauerhaft auf dem alten Stand.
+            val event = withTimeoutOrNull(SAFETY_REFRESH_MS) { changes.receive() }
+            if (event != null) {
+                delay(DEBOUNCE_MS)
+                while (changes.tryReceive().isSuccess) {
+                    // Weitere Ereignisse im selben Zeitfenster verwerfen
+                }
             }
 
             // Ohne sichtbares Widget nichts abrufen – das passiert z. B. direkt
@@ -295,6 +304,9 @@ class LiveUpdateService : Service() {
         private const val NOTIFICATION_ID = 4711
         private const val DEBOUNCE_MS = 1500L
         private const val RECONNECT_CHECK_MS = 15_000L
+
+        /** Ohne Ereignis trotzdem aktualisieren, solange das Widget sichtbar ist. */
+        private const val SAFETY_REFRESH_MS = 5 * 60_000L
         private const val SUBSCRIBE_MESSAGE =
             "{\"id\":1,\"type\":\"subscribe_events\",\"event_type\":\"state_changed\"}"
 
