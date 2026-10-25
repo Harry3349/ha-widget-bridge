@@ -11,29 +11,149 @@
   },
   "values": [
     {
-      "entity": "sensor.dachboden_shelly_erik_3d_drucker_3ddrucker_leistung",
-      "label": "3D-Drucker"
+      "entity": "sensor.sonoff_temp_luftfeuchte_aussen_temperatur",
+      "label": "Außen",
+      "color": "#4DD0E1"
     },
     {
-      "entity": "sensor.wohnzimmer_shelly_erik_pc_leistung",
-      "label": "Erik PC"
+      "entity": "sensor.sonoff_temp_luftfeuchte_aussen_luftfeuchtigkeit",
+      "label": "Außenfeuchte",
+      "color": "#4DD0E1"
     },
     {
-      "entity": "sensor.schlafzimmer_shelly_erik_licht_leistung",
-      "label": "Erik Licht"
+      "entity": "sensor.shelly_erik_pc_leistung",
+      "label": null
     },
     {
-      "entity": "sensor.wohnzimmer_usbc_power_pctisch_gesamtleistung",
+      "entity": "sensor.shelly_erik_licht_leistung",
+      "label": null
+    },
+    {
+      "entity": "sensor.shelly_erik_3d_drucker_3ddrucker_leistung",
+      "label": null
+    },
+    {
+      "entity": "sensor.usbc_power_pctisch_gesamtleistung",
       "label": "USB PC-Tisch"
     },
     {
-      "entity": "sensor.schlafzimmer_usbc_power_nachttisch_gesamtleistung",
+      "entity": "sensor.usbc_power_nachttisch_gesamtleistung",
       "label": "USB Nacht"
+    }
+  ],
+  "rows": [
+    {
+      "items": [
+        {
+          "type": "button",
+          "key": "erik_pc",
+          "label": "Erik PC",
+          "icon": "mdi:desktop-tower",
+          "service": "switch.toggle",
+          "entity_id": "switch.shelly_erik_pc",
+          "state_entity": "switch.shelly_erik_pc",
+          "show_state": null,
+          "align": "left",
+          "size": 14,
+          "width": 62,
+          "color": null
+        },
+        {
+          "type": "sensor",
+          "entity": "sensor.shelly_erik_pc_leistung",
+          "label": null,
+          "align": "right",
+          "size": 14,
+          "width": 38,
+          "color": null,
+          "threshold": null,
+          "label_above": false
+        }
+      ]
     },
     {
-      "entity": "sensor.sonoff_temp_luftfeuchte_04_temperatur",
-      "label": "Außen",
-      "color": "#4DD0E1"
+      "items": [
+        {
+          "type": "button",
+          "key": "licht",
+          "label": "Licht",
+          "icon": "mdi:lightbulb",
+          "service": "switch.toggle",
+          "entity_id": "switch.shelly_erik_licht",
+          "state_entity": "switch.shelly_erik_licht",
+          "show_state": null,
+          "align": "left",
+          "size": 14,
+          "width": 62,
+          "color": null
+        },
+        {
+          "type": "sensor",
+          "entity": "sensor.shelly_erik_licht_leistung",
+          "label": null,
+          "align": "right",
+          "size": 14,
+          "width": 38,
+          "color": null,
+          "threshold": null,
+          "label_above": false
+        }
+      ]
+    },
+    {
+      "items": [
+        {
+          "type": "button",
+          "key": "drucker",
+          "label": "3D-Drucker",
+          "icon": "mdi:printer-3d",
+          "service": "switch.toggle",
+          "entity_id": "switch.shelly_erik_3d_drucker_3ddrucker",
+          "state_entity": "switch.shelly_erik_3d_drucker_3ddrucker",
+          "show_state": null,
+          "align": "left",
+          "size": 14,
+          "width": 62,
+          "color": null
+        },
+        {
+          "type": "sensor",
+          "entity": "sensor.shelly_erik_3d_drucker_3ddrucker_leistung",
+          "label": null,
+          "align": "right",
+          "size": 14,
+          "width": 38,
+          "color": null,
+          "threshold": null,
+          "label_above": false
+        }
+      ]
+    },
+    {
+      "items": [
+        {
+          "type": "sensor",
+          "entity": "sensor.sonoff_temp_luftfeuchte_aussen_temperatur",
+          "label": "Außen",
+          "align": "left",
+          "size": 14,
+          "width": 50,
+          "color": "#4DD0E1",
+          "threshold": null,
+          "label_above": false
+        },
+        {
+          "type": "sensor",
+          "entity": "sensor.sonoff_temp_luftfeuchte_aussen_luftfeuchtigkeit",
+          "label": "Außenfeuchte",
+          "align": "right",
+          "size": 14,
+          "width": 50,
+          "color": "#4DD0E1",
+          "threshold": null,
+          "label_above": false
+        }
+      ]
     }
   ],
   "buttons": [
@@ -42,21 +162,21 @@
       "label": "3D-Drucker",
       "icon": "mdi:printer-3d",
       "service": "switch.toggle",
-      "entity_id": "switch.dachboden_shelly_erik_3d_drucker_3ddrucker"
+      "entity_id": "switch.shelly_erik_3d_drucker_3ddrucker"
     },
     {
       "key": "pc",
       "label": "Erik PC",
       "icon": "mdi:desktop-tower",
       "service": "switch.toggle",
-      "entity_id": "switch.wohnzimmer_shelly_erik_pc"
+      "entity_id": "switch.shelly_erik_pc"
     },
     {
       "key": "licht",
       "label": "Licht",
       "icon": "mdi:lightbulb",
       "service": "switch.toggle",
-      "entity_id": "switch.schlafzimmer_shelly_erik_licht"
+      "entity_id": "switch.shelly_erik_licht"
     }
   ]
 }

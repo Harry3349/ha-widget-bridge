@@ -117,6 +117,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Definitionen neu holen, wenn die App in den Vordergrund kommt oder die
+     * Übersicht betreten wird. Änderungen in Home Assistant (z. B. neue Werte)
+     * waren sonst erst nach einem App-Neustart sichtbar.
+     */
+    fun reloadWidgets() {
+        if (busy) return
+        if (!settings.isConfigured) return
+        loadWidgets()
+    }
+
     fun loadEntities() {
         val client = clientOrNull() ?: return
         viewModelScope.launch {

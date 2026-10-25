@@ -173,6 +173,22 @@ Regeln:
   per **Duplizieren** (Ziel „Smartwatch-Widget“) – es gibt kein „gemeinsames“ Widget mehr.
 * Eine Uhr hat höchstens **eine** Fassung (Zuordnung löst den Knoten aus allen anderen).
 
+### Außenwerte im Widget (2026-10-25)
+
+* Das Widget zeigt in der Klima-Zeile die **Außensensoren**
+  (`sensor.sonoff_temp_luftfeuchte_aussen_temperatur` / `…_aussen_luftfeuchtigkeit`),
+  nicht die Wohnzimmer-Werte.
+* `values` wird von der App **nicht** gerendert, sobald `rows` existieren – Änderungen
+  an der alten Werte-Liste bleiben wirkungslos. Sie ist aber die **Sensorauswahl** des
+  Zeilen-Editors: steht dort nichts („Werte“ leer), lassen sich keine Sensoren in Zeilen
+  legen, auch wenn die Zeile den Sensor schon zeigt. `tools/set_outside_row.py` pflegt
+  daher beides: es ersetzt Innen-Sensoren der Sonoff-Familie in `rows`, ergänzt die Zeile,
+  wenn sie fehlt, und trägt **alle Zeilen-Sensoren** in `values` ein (idempotent,
+  `--dry-run`, `--all` für Uhr-Fassungen).
+* Die mitgelieferte Vorlage `android/app/src/main/assets/preset_shelly.json` enthält jetzt
+  `values` (Außenwerte zuerst) **und** `rows` (inkl. Außen-Zeile), damit der Editor die
+  Sensoren anzeigt.
+
 ---
 
 ## 5. Abläufe (wichtig für Fehlersuche)

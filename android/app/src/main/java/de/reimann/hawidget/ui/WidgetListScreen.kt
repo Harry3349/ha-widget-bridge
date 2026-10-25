@@ -39,6 +39,10 @@ fun WidgetListScreen(
 ) {
     var duplicate by remember { mutableStateOf<DuplicateRequest?>(null) }
 
+    // Beim Betreten der Übersicht die Definitionen neu holen (z. B. nach einer
+    // Änderung in Home Assistant oder nach dem Verlassen des Editors).
+    LaunchedEffect(Unit) { vm.reloadWidgets() }
+
     // Die Uhren einmal abfragen (Bluetooth braucht einen Moment).
     LaunchedEffect(Unit) { if (vm.watches.isEmpty()) vm.loadWatches() }
 
@@ -49,7 +53,16 @@ fun WidgetListScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text("Widgets", style = MaterialTheme.typography.headlineSmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Widgets",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = { vm.loadWidgets() }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Definitionen neu laden")
+            }
+        }
         Text(
             "Handy und Smartwatch sind getrennte Bereiche: Ein Widget gehört entweder auf " +
                 "den Homescreen oder auf die Uhr. Mit „Duplizieren“ machst du aus einem " +
@@ -95,8 +108,10 @@ fun WidgetListScreen(
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
             )
+            // Aktualisiert nur die Kacheln (Snapshots), nicht die Definitionen –
+            // dafür sitzt der Knopf oben neben „Widgets“.
             IconButton(onClick = { vm.refreshWidgets() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Alle Widgets aktualisieren")
+                Icon(Icons.Default.Refresh, contentDescription = "Homescreen-Widgets aktualisieren")
             }
         }
 

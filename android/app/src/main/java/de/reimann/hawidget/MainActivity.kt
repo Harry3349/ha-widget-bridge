@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -27,6 +28,17 @@ import de.reimann.hawidget.ui.WidgetListScreen
 
 /** Einstiegspunkt: Einrichtung, Widget-Verwaltung und Editor. */
 class MainActivity : ComponentActivity() {
+
+    // Derselbe ViewModel-Stand wie in Compose (Activity als Store-Owner): so
+    // lässt sich beim Zurückkehren in die App neu laden.
+    private val viewModel: MainViewModel by viewModels()
+
+    override fun onResume() {
+        super.onResume()
+        // Widget-Definitionen aus Home Assistant neu holen – Änderungen dort
+        // (Werte, Zeilen) waren sonst erst nach einem App-Neustart sichtbar.
+        viewModel.reloadWidgets()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
