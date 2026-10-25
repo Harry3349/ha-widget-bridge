@@ -18,8 +18,8 @@ android {
         // Wear OS 3 = API 30; die Pixel Watch 3 läuft mit API 37
         minSdk = 30
         targetSdk = 35
-        versionCode = 14
-        versionName = "0.1.17"
+        versionCode = 15
+        versionName = "0.1.18"
         resourceConfigurations += listOf("de", "en")
     }
 

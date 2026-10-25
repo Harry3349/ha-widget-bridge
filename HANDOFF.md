@@ -203,7 +203,9 @@ Regeln:
   schiebt den Job gern auf ~1 h.
 * `LiveUpdateService` (Live-Modus): WebSocket `state_changed`, gebündelt; trennt bei
   Bildschirm aus, verbindet bei Bildschirm an neu und aktualisiert sofort. Neu: alle
-  5 min eine Sicherheitsaktualisierung, auch ohne Ereignis.
+  5 min eine Sicherheitsaktualisierung, auch ohne Ereignis. Der Dienst läuft als
+  **`specialUse`**-Vordergrunddienst – `dataSync` wird ab Android 15 nach 6 Stunden
+  Laufzeit pro Tag vom System beendet (Widget stand dann still).
 * `WidgetApp` registriert `SCREEN_ON`/`USER_PRESENT` prozessweit und stößt eine
   Aktualisierung an – greift auch, wenn der Live-Dienst beendet wurde.
 * `BootReceiver` (`BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`, `USER_UNLOCKED`): Planung
